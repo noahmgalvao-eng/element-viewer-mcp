@@ -74,6 +74,33 @@ const htmlContent = `
 <!DOCTYPE html>
 <html style="height: 100%; margin: 0;">
   <body style="height: 100%; margin: 0; overflow: hidden;">
+    <script>
+      function requestFullScreen() {
+        if (window.openai) {
+           window.openai.requestDisplayMode({ mode: "fullscreen" });
+           console.log("Requested fullscreen");
+        } else {
+           console.log("window.openai not found");
+           // Optional: retry or just wait, usually it's there or not supported in this context
+           setTimeout(requestFullScreen, 500); 
+        }
+      }
+      
+      // Attempt when load is complete
+      window.addEventListener('load', () => {
+         // Try immediately and then retry a few times if needed
+         let attempts = 0;
+         const interval = setInterval(() => {
+            if (window.openai) {
+                window.openai.requestDisplayMode({ mode: "fullscreen" });
+                clearInterval(interval);
+            } else {
+                attempts++;
+                if (attempts > 10) clearInterval(interval);
+            }
+         }, 500);
+      });
+    </script>
     <iframe 
       src="${MINHA_URL_WEBAPP}" 
       style="width: 100%; height: 100%; border: none;"
