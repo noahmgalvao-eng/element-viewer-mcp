@@ -1,0 +1,5 @@
+{
+  "name": "Matter Simulator SDK",
+  "description": "Interactive physics simulation of chemical elements visualizing states of matter (Solid, Liquid, Gas) under varying Temperature and Pressure.",
+  "requestFramePermissions": []
+}
