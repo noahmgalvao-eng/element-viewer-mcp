@@ -99,37 +99,46 @@ const htmlContent = `
       }
     </style>
     
-    <button id="exit-fullscreen-btn" class="control-btn" onclick="requestInline()">Sair da Tela Cheia</button>
-    <button id="fullscreen-btn" class="control-btn" onclick="requestFullScreen()">Tela Cheia</button>
+    <!-- Botões atualizados para usar o novo handler -->
+    <button id="exit-fullscreen-btn" class="control-btn" onclick="handleRequestDisplayMode('inline')">Sair da Tela Cheia</button>
+    <button id="fullscreen-btn" class="control-btn" onclick="handleRequestDisplayMode('fullscreen')">Tela Cheia</button>
 
     <script>
-      function requestFullScreen() {
-        if (window.openai) {
-           window.openai.requestDisplayMode({ mode: "fullscreen" });
-           console.log("Requested fullscreen");
-        } else {
-           console.warn("OpenAI API not found for fullscreen request");
+      /**
+       * Implementation based on kitchen-sink-lite handleRequestDisplayMode
+       */
+      const handleRequestDisplayMode = async (mode) => {
+        if (!window.openai?.requestDisplayMode) {
+          console.log("requestDisplayMode unavailable (defaulted to inline)");
+          return;
         }
-      }
 
-      function requestInline() {
-        if (window.openai) {
-           window.openai.requestDisplayMode({ mode: "inline" });
-           console.log("Requested inline");
-        } else {
-           console.warn("OpenAI API not found for inline request");
+        try {
+          const result = await window.openai.requestDisplayMode({ mode });
+          console.log("requestDisplayMode(" + mode + ") -> " + (result?.mode ?? "unknown"));
+        } catch (error) {
+          console.error("Failed to request display mode:", error);
         }
-      }
+      };
+
+      // Expose to global scope for onclick handlers
+      window.handleRequestDisplayMode = handleRequestDisplayMode;
 
       // Automatic Fullscreen on Load with Retry
+      // Mantemos a tentativa automática mas usando a nova função
       window.addEventListener('load', () => {
+        // Tenta imediatamente
+        handleRequestDisplayMode('fullscreen');
+
+        // Tenta novamente algumas vezes caso a API demore a injetar
         let attempts = 0;
         const maxAttempts = 10;
         
         const tryFullScreen = setInterval(() => {
             attempts++;
             if (window.openai) {
-                requestFullScreen();
+                // Se já conseguimos acessar window.openai, tentamos mais uma vez e paramos
+                handleRequestDisplayMode('fullscreen');
                 clearInterval(tryFullScreen);
             } else if (attempts >= maxAttempts) {
                 console.warn("Could not find window.openai after multiple attempts");
@@ -141,7 +150,8 @@ const htmlContent = `
     <iframe 
       src="${MINHA_URL_WEBAPP}" 
       style="width: 100%; height: 100%; border: none;"
-      allow="camera; microphone; geolocation"
+      allow="camera; microphone; geolocation; fullscreen"
+      allowfullscreen
     ></iframe>
   </body>
 </html>
