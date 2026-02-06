@@ -73,12 +73,11 @@ server.registerTool(
 const htmlContent = `
 <!DOCTYPE html>
 <html style="height: 100%; margin: 0;">
-  <body style="height: 100%; margin: 0; overflow: hidden;">
+  <body style="height: 100%; margin: 0; overflow: hidden; font-family: sans-serif;">
     <style>
-      #fullscreen-btn {
+      .control-btn {
         position: absolute;
         bottom: 20px;
-        right: 20px;
         z-index: 1000;
         padding: 10px 15px;
         background-color: #333;
@@ -86,23 +85,58 @@ const htmlContent = `
         border: none;
         border-radius: 5px;
         cursor: pointer;
-        font-family: sans-serif;
         opacity: 0.8;
+        transition: opacity 0.2s;
       }
-      #fullscreen-btn:hover {
+      .control-btn:hover {
         opacity: 1;
       }
+      #fullscreen-btn {
+        right: 20px;
+      }
+      #exit-fullscreen-btn {
+        right: 120px; /* Positioned to the left of the fullscreen button */
+      }
     </style>
-    <button id="fullscreen-btn" onclick="requestFullScreen()">Tela Cheia</button>
+    
+    <button id="exit-fullscreen-btn" class="control-btn" onclick="requestInline()">Sair da Tela Cheia</button>
+    <button id="fullscreen-btn" class="control-btn" onclick="requestFullScreen()">Tela Cheia</button>
+
     <script>
       function requestFullScreen() {
         if (window.openai) {
            window.openai.requestDisplayMode({ mode: "fullscreen" });
            console.log("Requested fullscreen");
         } else {
-           alert("OpenAI API ainda não disponível. Tente novamente em instantes.");
+           console.warn("OpenAI API not found for fullscreen request");
         }
       }
+
+      function requestInline() {
+        if (window.openai) {
+           window.openai.requestDisplayMode({ mode: "inline" });
+           console.log("Requested inline");
+        } else {
+           console.warn("OpenAI API not found for inline request");
+        }
+      }
+
+      // Automatic Fullscreen on Load with Retry
+      window.addEventListener('load', () => {
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        const tryFullScreen = setInterval(() => {
+            attempts++;
+            if (window.openai) {
+                requestFullScreen();
+                clearInterval(tryFullScreen);
+            } else if (attempts >= maxAttempts) {
+                console.warn("Could not find window.openai after multiple attempts");
+                clearInterval(tryFullScreen);
+            }
+        }, 500); // Check every 500ms
+      });
     </script>
     <iframe 
       src="${MINHA_URL_WEBAPP}" 
