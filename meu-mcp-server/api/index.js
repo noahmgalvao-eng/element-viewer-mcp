@@ -286,8 +286,4 @@ app.post("/sse", async (req, res) => {
     res.status(500).send("Internal Error");
   }
 });
-
-app.listen(PORT, () => {
-  console.log(`\n=== SERVIDOR MCP PRONTO NA PORTA ${PORT} ===`);
-  console.log(`Use esta URL no ChatGPT: https://<SEU-NGROK>.ngrok-free.dev/sse`);
-});
+export default app;

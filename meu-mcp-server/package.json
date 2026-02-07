@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Servidor MCP para o meu app",
-  "main": "server.js",
+  "main": "api/index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node api/index.js",
+    "dev": "node api/index.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.3",
