@@ -1,7 +1,9 @@
 
-import { ChemicalElement } from "../types";
+import { ChemicalElement, ElementProperties } from "../types";
+import { SOURCE_DATA } from "./periodic_table_source";
+import { CUSTOM_DATA, SODIUM_FALLBACK, ElementCustomData } from "./elements-visuals";
 
-// The 11 Frames extracted from the provided SVG liquid path
+// The 11 Frames extracted from the provided SVG liquid path (Preserved from original)
 export const MATTER_PATH_FRAMES = [
   "M -60,-120 C -20,-120 20,-120 60,-120 C 60,-80 60,-40 60,0 C 20,0 -20,0 -60,0 C -60,-40 -60,-80 -60,-120 Z",
   "M -55,-100 C -20,-105 20,-105 55,-100 C 75,-60 75,-30 70,0 C 20,5 -20,5 -70,0 C -75,-30 -75,-60 -55,-100 Z",
@@ -16,137 +18,67 @@ export const MATTER_PATH_FRAMES = [
   "M 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 Z"
 ];
 
-export const ELEMENTS: ChemicalElement[] = [
-  {
-    atomicNumber: 79,
-    symbol: "Au",
-    name: "Ouro",
-    classification: { group: "11", groupBlock: "IB", groupName: "Metais de Transição", period: 6, electronShells: 6 },
-    mass: 196.97,
-    properties: { 
-      meltingPointK: 1337.33, boilingPointK: 3129, bulkModulusGPa: 180,
-      latentHeatFusion: 63700, latentHeatVaporization: 1644000,
-      specificHeatSolid: 129, specificHeatLiquid: 150, specificHeatGas: 63,
-      criticalPoint: { tempK: 7250, pressurePa: 550000000 },
-      triplePoint: { tempK: 1337.33, pressurePa: 0.023 },
-      electronegativity: 2.54, atomicRadiusPm: 144, density: 19.30,
-      electronConfiguration: "[Xe] 4f¹⁴ 5d¹⁰ 6s¹", thermalConductivity: 318,
-      electricalConductivity: 4.5e7, // 45 MS/m
-      electronAffinity: 222.8, ionizationEnergy: 890.1, oxidationStates: [3, 1],
-      simonA_Pa: 5900000000, simonC: 2.0, // a = 5.9 GPa
-      enthalpyFusionJmol: 12550
-    },
-    visualDNA: { solid: { color: "#FFD700", opacidade: 1.0 }, liquid: { color: "#FFD700", opacidade: 1.0 }, gas: { color: "#FFD700", opacidade: 1.0 } },
-    category: 'metal'
-  },
-  {
-    atomicNumber: 11,
-    symbol: "Na",
-    name: "Sódio",
-    classification: { group: "1", groupBlock: "IA", groupName: "Metais Alcalinos", period: 3, electronShells: 3 },
-    mass: 22.99,
-    properties: { 
-      meltingPointK: 370.87, boilingPointK: 1156, bulkModulusGPa: 6.3,
-      latentHeatFusion: 113000, latentHeatVaporization: 3896000,
-      specificHeatSolid: 1230, specificHeatLiquid: 1380, specificHeatGas: 900,
-      criticalPoint: { tempK: 2573, pressurePa: 35000000 },
-      triplePoint: { tempK: 370.87, pressurePa: 0.00000014 },
-      electronegativity: 0.93, atomicRadiusPm: 186, density: 0.97,
-      electronConfiguration: "[Ne] 3s¹", thermalConductivity: 142,
-      electricalConductivity: 2.1e7, // 21 MS/m
-      electronAffinity: 52.8, ionizationEnergy: 495.8, oxidationStates: [1],
-      simonA_Pa: 850000000, simonC: 2.5, // a = 0.85 GPa
-      enthalpyFusionJmol: 2600
-    },
-    visualDNA: { solid: { color: "#E5E7EB", opacidade: 1.0 }, liquid: { color: "#E5E7EB", opacidade: 1.0 }, gas: { color: "#E5E7EB", opacidade: 1.0 } },
-    specialBehavior: { highPressureTurnover: true }, category: 'metal'
-  },
-  {
-    atomicNumber: 1,
-    symbol: "H",
-    name: "Hidrogênio",
-    classification: { group: "1", groupBlock: "IA", groupName: "Não-Metais (Diatômico)", period: 1, electronShells: 1 },
-    mass: 1.008,
-    properties: {
-      meltingPointK: 14.01, boilingPointK: 20.28, enthalpyVapJmol: 904, bulkModulusGPa: 0.2,
-      latentHeatFusion: 58000, latentHeatVaporization: 455000,
-      specificHeatSolid: 10000, specificHeatLiquid: 13000, specificHeatGas: 14304,
-      criticalPoint: { tempK: 33, pressurePa: 1293000 },
-      triplePoint: { tempK: 13.80, pressurePa: 7042 },
-      electronegativity: 2.20, atomicRadiusPm: 53, density: 0.000089,
-      electronConfiguration: "1s¹", thermalConductivity: 0.18,
-      electricalConductivity: 0, // Insulator
-      electronAffinity: 72.8, ionizationEnergy: 1312.0, oxidationStates: [1, -1],
-      simonA_Pa: 20000000, simonC: 1.5, // a = 20 MPa (Very sensitive)
-      enthalpyFusionJmol: 117
-    },
-    visualDNA: { solid: { color: "#FFFFFF", opacidade: 1.0 }, liquid: { color: "#FFFFFF", opacidade: 1.0 }, gas: { color: "#FFFFFF", opacidade: 1.0 } },
-    molecularForms: [{ symbol: "H₂", maxTempK: 3000 }], category: 'non-metal'
-  },
-  {
-    atomicNumber: 3,
-    symbol: "Li",
-    name: "Lítio",
-    classification: { group: "1", groupBlock: "IA", groupName: "Metais Alcalinos", period: 2, electronShells: 2 },
-    mass: 6.94,
-    properties: {
-      meltingPointK: 453.65, boilingPointK: 1603, bulkModulusGPa: 11,
-      latentHeatFusion: 432000, latentHeatVaporization: 21200000,
-      specificHeatSolid: 3582, specificHeatLiquid: 4380, specificHeatGas: 3000,
-      criticalPoint: { tempK: 3223, pressurePa: 67000000 },
-      triplePoint: { tempK: 453.65, pressurePa: 0.00000003 },
-      electronegativity: 0.98, atomicRadiusPm: 152, density: 0.534,
-      electronConfiguration: "[He] 2s¹", thermalConductivity: 85,
-      electricalConductivity: 1.1e7, // 11 MS/m
-      electronAffinity: 59.6, ionizationEnergy: 520.2, oxidationStates: [1],
-      simonA_Pa: 1000000000, simonC: 2.5, // a = 1.0 GPa
-      enthalpyFusionJmol: 3000
-    },
-    visualDNA: { solid: { color: "#C7C7C7", opacidade: 1.0 }, liquid: { color: "#C7C7C7", opacidade: 1.0 }, gas: { color: "#C7C7C7", opacidade: 1.0 } },
-    category: 'metal'
-  },
-  {
-    atomicNumber: 19,
-    symbol: "K",
-    name: "Potássio",
-    classification: { group: "1", groupBlock: "IA", groupName: "Metais Alcalinos", period: 4, electronShells: 4 },
-    mass: 39.098,
-    properties: {
-      meltingPointK: 336.7, boilingPointK: 1032, bulkModulusGPa: 3.1,
-      latentHeatFusion: 59590, latentHeatVaporization: 2000000, 
-      specificHeatSolid: 757, specificHeatLiquid: 800, specificHeatGas: 520,
-      criticalPoint: { tempK: 2280, pressurePa: 16000000 },
-      triplePoint: { tempK: 336.7, pressurePa: 0.00013 },
-      electronegativity: 0.82, atomicRadiusPm: 227, density: 0.862,
-      electronConfiguration: "[Ar] 4s¹", thermalConductivity: 102,
-      electricalConductivity: 1.4e7, // 14 MS/m
-      electronAffinity: 48.4, ionizationEnergy: 418.8, oxidationStates: [1],
-      simonA_Pa: 400000000, simonC: 2.5, // a = 0.4 GPa
-      enthalpyFusionJmol: 2330
-    },
-    visualDNA: { solid: { color: "#E0E0E0", opacidade: 1.0 }, liquid: { color: "#E0E0E0", opacidade: 1.0 }, gas: { color: "#E0E0E0", opacidade: 1.0 } },
-    category: 'metal'
-  },
-  {
-    atomicNumber: 12,
-    symbol: "Mg",
-    name: "Magnésio",
-    classification: { group: "2", groupBlock: "IIA", groupName: "Metais Alcalinos Terrosos", period: 3, electronShells: 3 },
-    mass: 24.305,
-    properties: {
-      meltingPointK: 923, boilingPointK: 1363, bulkModulusGPa: 45,
-      latentHeatFusion: 348000, latentHeatVaporization: 5250000,
-      specificHeatSolid: 1023, specificHeatLiquid: 1100, specificHeatGas: 900,
-      criticalPoint: { tempK: 3115, pressurePa: 40000000 },
-      triplePoint: { tempK: 923, pressurePa: 361 },
-      electronegativity: 1.31, atomicRadiusPm: 160, density: 1.74,
-      electronConfiguration: "[Ne] 3s²", thermalConductivity: 156,
-      electricalConductivity: 2.3e7, // 23 MS/m
-      electronAffinity: 0, ionizationEnergy: 737.7, oxidationStates: [2],
-      simonA_Pa: 3000000000, simonC: 2.0, // a = 3.0 GPa
-      enthalpyFusionJmol: 8480
-    },
-    visualDNA: { solid: { color: "#9ca3af", opacidade: 1.0 }, liquid: { color: "#9ca3af", opacidade: 1.0 }, gas: { color: "#9ca3af", opacidade: 1.0 } },
-    category: 'metal'
+// Adapter: Transform Raw JSON + Custom Overrides into Full ChemicalElement Array
+export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any) => {
+  // 1. Determine Custom Override or Fallback
+  // If specific data exists for this symbol, use it. Otherwise, default to SODIUM_FALLBACK.
+  const customData: ElementCustomData = CUSTOM_DATA[source.symbol] || SODIUM_FALLBACK;
+
+  // Cast properties once to ensure types match for required fields (assuming fallback has them)
+  const baseProperties = SODIUM_FALLBACK.properties as ElementProperties;
+
+  // 2. Resolve Density (Source is sometimes g/L for gases, need g/cm³)
+  let resolvedDensity = source.density;
+  if (source.phase === "Gas" && source.density) {
+    resolvedDensity = source.density / 1000;
   }
-];
+
+  // Fallback if density missing in source
+  if (!resolvedDensity) {
+    resolvedDensity = customData.properties?.density || baseProperties.density;
+  }
+
+  // 3. Resolve Properties (Merge: Fallback < Custom < Source Source-of-Truth)
+  const resolvedProperties: ElementProperties = {
+    // Start with Sodium Fallback (guarantees physics engine constants like latentHeat exist)
+    ...baseProperties,
+
+    // Overwrite with Specific Custom Properties (if any)
+    ...customData.properties,
+
+    // Overwrite with Source Data (Source of Truth for Identity/Basic Phys)
+    meltingPointK: source.melt || customData.properties?.meltingPointK || baseProperties.meltingPointK,
+    boilingPointK: source.boil || customData.properties?.boilingPointK || baseProperties.boilingPointK,
+    density: resolvedDensity,
+    electronegativity: source.electronegativity_pauling || customData.properties?.electronegativity,
+    electronAffinity: source.electron_affinity || customData.properties?.electronAffinity,
+    ionizationEnergy: source.ionization_energies ? source.ionization_energies[0] : customData.properties?.ionizationEnergy,
+    electronConfiguration: source.electron_configuration_semantic,
+
+    // Extended fields
+    atomicRadiusPm: customData.properties?.atomicRadiusPm || baseProperties.atomicRadiusPm,
+  } as ElementProperties;
+
+  return {
+    atomicNumber: source.number,
+    symbol: source.symbol,
+    name: customData.name || source.name, // Use Portuguese Name if available, else English
+
+    classification: {
+      group: String(source.group),
+      groupBlock: source.block.toUpperCase(), // s, p, d, f -> S, P, D, F
+      groupName: customData.classification?.groupName || "Elemento Químico",
+      period: source.period,
+      electronShells: source.shells ? source.shells.length : 0
+    },
+
+    mass: source.atomic_mass,
+    category: customData.category || SODIUM_FALLBACK.category || 'metal',
+
+    properties: resolvedProperties,
+
+    visualDNA: customData.visualDNA || SODIUM_FALLBACK.visualDNA,
+    specialBehavior: customData.specialBehavior || SODIUM_FALLBACK.specialBehavior,
+    molecularForms: customData.molecularForms || SODIUM_FALLBACK.molecularForms
+  };
+});
