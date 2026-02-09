@@ -1,21 +1,21 @@
 
-import { ChemicalElement, ElementProperties, VisualDNA, SpecialBehavior, MolecularState } from "../types";
+import { ChemicalElement, ElementProperties, SpecialBehavior, MolecularState } from "../types";
 
 // Define the shape of our proprietary overrides (Partial of the full ChemicalElement)
+// REMOVED: visualDNA (Now sourced from Scientific Layer)
 export interface ElementCustomData {
     name?: string; // Portuguese Override
     classification?: {
         groupName?: string; // Portuguese Override
     };
     properties?: Partial<ElementProperties>;
-    visualDNA: VisualDNA;
     specialBehavior?: SpecialBehavior;
     molecularForms?: MolecularState[];
     category?: string;
 }
 
 // CRITICAL: The Sodium Rule Fallback
-// This object contains the exact physics and visual configuration of Sodium (Na).
+// This object contains the exact physics configuration of Sodium (Na).
 // Used as the default for any element missing specific custom data.
 export const SODIUM_FALLBACK: ElementCustomData = {
     name: "Elemento Genérico",
@@ -48,11 +48,6 @@ export const SODIUM_FALLBACK: ElementCustomData = {
         simonC: 2.5,
         enthalpyFusionJmol: 2600,
     },
-    visualDNA: {
-        solid: { color: "#E5E7EB", opacidade: 1.0 },
-        liquid: { color: "#E5E7EB", opacidade: 1.0 },
-        gas: { color: "#E5E7EB", opacidade: 1.0 }
-    },
     specialBehavior: { highPressureTurnover: true }
 };
 
@@ -78,11 +73,6 @@ export const CUSTOM_DATA: Record<string, ElementCustomData> = {
             simonA_Pa: 5900000000,
             simonC: 2.0,
             enthalpyFusionJmol: 12550
-        },
-        visualDNA: {
-            solid: { color: "#FFD700", opacidade: 1.0 },
-            liquid: { color: "#FFD700", opacidade: 1.0 },
-            gas: { color: "#FFD700", opacidade: 1.0 }
         }
     },
     "Na": {
@@ -112,11 +102,6 @@ export const CUSTOM_DATA: Record<string, ElementCustomData> = {
             simonC: 1.5,
             enthalpyFusionJmol: 117
         },
-        visualDNA: {
-            solid: { color: "#FFFFFF", opacidade: 1.0 },
-            liquid: { color: "#FFFFFF", opacidade: 1.0 },
-            gas: { color: "#FFFFFF", opacidade: 1.0 }
-        },
         molecularForms: [{ symbol: "H₂", maxTempK: 3000 }]
     },
     "Li": {
@@ -139,11 +124,6 @@ export const CUSTOM_DATA: Record<string, ElementCustomData> = {
             simonA_Pa: 1000000000,
             simonC: 2.5,
             enthalpyFusionJmol: 3000
-        },
-        visualDNA: {
-            solid: { color: "#C7C7C7", opacidade: 1.0 },
-            liquid: { color: "#C7C7C7", opacidade: 1.0 },
-            gas: { color: "#C7C7C7", opacidade: 1.0 }
         }
     },
     "K": {
@@ -166,11 +146,6 @@ export const CUSTOM_DATA: Record<string, ElementCustomData> = {
             simonA_Pa: 400000000,
             simonC: 2.5,
             enthalpyFusionJmol: 2330
-        },
-        visualDNA: {
-            solid: { color: "#E0E0E0", opacidade: 1.0 },
-            liquid: { color: "#E0E0E0", opacidade: 1.0 },
-            gas: { color: "#E0E0E0", opacidade: 1.0 }
         }
     },
     "Mg": {
@@ -193,11 +168,6 @@ export const CUSTOM_DATA: Record<string, ElementCustomData> = {
             simonA_Pa: 3000000000,
             simonC: 2.0,
             enthalpyFusionJmol: 8480
-        },
-        visualDNA: {
-            solid: { color: "#9ca3af", opacidade: 1.0 },
-            liquid: { color: "#9ca3af", opacidade: 1.0 },
-            gas: { color: "#9ca3af", opacidade: 1.0 }
         }
     }
 };
