@@ -10,6 +10,29 @@ export interface ElementProperties {
   specificHeatSolid: number;      // J/kg.K
   specificHeatLiquid: number;     // J/kg.K
   specificHeatGas: number;        // J/kg.K
+  
+  // --- DISPLAY STRINGS (For Estimated Values * or N/A) ---
+  specificHeatSolidDisplay?: string;
+  specificHeatLiquidDisplay?: string;
+  specificHeatGasDisplay?: string;
+  latentHeatFusionDisplay?: string;
+  latentHeatVaporizationDisplay?: string;
+
+  // --- SOURCE CITATION IDS (1=Wiki, 2=Mendeleev, 3=PubChem, 4=Angstrom, 5=Wolfram) ---
+  meltingPointSource?: number;
+  boilingPointSource?: number;
+  densitySource?: number;
+  atomicRadiusSource?: number;
+  thermalConductivitySource?: number;
+  specificHeatSolidSource?: number;
+  specificHeatLiquidSource?: number;
+  specificHeatGasSource?: number;
+  latentHeatFusionSource?: number;
+  latentHeatVaporizationSource?: number;
+  electronegativitySource?: number;
+  electronAffinitySource?: number;
+  ionizationEnergySource?: number;
+
   // --- CRITICAL POINT DATA ---
   criticalPoint?: {
     tempK: number;

@@ -21,16 +21,16 @@ export const MATTER_PATH_FRAMES = [
 
 // Adapter: Transform Raw JSON (Layer 1) + Scientific (Layer 2) + Custom (Layer 3)
 export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any) => {
-
+  
   // 1. Setup Data Layers
   const symbol = source.symbol;
-
+  
   // Layer 2: Scientific Data (Physics + Color)
-  const scientific = (SCIENTIFIC_DATA as any)[symbol];
+  const scientific = (SCIENTIFIC_DATA as any)[symbol]; 
 
   // Layer 3: Custom Data (Legacy Props + Simulation Tuning)
   const customData: ElementCustomData = CUSTOM_DATA[symbol] || SODIUM_FALLBACK;
-
+  
   // Helper for Layer 3 retention & Safety Fallbacks
   const baseLegacyProps = SODIUM_FALLBACK.properties as ElementProperties;
   const specificLegacyProps = customData.properties || {};
@@ -38,82 +38,154 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   // HELPER: Sanity Check for Physics (Prevents 0/Infinity/NaN bugs)
   // If scientific data is missing or 0, fallback to Sodium defaults (Layer 3 base).
   const ensurePhysical = (val: number | undefined | null, fallback: number): number => {
-    return (typeof val === 'number' && val > 0) ? val : fallback;
+      // Handles "N/A" which results in NaN after simple casting
+      if (typeof val === 'string' && val === 'N/A') return fallback;
+      if (typeof val === 'number' && !isNaN(val) && val > 0) return val;
+      return fallback;
+  };
+
+  // HELPER: Parse Scientific Values (handles '*', 'N/A', and numeric suffixes like '_5')
+  const parseSciValue = (input: string | number | undefined, fallback: number) => {
+      if (input === undefined || input === null) return { val: fallback, str: undefined, source: undefined };
+      
+      // If explicit N/A, return fallback for physics, but 'N/A' string for Display
+      if (input === "N/A") return { val: fallback, str: "N/A", source: undefined };
+
+      if (typeof input === 'number') return { val: input, str: input.toString(), source: undefined };
+      
+      let str = input.toString();
+      
+      // 1. Extract Source Suffix (e.g. "_2")
+      let sourceId: number | undefined = undefined;
+      const suffixMatch = str.match(/_(\d+)$/);
+      if (suffixMatch) {
+          sourceId = parseInt(suffixMatch[1], 10);
+          str = str.replace(/_(\d+)$/, ''); // Remove suffix for value parsing
+      }
+
+      // 2. Parse Value (Handle '*' for estimate)
+      // parseFloat stops at non-numeric characters generally, but let's be safe
+      const cleanStr = str.replace('*', '');
+      const val = parseFloat(cleanStr); 
+      
+      const isValid = !isNaN(val) && val > 0;
+      
+      return { 
+          val: isValid ? val : fallback, 
+          str: str, // Keep original string (with *) for display, but without suffix
+          source: sourceId
+      };
   };
 
   // 2. Resolve Base Properties (Layer 1 Corrections)
   let resolvedDensity = source.density;
   if (source.phase === "Gas" && source.density) {
-    resolvedDensity = source.density / 1000;
+      resolvedDensity = source.density / 1000;
   }
   if (!resolvedDensity) {
-    resolvedDensity = baseLegacyProps.density || 1.0;
+      resolvedDensity = baseLegacyProps.density || 1.0; 
   }
+
+  // Parse Specific Heats (Layer 2)
+  const shSolid = parseSciValue(scientific?.specificHeat?.solid, baseLegacyProps.specificHeatSolid);
+  const shLiquid = parseSciValue(scientific?.specificHeat?.liquid, baseLegacyProps.specificHeatLiquid);
+  const shGas = parseSciValue(scientific?.specificHeat?.gas, baseLegacyProps.specificHeatGas);
+
+  // Parse Latent Heats (Layer 2)
+  const lhFusion = parseSciValue(scientific?.latentHeat?.fusion, baseLegacyProps.latentHeatFusion);
+  const lhVap = parseSciValue(scientific?.latentHeat?.vaporization, baseLegacyProps.latentHeatVaporization);
+
+  // Parse Others
+  const thermCond = parseSciValue(scientific?.thermalConductivity, baseLegacyProps.thermalConductivity || 10);
+  const atRad = parseSciValue(scientific?.atomicRadiusPm, baseLegacyProps.atomicRadiusPm!);
+  const meltTemp = parseSciValue(scientific?.phaseTemperatures?.meltingK, source.melt || baseLegacyProps.meltingPointK);
+  const boilTemp = parseSciValue(scientific?.phaseTemperatures?.boilingK, source.boil || 9999);
 
   // 3. Construct Properties Object adhering to Merge Strategy
   const properties: ElementProperties = {
-    // --- BASE IDENTITY (Layer 1) ---
-    // If Melt/Boil are missing in source, use Fallback to prevent "Always Gas" behavior at 298K
-    meltingPointK: ensurePhysical(source.melt, baseLegacyProps.meltingPointK),
-    boilingPointK: ensurePhysical(source.boil, 9999),
-    density: resolvedDensity,
-    electronegativity: source.electronegativity_pauling || 0,
-    electronConfiguration: source.electron_configuration_semantic,
-    electronAffinity: source.electron_affinity || 0,
-    ionizationEnergy: source.ionization_energies ? source.ionization_energies[0] : 0,
+      // --- BASE IDENTITY (Layer 1 + Layer 2 Temperatures) ---
+      meltingPointK: ensurePhysical(meltTemp.val, baseLegacyProps.meltingPointK),
+      boilingPointK: ensurePhysical(boilTemp.val, 9999), 
+      meltingPointSource: meltTemp.source,
+      boilingPointSource: boilTemp.source,
 
-    // --- NEW PHYSICS (Layer 2 - Scientific Data with Safety Fallbacks) ---
-    // CRITICAL FIX: Never allow these to be 0 for simulation stability.
-    specificHeatSolid: ensurePhysical(scientific?.specificHeat, baseLegacyProps.specificHeatSolid),
-    specificHeatLiquid: ensurePhysical(scientific?.specificHeat, baseLegacyProps.specificHeatLiquid),
-    specificHeatGas: ensurePhysical(scientific?.specificHeat, baseLegacyProps.specificHeatGas),
+      density: resolvedDensity,
+      electronegativity: source.electronegativity_pauling || 0,
+      electronConfiguration: source.electron_configuration_semantic,
+      electronAffinity: source.electron_affinity || 0,
+      ionizationEnergy: source.ionization_energies ? source.ionization_energies[0] : 0,
 
-    thermalConductivity: scientific?.thermalConductivity ?? baseLegacyProps.thermalConductivity ?? 10,
-    atomicRadiusPm: ensurePhysical(scientific?.atomicRadiusPm, baseLegacyProps.atomicRadiusPm!),
-    oxidationStates: scientific?.oxidationStates ?? [],
+      // --- NEW PHYSICS (Layer 2 - Scientific Data with Safety Fallbacks) ---
+      // CRITICAL FIX: Never allow these to be 0 for simulation stability.
+      specificHeatSolid: shSolid.val,
+      specificHeatLiquid: shLiquid.val,
+      specificHeatGas: shGas.val,
+      // Store Display Strings (for *, N/A)
+      specificHeatSolidDisplay: shSolid.str,
+      specificHeatLiquidDisplay: shLiquid.str,
+      specificHeatGasDisplay: shGas.str,
+      // Sources
+      specificHeatSolidSource: shSolid.source,
+      specificHeatLiquidSource: shLiquid.source,
+      specificHeatGasSource: shGas.source,
+      
+      thermalConductivity: thermCond.val,
+      thermalConductivitySource: thermCond.source,
 
-    latentHeatFusion: ensurePhysical(scientific?.latentHeat?.fusion, baseLegacyProps.latentHeatFusion),
-    latentHeatVaporization: ensurePhysical(scientific?.latentHeat?.vaporization, baseLegacyProps.latentHeatVaporization),
+      atomicRadiusPm: ensurePhysical(atRad.val, baseLegacyProps.atomicRadiusPm!),
+      atomicRadiusSource: atRad.source,
 
-    // --- RETAINED LEGACY (Layer 3 - Custom/Sodium Fallback) ---
-    bulkModulusGPa: specificLegacyProps.bulkModulusGPa ?? baseLegacyProps.bulkModulusGPa,
-    criticalPoint: specificLegacyProps.criticalPoint ?? baseLegacyProps.criticalPoint,
-    triplePoint: specificLegacyProps.triplePoint ?? baseLegacyProps.triplePoint,
+      oxidationStates: scientific?.oxidationStates ?? [],
+      
+      // LATENT HEAT
+      latentHeatFusion: lhFusion.val,
+      latentHeatVaporization: lhVap.val,
+      // Display strings
+      latentHeatFusionDisplay: lhFusion.str,
+      latentHeatVaporizationDisplay: lhVap.str,
+      // Sources
+      latentHeatFusionSource: lhFusion.source,
+      latentHeatVaporizationSource: lhVap.source,
 
-    // Simulation Tuning Parameters (Always Layer 3)
-    simonA_Pa: specificLegacyProps.simonA_Pa ?? baseLegacyProps.simonA_Pa,
-    simonC: specificLegacyProps.simonC ?? baseLegacyProps.simonC,
-
-    // Optional Enthalpy Overrides
-    enthalpyFusionJmol: specificLegacyProps.enthalpyFusionJmol ?? baseLegacyProps.enthalpyFusionJmol,
-    enthalpyVapJmol: specificLegacyProps.enthalpyVapJmol,
+      // --- RETAINED LEGACY (Layer 3 - Custom/Sodium Fallback) ---
+      bulkModulusGPa: specificLegacyProps.bulkModulusGPa ?? baseLegacyProps.bulkModulusGPa,
+      criticalPoint: specificLegacyProps.criticalPoint ?? baseLegacyProps.criticalPoint,
+      triplePoint: specificLegacyProps.triplePoint ?? baseLegacyProps.triplePoint,
+      
+      // Simulation Tuning Parameters (Always Layer 3)
+      simonA_Pa: specificLegacyProps.simonA_Pa ?? baseLegacyProps.simonA_Pa,
+      simonC: specificLegacyProps.simonC ?? baseLegacyProps.simonC,
+      
+      // Optional Enthalpy Overrides
+      enthalpyFusionJmol: specificLegacyProps.enthalpyFusionJmol ?? baseLegacyProps.enthalpyFusionJmol,
+      enthalpyVapJmol: specificLegacyProps.enthalpyVapJmol, 
   };
 
   // 4. Construct Visual DNA (Strictly from Layer 2 Scientific Data)
   const elementColor = scientific?.color || "#94a3b8"; // Default to Slate-400 if missing (e.g. Uue)
-
+  
   const generatedVisualDNA = {
-    solid: { color: elementColor, opacidade: 1.0 },
-    liquid: { color: elementColor, opacidade: 1.0 },
-    gas: { color: elementColor, opacidade: 1.0 }
+      solid: { color: elementColor, opacidade: 1.0 },
+      liquid: { color: elementColor, opacidade: 1.0 },
+      gas: { color: elementColor, opacidade: 1.0 }
   };
 
   return {
     atomicNumber: source.number,
     symbol: source.symbol,
-    name: customData.name || source.name,
-
+    name: customData.name || source.name, 
+    
     classification: {
       group: String(source.group),
-      groupBlock: source.block.toUpperCase(),
+      groupBlock: source.block.toUpperCase(), 
       groupName: customData.classification?.groupName || "Elemento Químico",
       period: source.period,
       electronShells: source.shells ? source.shells.length : 0
     },
-
+    
     mass: source.atomic_mass,
     category: customData.category || SODIUM_FALLBACK.category || 'metal',
-
+    
     properties,
     visualDNA: generatedVisualDNA,
     specialBehavior: customData.specialBehavior || SODIUM_FALLBACK.specialBehavior,

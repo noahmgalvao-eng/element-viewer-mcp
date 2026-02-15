@@ -1,7 +1,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { ChemicalElement, PhysicsState } from '../../types';
-import { X, Thermometer, ArrowRight, Activity, ChevronDown, ChevronUp, Beaker, Zap, Triangle, CloudFog } from 'lucide-react';
+import { X, Thermometer, ArrowRight, Activity, ChevronDown, ChevronUp, Beaker, Zap, Triangle, CloudFog, BookOpen, ExternalLink } from 'lucide-react';
+import { SOURCE_DATA } from '../../data/periodic_table_source';
 
 interface Props {
   data: {
@@ -19,6 +20,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const menuRef = useRef<HTMLDivElement>(null);
   const { element, physicsState, x, y } = data;
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showReferences, setShowReferences] = useState(false);
 
   // Close on click outside or Escape
   useEffect(() => {
@@ -31,13 +33,15 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
       if (event.key === 'Escape') onClose();
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEsc);
+    if (!showReferences) { // Only bind if reference modal is NOT open, to avoid conflict
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEsc);
+    }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEsc);
     };
-  }, [onClose]);
+  }, [onClose, showReferences]);
 
   // --- Viewport Collision Detection ---
   const MENU_HEIGHT = isExpanded ? 550 : 350; // Estimated height based on state
@@ -78,7 +82,12 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     return (p/1000000).toFixed(2) + ' MPa';
   };
 
+  // Find source URL for current element
+  const elementSourceData = SOURCE_DATA.elements.find(e => e.symbol === element.symbol);
+  const wikiUrl = elementSourceData?.source || "https://en.wikipedia.org/wiki/Periodic_table";
+
   return (
+    <>
     <div 
       ref={menuRef}
       style={style}
@@ -115,7 +124,10 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
            <div className="bg-slate-800/50 rounded-lg p-2 border border-slate-700/50 hover:border-slate-600 transition-colors">
                 <div className="flex justify-between text-xs text-slate-400 mb-1">
                     <span>Melting Point (Std)</span>
-                    <span>{element.properties.meltingPointK} K</span>
+                    <span className="flex items-center">
+                        {element.properties.meltingPointK} K
+                        {element.properties.meltingPointSource && <sup className="text-[8px] ml-0.5 text-slate-500">({element.properties.meltingPointSource})</sup>}
+                    </span>
                 </div>
                 <div className="flex justify-between items-center group">
                     <span className="text-xs font-bold text-slate-200">
@@ -145,7 +157,10 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
            <div className="bg-slate-800/50 rounded-lg p-2 border border-slate-700/50 hover:border-slate-600 transition-colors">
                 <div className="flex justify-between text-xs text-slate-400 mb-1">
                     <span>Boiling Point (Std)</span>
-                    <span>{element.properties.boilingPointK} K</span>
+                    <span className="flex items-center">
+                        {element.properties.boilingPointK} K
+                        {element.properties.boilingPointSource && <sup className="text-[8px] ml-0.5 text-slate-500">({element.properties.boilingPointSource})</sup>}
+                    </span>
                 </div>
                 <div className="flex justify-between items-center group">
                     <span className="text-xs font-bold text-slate-200">
@@ -294,8 +309,8 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                     </h5>
                     <div className="grid grid-cols-2 gap-2">
                         <PropBox label="Atomic Mass" value={`${element.mass} u`} />
-                        <PropBox label="Density" value={element.properties.density ? `${element.properties.density} g/cm³` : 'N/A'} />
-                        <PropBox label="At. Radius" value={element.properties.atomicRadiusPm ? `${element.properties.atomicRadiusPm} pm` : 'N/A'} />
+                        <PropBox label="Density" value={element.properties.density ? `${element.properties.density} g/cm³` : 'N/A'} source={element.properties.densitySource} />
+                        <PropBox label="At. Radius" value={element.properties.atomicRadiusPm ? `${element.properties.atomicRadiusPm} pm` : 'N/A'} source={element.properties.atomicRadiusSource} />
                         <PropBox label="Electroneg." value={element.properties.electronegativity?.toFixed(2) ?? 'N/A'} />
                         
                         {/* New Fields */}
@@ -324,7 +339,11 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                         <Thermometer size={12} /> Physics
                     </h5>
                     <div className="grid grid-cols-2 gap-2">
-                        <PropBox label="Thermal Cond." value={element.properties.thermalConductivity ? `${element.properties.thermalConductivity} W/mK` : 'N/A'} />
+                        <PropBox 
+                            label="Thermal Cond." 
+                            value={element.properties.thermalConductivity ? `${element.properties.thermalConductivity} W/mK` : 'N/A'} 
+                            source={element.properties.thermalConductivitySource}
+                        />
                         <PropBox 
                             label="Cond. Elétrica" 
                             value={element.properties.electricalConductivity !== undefined 
@@ -333,12 +352,44 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                         />
                         <PropBox label="Bulk Modulus" value={element.properties.bulkModulusGPa ? `${element.properties.bulkModulusGPa} GPa` : 'N/A'} />
                         
-                        <PropBox label="Specific Heat (Solid)" value={`${element.properties.specificHeatSolid} J/kgK`} />
-                        <PropBox label="Specific Heat (Liquid)" value={`${element.properties.specificHeatLiquid} J/kgK`} />
-                        <PropBox label="Specific Heat (Gas)" value={`${element.properties.specificHeatGas} J/kgK`} />
+                        <PropBox 
+                            label="Specific Heat (Solid)" 
+                            value={element.properties.specificHeatSolidDisplay === 'N/A' ? 'N/A' : (element.properties.specificHeatSolidDisplay 
+                                ? `${element.properties.specificHeatSolidDisplay} J/kgK` 
+                                : `${element.properties.specificHeatSolid} J/kgK`)} 
+                            source={element.properties.specificHeatSolidSource}
+                        />
+                        <PropBox 
+                            label="Specific Heat (Liquid)" 
+                            value={element.properties.specificHeatLiquidDisplay === 'N/A' ? 'N/A' : (element.properties.specificHeatLiquidDisplay 
+                                ? `${element.properties.specificHeatLiquidDisplay} J/kgK` 
+                                : `${element.properties.specificHeatLiquid} J/kgK`)} 
+                            source={element.properties.specificHeatLiquidSource}
+                        />
+                        <PropBox 
+                            label="Specific Heat (Gas)" 
+                            value={element.properties.specificHeatGasDisplay === 'N/A' ? 'N/A' : (element.properties.specificHeatGasDisplay 
+                                ? `${element.properties.specificHeatGasDisplay} J/kgK` 
+                                : `${element.properties.specificHeatGas} J/kgK`)} 
+                            source={element.properties.specificHeatGasSource}
+                        />
                         
-                        <PropBox label="Latent Heat (S→L)" value={`${(element.properties.latentHeatFusion / 1000).toFixed(0)} kJ/kg`} />
-                        <PropBox label="Latent Heat (L→G)" value={`${(element.properties.latentHeatVaporization / 1000).toFixed(0)} kJ/kg`} />
+                        <PropBox 
+                            label="Latent Heat (S→L)" 
+                            value={element.properties.latentHeatFusionDisplay === 'N/A' 
+                                ? 'N/A' 
+                                : `${(element.properties.latentHeatFusion / 1000).toFixed(0)} kJ/kg`
+                            } 
+                            source={element.properties.latentHeatFusionSource}
+                        />
+                        <PropBox 
+                            label="Latent Heat (L→G)" 
+                            value={element.properties.latentHeatVaporizationDisplay === 'N/A'
+                                ? 'N/A' 
+                                : `${(element.properties.latentHeatVaporization / 1000).toFixed(0)} kJ/kg`
+                            } 
+                            source={element.properties.latentHeatVaporizationSource}
+                        />
                         
                         {element.properties.enthalpyFusionJmol && (
                              <PropBox label="Enthalpy Fusion (Molar)" value={`${(element.properties.enthalpyFusionJmol / 1000).toFixed(2)} kJ/mol`} />
@@ -352,16 +403,80 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
       {/* Footer */}
       <div className="bg-slate-950 p-2 text-[10px] text-center text-slate-600 font-mono">
          Data based on standard state (STP) values.
+         <br/>
+         * Valores estimados
+         <br/>
+         <button 
+            onClick={() => setShowReferences(true)}
+            className="mt-1 text-cyan-500 hover:text-cyan-400 hover:underline cursor-pointer"
+         >
+             1, 2, 3, 4, 5 - Ver referências
+         </button>
       </div>
     </div>
+
+    {/* REFERENCES MODAL */}
+    {showReferences && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="w-[340px] bg-slate-900 border border-slate-600 rounded-xl shadow-2xl flex flex-col overflow-hidden">
+                <div className="flex items-center justify-between p-4 bg-slate-800/50 border-b border-slate-700">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <BookOpen size={16} /> Referências Bibliográficas
+                    </h3>
+                    <button onClick={() => setShowReferences(false)} className="text-slate-400 hover:text-white transition-colors">
+                        <X size={18} />
+                    </button>
+                </div>
+                <div className="p-4 space-y-4 text-xs text-slate-300 font-mono overflow-y-auto max-h-[60vh]">
+                    <div className="flex gap-2">
+                        <span className="text-cyan-400 font-bold shrink-0">[1]</span>
+                        <div>
+                            {element.name}. (2026, February 15). In Wikipedia. 
+                            <a href={wikiUrl} target="_blank" rel="noopener noreferrer" className="block text-cyan-500 hover:underline truncate mt-1 flex items-center gap-1">
+                                {wikiUrl} <ExternalLink size={10} />
+                            </a>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <span className="text-cyan-400 font-bold shrink-0">[2]</span>
+                        <div>
+                            L. M. Mentel, mendeleev - A Python resource for properties of chemical elements, ions and isotopes. , 2014-- . Available at: <a href="https://github.com/lmmentel/mendeleev" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:underline">https://github.com/lmmentel/mendeleev</a>.
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <span className="text-cyan-400 font-bold shrink-0">[3]</span>
+                        <div>
+                            Serviços de dados fornecidos pelo PubChem PUG-REST API.
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <span className="text-cyan-400 font-bold shrink-0">[4]</span>
+                        <div>
+                            Angstrom Sciences, Inc. (2026). Magnetron Sputtering Reference. Retrieved from <a href="https://www.angstromsciences.com/magnetron-sputtering-reference" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:underline break-all">https://www.angstromsciences.com/magnetron-sputtering-reference</a>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <span className="text-cyan-400 font-bold shrink-0">[5]</span>
+                        <div>
+                            Wolfram Research, Inc. (2026). ElementData curated properties. Retrieved from <a href="https://periodictable.com" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:underline">https://periodictable.com</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )}
+    </>
   );
 };
 
 // Small Helper Component for Grid Items
-const PropBox = ({ label, value }: { label: string, value: string | number }) => (
+const PropBox = ({ label, value, source }: { label: string, value: string | number, source?: number }) => (
     <div className="bg-slate-800/30 p-2 rounded border border-slate-700/30 flex flex-col">
         <span className="text-[9px] text-slate-500 uppercase">{label}</span>
-        <span className="text-xs font-mono text-slate-300">{value}</span>
+        <span className="text-xs font-mono text-slate-300 flex items-center">
+            {value}
+            {source && <sup className="text-[8px] ml-0.5 text-slate-500">({source})</sup>}
+        </span>
     </div>
 );
 
