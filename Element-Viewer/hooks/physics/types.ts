@@ -5,7 +5,7 @@ export interface SimulationMutableState {
     lastFrameTime: number;
     particles: Particle[];
     simTime: number;
-    
+
     // SCF Logic Tracks
     lastStableState: MatterState;
     transitionStartTime: number;

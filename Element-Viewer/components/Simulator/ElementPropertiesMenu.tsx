@@ -202,8 +202,8 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                                         }
                                     }}
                                     className={`flex items-center gap-2 px-2 py-1 rounded border transition-all text-sm font-mono ${(!isSublimationRegime && physicsState.boilingPointCurrent >= 49000)
-                                        ? "bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed"
-                                        : "bg-red-900/30 border-red-700/50 hover:bg-red-600 hover:text-white text-red-300 cursor-pointer"
+                                            ? "bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed"
+                                            : "bg-red-900/30 border-red-700/50 hover:bg-red-600 hover:text-white text-red-300 cursor-pointer"
                                         }`}
                                 >
                                     {isSublimationRegime
@@ -341,7 +341,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                                     <Beaker size={12} /> Atomic & Chemical
                                 </h5>
                                 <div className="grid grid-cols-2 gap-2">
-                                    <PropBox label="Atomic Mass" value={`${element.mass} u`} source={element.massSource} />
+                                    <PropBox label="Atomic Mass" value={`${element.mass} u`} />
                                     <PropBox label="Density" value={element.properties.densityDisplay || 'N/A'} source={element.properties.densitySource} />
                                     <PropBox label="At. Radius" value={element.properties.atomicRadiusDisplay || 'N/A'} source={element.properties.atomicRadiusSource} />
                                     <PropBox label="Electroneg." value={element.properties.electronegativityDisplay || 'N/A'} />

@@ -117,7 +117,6 @@ export interface ChemicalElement {
     electronShells: number;
   };
   mass: number; // Atomic Mass in u
-  massSource?: number; // Source reference for mass
   properties: ElementProperties;
   visualDNA: VisualDNA;
   specialBehavior?: SpecialBehavior;
