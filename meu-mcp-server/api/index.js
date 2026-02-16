@@ -4,9 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { htmlContent } from "./html-content.js";
 
 // --- CONFIGURAÇÃO ---
 const app = express();
@@ -16,9 +14,6 @@ const server = new McpServer({
   name: "meu-webapp-wrapper",
   version: "1.0.0"
 });
-
-// URL DO FRONTEND (Mantido para referências, mas o conteúdo é servido localmente)
-const MINHA_URL_WEBAPP = "https://element-viewer.vercel.app";
 
 // --- 1. FERRAMENTAS OBRIGATÓRIAS (SEARCH & FETCH) ---
 server.registerTool(
@@ -38,8 +33,8 @@ server.registerTool(
         text: JSON.stringify({
           results: [{
             id: "home",
-            title: "App Home",
-            url: MINHA_URL_WEBAPP
+            title: "Element Viewer",
+            url: "ui://widget/index.html"
           }]
         })
       }]
@@ -63,9 +58,9 @@ server.registerTool(
         type: "text",
         text: JSON.stringify({
           id: id,
-          title: "App Content",
-          text: "Conteúdo do WebApp acessível via UI.",
-          url: MINHA_URL_WEBAPP
+          title: "Element Viewer",
+          text: "Simulador interativo de elementos químicos.",
+          url: "ui://widget/index.html"
         })
       }]
     };
@@ -73,24 +68,8 @@ server.registerTool(
 );
 
 // --- 2. SUA FERRAMENTA UI ---
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const HTML_PATH = path.resolve(__dirname, "../../Element-Viewer/dist/index.html");
-
-let htmlContent = "";
-
-try {
-  if (fs.existsSync(HTML_PATH)) {
-    htmlContent = fs.readFileSync(HTML_PATH, "utf-8");
-    console.log(`[INIT] HTML carregado com sucesso de: ${HTML_PATH}`);
-  } else {
-    console.error(`[INIT] ERRO: Arquivo HTML não encontrado em: ${HTML_PATH}`);
-    htmlContent = "<html><body><h1>Erro: Build do frontend não encontrado. Execute 'npm run build' no diretório Element-Viewer.</h1></body></html>";
-  }
-} catch (error) {
-  console.error(`[INIT] Erro ao ler HTML:`, error);
-  htmlContent = `<html><body><h1>Erro interno ao carregar frontend: ${error.message}</h1></body></html>`;
-}
+// htmlContent é importado de html-content.js (gerado por scripts/embed-html.js)
+console.log(`[INIT] HTML content carregado: ${htmlContent.length} caracteres`);
 
 server.registerResource(
   "app-ui",
@@ -102,11 +81,7 @@ server.registerResource(
       mimeType: "text/html+skybridge",
       text: htmlContent,
       _meta: {
-        "openai/widgetPrefersBorder": true,
-        "openai/widgetCSP": {
-          "connect_domains": [MINHA_URL_WEBAPP],
-          "resource_domains": [MINHA_URL_WEBAPP, MINHA_URL_WEBAPP + "/", "https://assets.gadget.dev", "https://app-assets.gadget.dev"]
-        },
+        "openai/widgetPrefersBorder": true
       },
     }],
   })
@@ -116,7 +91,7 @@ server.registerTool(
   "abrir_app",
   {
     title: "Abrir Meu App",
-    description: "Abre a interface do aplicativo web.",
+    description: "Abre a interface do aplicativo web Element Viewer.",
     inputSchema: z.object({}),
     _meta: {
       "openai/outputTemplate": "ui://widget/index.html",
@@ -153,8 +128,6 @@ app.get("/", (req, res) => {
 app.get("/sse", async (req, res) => {
   console.log(">>> [SSE] Tentativa de conexão iniciada...");
 
-  // Instrui o cliente a mandar mensagens para /message usando o ID da sessão
-  // Se o client for "esperto", ele usará isso. Se for "burro", ele tentará POST /sse
   const transport = new SSEServerTransport("/message", res);
 
   await server.connect(transport);
@@ -171,7 +144,6 @@ app.get("/sse", async (req, res) => {
 });
 
 // --- ROTA 2: RECEBER MENSAGENS DA SESSÃO (POST /message) ---
-// O padrão do SDK geralmente pede um endpoint separado para receber as mensagens
 app.post("/message", async (req, res) => {
   const sessionId = req.query.sessionId;
   console.log(`[MSG] Recebido POST em /message para sessão: ${sessionId}`);
@@ -190,12 +162,9 @@ app.post("/message", async (req, res) => {
 });
 
 // --- ROTA 3: HANDLER HÍBRIDO (POST /sse) ---
-// Resolve o problema: Se o ChatGPT manda POST para /sse com sessionId, trata como mensagem.
-// Se manda sem sessionId, trata como Stateless (validação inicial).
 app.post("/sse", async (req, res) => {
   const sessionId = req.query.sessionId;
 
-  // CASO A: Tem Session ID? Então é uma mensagem para uma conexão existente!
   if (sessionId) {
     console.log(`[MSG] Recebido POST em /sse (Redirecionando logica) para sessão: ${sessionId}`);
     const transport = transports.get(sessionId);
@@ -208,7 +177,6 @@ app.post("/sse", async (req, res) => {
     }
   }
 
-  // CASO B: Não tem Session ID? Então é Stateless (Fallback/Inicialização rápida)
   console.log("[FALLBACK] POST /sse Stateless (Cliente não iniciou Stream)");
   const transport = new StreamableHTTPServerTransport({ enableJsonResponse: true });
   try {

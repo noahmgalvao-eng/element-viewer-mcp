@@ -6,7 +6,8 @@
   "main": "api/index.js",
   "scripts": {
     "start": "node api/index.js",
-    "dev": "node api/index.js"
+    "dev": "node api/index.js",
+    "embed": "node scripts/embed-html.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.3",
