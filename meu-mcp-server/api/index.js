@@ -55,6 +55,7 @@ function createElementViewerServer() {
         "openai/outputTemplate": "ui://widget/element-viewer.html",
         "openai/toolInvocation/invoking": "Abrindo Element Viewer…",
         "openai/toolInvocation/invoked": "Element Viewer pronto.",
+        "openai/widgetAccessible": true,
       },
     },
     async () => ({

@@ -228,14 +228,11 @@ function App() {
     // --- FULLSCREEN HANDLER ---
     const handleToggleFullscreen = (e: React.MouseEvent) => {
         e.stopPropagation();
-        const oai = (window as any).openai;
-        if (oai?.requestDisplayMode) {
-            oai.requestDisplayMode({ mode: isFullscreen ? 'inline' : 'fullscreen' });
+        const api = (window as any).openai ?? (window as any).webplus;
+        if (api?.requestDisplayMode) {
+            api.requestDisplayMode({ mode: isFullscreen ? 'inline' : 'fullscreen' });
         }
     };
-
-    // Check if running inside ChatGPT widget
-    const isInChatGPT = typeof (window as any).openai !== 'undefined';
 
     return (
         <div
@@ -344,16 +341,14 @@ function App() {
                     <span className="text-xs">{timeScale}x</span>
                 </button>
 
-                {/* Fullscreen Toggle (only visible inside ChatGPT widget) */}
-                {isInChatGPT && (
-                    <button
-                        onClick={handleToggleFullscreen}
-                        className={floatingBtnClass}
-                        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-                    >
-                        {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-                    </button>
-                )}
+                {/* Fullscreen Toggle */}
+                <button
+                    onClick={handleToggleFullscreen}
+                    className={floatingBtnClass}
+                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                >
+                    {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+                </button>
             </div>
 
             {/* --- MAIN VISUALIZATION CANVAS (Seamless Grid) --- */}
