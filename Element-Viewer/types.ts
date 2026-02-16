@@ -10,13 +10,29 @@ export interface ElementProperties {
   specificHeatSolid: number;      // J/kg.K
   specificHeatLiquid: number;     // J/kg.K
   specificHeatGas: number;        // J/kg.K
-  
-  // --- DISPLAY STRINGS (For Estimated Values * or N/A) ---
+
+  // --- DISPLAY STRINGS (For UI: Estimated Values *, N/A, or raw Source Data without Sodium Fallback) ---
+  meltingPointDisplay?: string;
+  boilingPointDisplay?: string;
+  densityDisplay?: string;
+  atomicRadiusDisplay?: string;
+  electronegativityDisplay?: string;
+  electronAffinityDisplay?: string;
+  ionizationEnergyDisplay?: string;
+  oxidationStatesDisplay?: string;
+  thermalConductivityDisplay?: string;
+  electricalConductivityDisplay?: string;
+  bulkModulusDisplay?: string;
+
   specificHeatSolidDisplay?: string;
   specificHeatLiquidDisplay?: string;
   specificHeatGasDisplay?: string;
   latentHeatFusionDisplay?: string;
   latentHeatVaporizationDisplay?: string;
+
+  // New Display Strings for Triple Point
+  triplePointTempDisplay?: string;
+  triplePointPressDisplay?: string;
 
   // --- SOURCE CITATION IDS (1=Wiki, 2=Mendeleev, 3=PubChem, 4=Angstrom, 5=Wolfram) ---
   meltingPointSource?: number;
@@ -32,6 +48,7 @@ export interface ElementProperties {
   electronegativitySource?: number;
   electronAffinitySource?: number;
   ionizationEnergySource?: number;
+  triplePointSource?: number; // NEW
 
   // --- CRITICAL POINT DATA ---
   criticalPoint?: {
@@ -49,8 +66,8 @@ export interface ElementProperties {
   density?: number;           // g/cm³
   thermalConductivity?: number; // W/(m·K)
   electricalConductivity?: number; // S/m (Siemens per meter)
-  electronConfiguration?: string; 
-  
+  electronConfiguration?: string;
+
   // NEW SCIENTIFIC DATA
   electronAffinity?: number;      // kJ/mol
   ionizationEnergy?: number;      // 1st Ionization Energy (kJ/mol)
@@ -82,14 +99,15 @@ export interface SpecialBehavior {
 }
 
 export interface MolecularState {
-    symbol: string;   // e.g., "S₈", "Cl₂"
-    maxTempK: number; // The threshold temp where this bond breaks
+  symbol: string;   // e.g., "S₈", "Cl₂"
+  maxTempK: number; // The threshold temp where this bond breaks
 }
 
 export interface ChemicalElement {
   atomicNumber: number;
   symbol: string;
   name: string;
+  summary: string; // NEW: Description from source
   // NEW: Classification Data
   classification: {
     group: string;       // IUPAC (e.g., "1", "11")
@@ -174,21 +192,21 @@ export interface PhysicsState {
   sublimationPointCurrent: number; // New: T_sub
 
   // Progress indicators (0 to 1)
-  meltProgress: number; 
+  meltProgress: number;
   boilProgress: number;     // 0 = Full Liquid, 1 = All Gas
   sublimationProgress: number; // 0 = Full Solid, 1 = All Gas (Sublimated)
-  
+
   // The Particle System
   particles: Particle[];
   pathProgress: number;     // Controls the SVG Puddle shape
-  
+
   powerInput: number;       // Watts (J/s) flowing in/out
-  
+
   // High Pressure Physics
   compressionFactor: number; // 1.0 = Normal, <1.0 = Compressed
   gasBounds: Bounds;         // The rectangular limits for gas particles
   meanParticleSpeed: number; // Average velocity scalar of gas particles
-  
+
   // Authoritative Geometry
   matterRect: MatterRect;
 
