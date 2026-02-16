@@ -103,11 +103,9 @@ server.registerResource(
       text: htmlContent,
       _meta: {
         "openai/widgetPrefersBorder": true,
-        "openai/widgetDomain": MINHA_URL_WEBAPP,
         "openai/widgetCSP": {
           "connect_domains": [MINHA_URL_WEBAPP],
-          "resource_domains": [MINHA_URL_WEBAPP, MINHA_URL_WEBAPP + "/", "https://assets.gadget.dev", "https://app-assets.gadget.dev"],
-          // frame_domains removido pois não estamos mais usando iframe
+          "resource_domains": [MINHA_URL_WEBAPP, MINHA_URL_WEBAPP + "/", "https://assets.gadget.dev", "https://app-assets.gadget.dev"]
         },
       },
     }],
