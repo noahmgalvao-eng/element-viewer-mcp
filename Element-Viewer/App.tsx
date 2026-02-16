@@ -362,7 +362,7 @@ function App() {
 
             {/* --- DISPLAY MODES (Always visible, top-right, highest z-index) --- */}
             <div
-                className="fixed z-[60] flex gap-2"
+                className="fixed z-[100] flex gap-2"
                 style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
             >
                 {/* PiP Toggle */}
