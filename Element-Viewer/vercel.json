@@ -8,10 +8,6 @@
           "value": "frame-ancestors * https://chatgpt.com https://chat.openai.com;"
         },
         {
-          "key": "X-Frame-Options",
-          "value": "ALLOWALL"
-        },
-        {
           "key": "Access-Control-Allow-Origin",
           "value": "*"
         }

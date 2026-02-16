@@ -171,7 +171,8 @@ server.registerResource(
         "openai/widgetDomain": MINHA_URL_WEBAPP,
         "openai/widgetCSP": {
           "connect_domains": [MINHA_URL_WEBAPP],
-          "resource_domains": [MINHA_URL_WEBAPP, "https://assets.gadget.dev", "https://app-assets.gadget.dev"]
+          "resource_domains": [MINHA_URL_WEBAPP, "https://assets.gadget.dev", "https://app-assets.gadget.dev"],
+          "frame_domains": [MINHA_URL_WEBAPP]
         },
       },
     }],
