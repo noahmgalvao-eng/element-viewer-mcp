@@ -76,9 +76,9 @@ function createElementViewerServer() {
 
 // --- EXPRESS APP (for Vercel serverless) ---
 const app = express();
-
-// Parse JSON bodies (required for MCP POST requests)
-app.use(express.json());
+// NOTE: Do NOT use express.json() — the MCP SDK reads the raw request body
+// stream itself. If Express parses it first, the stream is consumed and the
+// SDK sees an empty body → 400 error.
 
 // --- CORS PREFLIGHT for /mcp ---
 app.options("/mcp", (req, res) => {
