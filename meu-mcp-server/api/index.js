@@ -7,12 +7,6 @@ import { htmlContent } from "./html-content.js";
 // --- Helpers ---
 console.log(`[INIT] HTML content carregado: ${htmlContent.length} caracteres`);
 
-/**
- * Creates a FRESH MCP server instance (stateless, per-request).
- * This follows the official Apps SDK quickstart pattern exactly.
- * Each request gets its own server + transport, which is required 
- * for Vercel serverless (no persistent connections).
- */
 function createElementViewerServer() {
   const server = new McpServer({
     name: "element-viewer",
@@ -49,7 +43,7 @@ function createElementViewerServer() {
     {
       title: "Abrir Element Viewer",
       description:
-        "Abre a interface interativa do Element Viewer. Use quando o usuário pedir para abrir, visualizar ou interagir com o simulador de elementos químicos.",
+        "Abre a interface interativa do simulador de física/química Element Viewer. Use quando o usuário quiser visualizar ou interagir com estados da matéria.",
       inputSchema: z.object({}),
       _meta: {
         "openai/outputTemplate": "ui://widget/element-viewer.html",
@@ -59,14 +53,19 @@ function createElementViewerServer() {
       },
     },
     async () => ({
+      // Aqui enviamos o estado inicial para o ChatGPT já começar com contexto
       structuredContent: {
         app: "Element Viewer",
         status: "open",
+        ambiente_inicial: {
+          temperatura_K: 298.15,
+          pressao_Pa: 101325
+        }
       },
       content: [
         {
           type: "text",
-          text: "Element Viewer aberto com sucesso.",
+          text: "Element Viewer aberto com sucesso. A simulação iniciou em Condições Normais de Temperatura e Pressão (298.15K, 1 atm).",
         },
       ],
     })
@@ -77,11 +76,7 @@ function createElementViewerServer() {
 
 // --- EXPRESS APP (for Vercel serverless) ---
 const app = express();
-// NOTE: Do NOT use express.json() — the MCP SDK reads the raw request body
-// stream itself. If Express parses it first, the stream is consumed and the
-// SDK sees an empty body → 400 error.
 
-// --- CORS PREFLIGHT for /mcp ---
 app.options("/mcp", (req, res) => {
   res.writeHead(204, {
     "Access-Control-Allow-Origin": "*",
@@ -92,27 +87,21 @@ app.options("/mcp", (req, res) => {
   res.end();
 });
 
-// --- HEALTH CHECK ---
 app.get("/", (req, res) => {
   res.status(200).send("Element Viewer MCP Server Running");
 });
 
-// --- MCP HANDLER (POST, GET, DELETE /mcp) ---
 app.all("/mcp", async (req, res) => {
   console.log(`[MCP] ${req.method} /mcp`);
-
-  // Set CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Expose-Headers", "Mcp-Session-Id");
 
-  // Create FRESH server + transport per request (stateless mode)
   const server = createElementViewerServer();
   const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: undefined, // stateless mode — required for Vercel
+    sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
 
-  // Cleanup on close
   res.on("close", () => {
     transport.close();
     server.close();
@@ -130,5 +119,4 @@ app.all("/mcp", async (req, res) => {
   }
 });
 
-// Vercel serverless export
 export default app;

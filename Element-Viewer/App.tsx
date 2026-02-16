@@ -74,6 +74,44 @@ function App() {
     // (Managed in hook now or declared above)
 
 
+    // --- CHATGPT WIDGET STATE SYNC ---
+    // Este effect sincroniza o estado da simulação com o ChatGPT em tempo real
+    useEffect(() => {
+        const syncStateToChatGPT = () => {
+            if (typeof window !== 'undefined' && window.openai?.setWidgetState) {
+                // Coleta os dados exatos do que o usuário está vendo agora
+                const elementsData = selectedElements.map(el => {
+                    const getter = simulationRegistry.current.get(el.atomicNumber);
+                    const currentState = getter ? getter() : null;
+                    return {
+                        nome: el.name,
+                        simbolo: el.symbol,
+                        estado_da_materia: currentState ? currentState.state : "Desconhecido",
+                        temperatura_atual_K: currentState ? currentState.temperature.toFixed(2) : temperature.toFixed(2)
+                    };
+                });
+
+                // Envia para a memória invisível do ChatGPT
+                window.openai.setWidgetState({
+                    ambiente: {
+                        temperatura_alvo_K: temperature.toFixed(2),
+                        pressao_Pa: pressure.toExponential(2)
+                    },
+                    elementos_visiveis: elementsData
+                });
+            }
+        };
+
+        // Dispara sempre que houver mudanças na UI
+        syncStateToChatGPT();
+
+        // Configura um loop a cada 2 segundos para capturar as mudanças de fase (sólido -> líquido, etc)
+        // enquanto a temperatura sobe/desce animadamente pelo seu motor de física
+        const intervalId = setInterval(syncStateToChatGPT, 2000);
+
+        return () => clearInterval(intervalId);
+    }, [temperature, pressure, selectedElements]);
+
     // --- SELECTION LOGIC ---
     const handleElementSelect = (el: ChemicalElement) => {
         if (isRecording) return; // Prevent changing elements while recording
