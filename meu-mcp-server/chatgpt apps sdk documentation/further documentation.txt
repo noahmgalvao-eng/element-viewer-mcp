@@ -1,0 +1,1199 @@
+# Research use cases
+
+## Why start with use cases
+
+Every successful Apps SDK app starts with a crisp understanding of what the user is trying to accomplish. Discovery in ChatGPT is model-driven: the assistant chooses your app when your tool metadata, descriptions, and past usage align with the user’s prompt and memories. That only works if you have already mapped the tasks the model should recognize and the outcomes you can deliver.
+
+Use this page to capture your hypotheses, pressure-test them with prompts, and align your team on scope before you define tools or build components.
+
+## Gather inputs
+
+Begin with qualitative and quantitative research:
+
+- **User interviews and support requests** – capture the jobs-to-be-done, terminology, and data sources users rely on today.
+- **Prompt sampling** – list direct asks (e.g., “show my Jira board”) and indirect intents (“what am I blocked on for the launch?”) that should route to your app.
+- **System constraints** – note any compliance requirements, offline data, or rate limits that will influence tool design later.
+
+Document the user persona, the context they are in when they reach for ChatGPT, and what success looks like in a single sentence for each scenario.
+
+## Define evaluation prompts
+
+Decision boundary tuning is easier when you have a golden set to iterate against. For each use case:
+
+1. **Author at least five direct prompts** that explicitly reference your data, product name, or verbs you expect the user to say.
+2. **Draft five indirect prompts** where the user states a goal but not the tool (“I need to keep our launch tasks organized”).
+3. **Add negative prompts** that should *not* trigger your app so you can measure precision.
+
+Use these prompts later in [Optimize metadata](/apps-sdk/guides/optimize-metadata) to hill-climb on recall and precision without overfitting to a single request.
+
+## Scope the minimum lovable feature
+
+For each use case decide:
+
+- **What information must be visible inline** to answer the question or let the user act.
+- **Which actions require write access** and whether they should be gated behind confirmation in developer mode.
+- **What state needs to persist** between turns—for example, filters, selected rows, or draft content.
+
+Rank the use cases based on user impact and implementation effort. A common pattern is to ship one P0 scenario with a high-confidence component, then expand to P1 scenarios once discovery data confirms engagement.
+
+## Translate use cases into tooling
+
+Once a scenario is in scope, draft the tool contract:
+
+- Inputs: the parameters the model can safely provide. Keep them explicit, use enums when the set is constrained, and document defaults.
+- Outputs: the structured content you will return. Add fields the model can reason about (IDs, timestamps, status) in addition to what your UI renders.
+- Component intent: whether you need a read-only viewer, an editor, or a multiturn workspace. This influences the [component planning](/apps-sdk/plan/components) and storage model later.
+
+Review these drafts with stakeholders—especially legal or compliance teams—before you invest in implementation. Many integrations require PII reviews or data processing agreements before they can ship to production.
+
+## Prepare for iteration
+
+Even with solid planning, expect to revise prompts and metadata after your first dogfood. Build time into your schedule for:
+
+- Rotating through the golden prompt set weekly and logging tool selection accuracy.
+- Collecting qualitative feedback from early testers in ChatGPT developer mode.
+- Capturing analytics (tool calls, component interactions) so you can measure adoption.
+
+These research artifacts become the backbone for your roadmap, changelog, and success metrics once the app is live.
+
+# Design components
+
+## Why components matter
+
+UI components are the human-visible half of your connector. They let users view or edit data inline, switch to fullscreen when needed, and keep context synchronized between typed prompts and UI actions. Planning them early ensures your MCP server returns the right structured data and component metadata from day one.
+
+## Explore sample components
+
+We publish reusable examples in [openai-apps-sdk-examples](https://github.com/openai/openai-apps-sdk-examples) so you can see common patterns before you build your own. The pizzaz gallery covers every default surface we provide today:
+
+### List
+
+Renders dynamic collections with empty-state handling. [View the code](https://github.com/openai/openai-apps-sdk-examples/tree/main/src/pizzaz-list).
+
+![Screenshot of the Pizzaz list component](/images/apps-sdk/pizzaz-list.png)
+
+### Map
+
+Plots geo data with marker clustering and detail panes. [View the code](https://github.com/openai/openai-apps-sdk-examples/tree/main/src/pizzaz).
+
+![Screenshot of the Pizzaz map component](/images/apps-sdk/pizzaz-map.png)
+
+### Album
+
+Showcases media grids with fullscreen transitions. [View the code](https://github.com/openai/openai-apps-sdk-examples/tree/main/src/pizzaz-albums).
+
+![Screenshot of the Pizzaz album component](/images/apps-sdk/pizzaz-album.png)
+
+### Carousel
+
+Highlights featured content with swipe gestures. [View the code](https://github.com/openai/openai-apps-sdk-examples/tree/main/src/pizzaz-carousel).
+
+![Screenshot of the Pizzaz carousel component](/images/apps-sdk/pizzaz-carousel.png)
+
+### Shop
+
+Demonstrates product browsing with checkout affordances. [View the code](https://github.com/openai/openai-apps-sdk-examples/tree/main/src/pizzaz-shop).
+
+![Screenshot of the Pizzaz shop component in grid view](/images/apps-sdk/pizzaz-shop-view.png)
+![Screenshot of the Pizzaz shop component in modal view](/images/apps-sdk/pizzaz-shop-modal.png)
+
+## Clarify the user interaction
+
+For each use case, decide what the user needs to see and manipulate:
+
+- **Viewer vs. editor** – is the component read-only (a chart, a dashboard) or should it support editing and writebacks (forms, kanban boards)?
+- **Single-shot vs. multiturn** – will the user accomplish the task in one invocation, or should state persist across turns as they iterate?
+- **Inline vs. fullscreen** – some tasks are comfortable in the default inline card, while others benefit from fullscreen or picture-in-picture modes. Sketch these states before you implement.
+
+Write down the fields, affordances, and empty states you need so you can validate them with design partners and reviewers.
+
+## Map data requirements
+
+Components should receive everything they need in the tool response. When planning:
+
+- **Structured content** – define the JSON payload that the component will parse.
+- **Initial component state** – use `window.openai.toolOutput` as the initial render data. On subsequent followups that invoke `callTool`, use the return value of `callTool`. To cache state for re-rendering, you can use `window.openai.setWidgetState`.
+- **Auth context** – note whether the component should display linked-account information, or whether the model must prompt the user to connect first.
+
+Feeding this data through the MCP response is simpler than adding ad-hoc APIs later.
+
+## Design for responsive layouts
+
+Components run inside an iframe on both desktop and mobile. Plan for:
+
+- **Adaptive breakpoints** – set a max width and design layouts that collapse gracefully on small screens.
+- **Accessible color and motion** – respect system dark mode (match color-scheme) and provide focus states for keyboard navigation.
+- **Launcher transitions** – if the user opens your component from the launcher or expands to fullscreen, make sure navigation elements stay visible.
+
+Document CSS variables, font stacks, and iconography up front so they are consistent across components.
+
+## Define the state contract
+
+Because components and the chat surface share conversation state, be explicit about what is stored where:
+
+- **Component state** – use the `window.openai.setWidgetState` API to persist state the host should remember (selected record, scroll position, staged form data).
+- **Server state** – store authoritative data in your backend or the built-in storage layer. Decide how to merge server changes back into component state after follow-up tool calls.
+- **Model messages** – think about what human-readable updates the component should send back via `sendFollowUpMessage` so the transcript stays meaningful.
+
+Capturing this state diagram early prevents hard-to-debug sync issues later.
+
+## Plan telemetry and debugging hooks
+
+Inline experiences are hardest to debug without instrumentation. Decide in advance how you will:
+
+- Emit analytics events for component loads, button clicks, and validation errors.
+- Log tool-call IDs alongside component telemetry so you can trace issues end to end.
+- Provide fallbacks when the component fails to load (e.g., show the structured JSON and prompt the user to retry).
+
+Once these plans are in place you are ready to move on to the implementation details in [Build a ChatGPT UI](/apps-sdk/build/chatgpt-ui).
+
+# Build your ChatGPT UI
+
+## Overview
+
+UI components turn structured tool results from your MCP server into a human-friendly UI. Your components run inside an iframe in ChatGPT, talk to the host via the `window.openai` API, and render inline with the conversation. This guide describes how to structure your component project, bundle it, and wire it up to your MCP server.
+
+You can also check out the [examples repository on GitHub](https://github.com/openai/openai-apps-sdk-examples).
+
+### Component library
+
+Use the optional UI kit at [apps-sdk-ui](https://openai.github.io/apps-sdk-ui) for ready-made buttons, cards, input controls, and layout primitives that match ChatGPT’s container. It saves time when you want consistent styling without rebuilding base components.
+
+## Understand the `window.openai` API
+
+The host injects `window.openai` with UI-related globals and methods for calling tools, sending follow-ups, and managing layout. In your widget, read values directly from `window.openai` (e.g., `window.openai.toolOutput`, `window.openai.locale`) or through helper hooks like `useOpenAiGlobal` shown later.
+
+`window.openai` is the bridge between your frontend and ChatGPT. Use the quick reference below to understand the available data and APIs before you dive into component scaffolding.
+
+### List of capabilities
+
+| Capability | What it does | Typical use |
+| --- | --- | --- |
+| State & data | `window.openai.toolInput` | Arguments supplied when the tool was invoked. |
+| State & data | `window.openai.toolOutput` | Your `structuredContent`. Keep fields concise; the model reads them verbatim. |
+| State & data | `window.openai.toolResponseMetadata` | The `_meta` payload; only the widget sees it, never the model. |
+| State & data | `window.openai.widgetState` | Snapshot of UI state persisted between renders. |
+| State & data | `window.openai.setWidgetState(state)` | Stores a new snapshot synchronously; call it after every meaningful UI interaction. |
+| Widget runtime APIs | `window.openai.callTool(name, args)` | Invoke another MCP tool from the widget (mirrors model-initiated calls). |
+| Widget runtime APIs | `window.openai.sendFollowUpMessage({ prompt })` | Ask ChatGPT to post a message authored by the component. |
+| Widget runtime APIs | `window.openai.uploadFile(file)` | Upload a user-selected file and receive a `fileId`. |
+| Widget runtime APIs | `window.openai.getFileDownloadUrl({ fileId })` | Retrieve a temporary download URL for a file uploaded by the widget or provided via file params. |
+| Widget runtime APIs | `window.openai.requestDisplayMode(...)` | Request PiP/fullscreen modes. |
+| Widget runtime APIs | `window.openai.requestModal(...)` | Spawn a modal owned by ChatGPT. |
+| Widget runtime APIs | `window.openai.notifyIntrinsicHeight(...)` | Report dynamic widget heights to avoid scroll clipping. |
+| Widget runtime APIs | `window.openai.openExternal({ href })` | Open a vetted external link in the user’s browser. |
+| Context | `window.openai.theme`, `window.openai.displayMode`, `window.openai.maxHeight`, `window.openai.safeArea`, `window.openai.view`, `window.openai.userAgent`, `window.openai.locale` | Environment signals you can read—or subscribe to via `useOpenAiGlobal`—to adapt visuals and copy. |
+
+### useOpenAiGlobal
+
+Many Apps SDK projects wrap `window.openai` access in small hooks so views remain testable. This example hook listens for host `openai:set_globals` events and lets React components subscribe to a single global value:
+
+```ts
+export function useOpenAiGlobal<K extends keyof OpenAiGlobals>(
+  key: K
+): OpenAiGlobals[K] {
+  return useSyncExternalStore(
+    (onChange) => {
+      const handleSetGlobal = (event: SetGlobalsEvent) => {
+        const value = event.detail.globals[key];
+        if (value === undefined) {
+          return;
+        }
+
+        onChange();
+      };
+
+      window.addEventListener(SET_GLOBALS_EVENT_TYPE, handleSetGlobal, {
+        passive: true,
+      });
+
+      return () => {
+        window.removeEventListener(SET_GLOBALS_EVENT_TYPE, handleSetGlobal);
+      };
+    },
+    () => window.openai[key]
+  );
+}
+```
+
+`useOpenAiGlobal` is an important primitive to make your app reactive to changes in display mode, theme, and "props" via subsequent tool calls.
+
+For example, read the tool input, output, and metadata:
+
+```ts
+export function useToolInput() {
+  return useOpenAiGlobal("toolInput");
+}
+
+export function useToolOutput() {
+  return useOpenAiGlobal("toolOutput");
+}
+
+export function useToolResponseMetadata() {
+  return useOpenAiGlobal("toolResponseMetadata");
+}
+```
+
+### Persist component state, expose context to ChatGPT
+
+Widget state can be used for persisting data across user sessions, and exposing data to ChatGPT. Anything you pass to `setWidgetState` will be shown to the model, and hydrated into `window.openai.widgetState`
+
+Widget state is scoped to the specific widget instance that lives on a single conversation message. When your component calls `window.openai.setWidgetState(payload)`, the host stores that payload under that widget’s `message_id/widgetId` pair and rehydrates it only for that widget. The state does not travel across the whole conversation or between different widgets.
+
+Follow-up turns keep the same widget (and therefore the same state) only when the user submits through that widget’s controls—inline follow-ups, PiP composer, or fullscreen composer. If the user types into the main chat composer, the request is treated as a new widget run with a fresh `widgetId` and empty `widgetState`.
+
+Anything you pass to `setWidgetState` is sent to the model, so keep the payload focused and well under 4k [tokens](https://platform.openai.com/tokenizer) for performance.
+
+### Trigger server actions
+
+`window.openai.callTool` lets the component directly make MCP tool calls. Use this for direct manipulations (refresh data, fetch nearby restaurants). Design tools to be idempotent where possible and return updated structured content that the model can reason over in subsequent turns.
+
+Please note that your tool needs to be marked as [able to be initiated by the component](/apps-sdk/build/mcp-server###allow-component-initiated-tool-access).
+
+```tsx
+async function refreshPlaces(city: string) {
+  await window.openai?.callTool("refresh_pizza_list", { city });
+}
+```
+
+### Send conversational follow-ups
+
+Use `window.openai.sendFollowUpMessage` to insert a message into the conversation as if the user asked it.
+
+```tsx
+await window.openai?.sendFollowUpMessage({
+  prompt: "Draft a tasting itinerary for the pizzerias I favorited.",
+});
+```
+
+### Upload files from the widget
+
+Use `window.openai.uploadFile(file)` to upload a user-selected file and receive a `fileId`. This currently supports `image/png`, `image/jpeg`, and `image/webp`.
+
+```tsx
+function FileUploadInput() {
+  return (
+    <input
+      type="file"
+      accept="image/png,image/jpeg,image/webp"
+      onChange={async (event) => {
+        const file = event.currentTarget.files?.[0];
+        if (!file || !window.openai?.uploadFile) {
+          return;
+        }
+
+        const { fileId } = await window.openai.uploadFile(file);
+        console.log("Uploaded fileId:", fileId);
+      }}
+    />
+  );
+}
+```
+
+### Download files in the widget
+
+Use `window.openai.getFileDownloadUrl({ fileId })` to retrieve a temporary URL for files that were uploaded by the widget or passed to your tool via file params.
+
+```tsx
+const { downloadUrl } = await window.openai.getFileDownloadUrl({ fileId });
+imageElement.src = downloadUrl;
+```
+
+### Close the widget
+
+You can close the widget two ways: from the UI by calling `window.openai.requestClose()`, or from the server by having your tool response set `metadata.openai/closeWidget: true`, which instructs the host to hide the widget when that response arrives:
+
+```json
+{
+  "role": "tool",
+  "tool_call_id": "abc123",
+  "content": "...",
+  "metadata": {
+    "openai/closeWidget": true,
+    "openai/widgetDomain": "https://chatgpt.com",
+    "openai/widgetCSP": {
+      "connect_domains": ["https://chatgpt.com"],
+      "resource_domains": ["https://*.oaistatic.com"],
+      "redirect_domains": ["https://checkout.example.com"], // Optional: allow openExternal redirects + return link
+      "frame_domains": ["https://*.example.com"]  // Optional: allow iframes from these domains
+    }
+  }
+}
+```
+
+Note: By default, widgets cannot render subframes. Setting `frame_domains` relaxes this and allows your widget to embed iframes from those origins. Apps that use `frame_domains` are subject to stricter review and are likely to be rejected for broad distribution unless iframe content is core to the use case.
+
+If you want `window.openai.openExternal` to send users to an external flow (like checkout) and enable a return link to the same conversation, optionally add the destination origin to `redirect_domains`. ChatGPT will skip the safe-link modal and append a `redirectUrl` query parameter to the destination so you can route the user back into ChatGPT.
+
+### Widget session ID
+
+The host includes a per-widget identifier in tool response metadata as `openai/widgetSessionId`. Use it to correlate multiple tool calls or logs for the same widget instance while it remains mounted.
+
+### Request alternate layouts
+
+If the UI needs more space—like maps, tables, or embedded editors—ask the host to change the container. `window.openai.requestDisplayMode` negotiates inline, PiP, or fullscreen presentations.
+
+```tsx
+await window.openai?.requestDisplayMode({ mode: "fullscreen" });
+// Note: on mobile, PiP may be coerced to fullscreen
+```
+
+### Use host-backed navigation
+
+Skybridge (the sandbox runtime) mirrors the iframe’s history into ChatGPT’s UI. Use standard routing APIs—such as React Router—and the host will keep navigation controls in sync with your component.
+
+Router setup (React Router’s `BrowserRouter`):
+
+```ts
+export default function PizzaListRouter() {
+  return (
+    
+
+<Routes>
+        }>
+          } />
+        </Route>
+      </Routes>
+
+  );
+}
+```
+
+Programmatic navigation:
+
+```ts
+const navigate = useNavigate();
+
+function openDetails(placeId: string) {
+  navigate(`place/${placeId}`, { replace: false });
+}
+
+function closeDetails() {
+  navigate("..", { replace: true });
+}
+```
+
+## Scaffold the component project
+
+Now that you understand the `window.openai` API, it's time to scaffold your component project.
+
+As best practice, keep the component code separate from your server logic. A common layout is:
+
+```
+app/
+  server/            # MCP server (Python or Node)
+  web/               # Component bundle source
+    package.json
+    tsconfig.json
+    src/component.tsx
+    dist/component.js   # Build output
+```
+
+Create the project and install dependencies (Node 18+ recommended):
+
+```bash
+cd app/web
+npm init -y
+npm install react@^18 react-dom@^18
+npm install -D typescript esbuild
+```
+
+If your component requires drag-and-drop, charts, or other libraries, add them now. Keep the dependency set lean to reduce bundle size.
+
+## Author the React component
+
+Your entry file should mount a component into a `root` element and read initial data from `window.openai.toolOutput` or persisted state.
+
+We have provided some example apps under the [examples page](./examples#pizzaz-list-source), for example, for a "Pizza list" app, which is a list of pizza restaurants.
+
+### Explore the Pizzaz component gallery
+
+We provide a number of example components in the [Apps SDK examples](/apps-sdk/build/examples). Treat them as blueprints when shaping your own UI:
+
+- **Pizzaz List** – ranked card list with favorites and call-to-action buttons.  
+  ![Screenshot of the Pizzaz list component](/images/apps-sdk/pizzaz-list.png)
+- **Pizzaz Carousel** – embla-powered horizontal scroller that demonstrates media-heavy layouts.  
+  ![Screenshot of the Pizzaz carousel component](/images/apps-sdk/pizzaz-carousel.png)
+- **Pizzaz Map** – Mapbox integration with fullscreen inspector and host state sync.  
+  ![Screenshot of the Pizzaz map component](/images/apps-sdk/pizzaz-map.png)
+- **Pizzaz Album** – stacked gallery view built for deep dives on a single place.  
+  ![Screenshot of the Pizzaz album component](/images/apps-sdk/pizzaz-album.png)
+- **Pizzaz Video** – scripted player with overlays and fullscreen controls.
+
+Each example shows how to bundle assets, wire host APIs, and structure state for real conversations. Copy the one closest to your use case and adapt the data layer for your tool responses.
+
+### React helper hooks
+
+Using `useOpenAiGlobal` in a `useWidgetState` hook to keep host-persisted widget state aligned with your local React state:
+
+```ts
+export function useWidgetState<T extends WidgetState>(
+  defaultState: T | (() => T)
+): readonly [T, (state: SetStateAction<T>) => void];
+export function useWidgetState<T extends WidgetState>(
+  defaultState?: T | (() => T | null) | null
+): readonly [T | null, (state: SetStateAction<T | null>) => void];
+export function useWidgetState<T extends WidgetState>(
+  defaultState?: T | (() => T | null) | null
+): readonly [T | null, (state: SetStateAction<T | null>) => void] {
+  const widgetStateFromWindow = useWebplusGlobal("widgetState") as T;
+
+  const [widgetState, _setWidgetState] = useState<T | null>(() => {
+    if (widgetStateFromWindow != null) {
+      return widgetStateFromWindow;
+    }
+
+    return typeof defaultState === "function"
+      ? defaultState()
+      : defaultState ?? null;
+  });
+
+  useEffect(() => {
+    _setWidgetState(widgetStateFromWindow);
+  }, [widgetStateFromWindow]);
+
+  const setWidgetState = useCallback(
+    (state: SetStateAction<T | null>) => {
+      _setWidgetState((prevState) => {
+        const newState = typeof state === "function" ? state(prevState) : state;
+
+        if (newState != null) {
+          window.openai.setWidgetState(newState);
+        }
+
+        return newState;
+      });
+    },
+    [window.openai.setWidgetState]
+  );
+
+  return [widgetState, setWidgetState] as const;
+}
+```
+
+The hooks above make it easy to read the latest tool output, layout globals, or widget state directly from React components while still delegating persistence back to ChatGPT.
+
+## Widget localization
+
+The host passes `locale` in `window.openai` and mirrors it to `document.documentElement.lang`. It is up to your widget to use that locale to load translations and format dates/numbers. A simple pattern with `react-intl`:
+
+```tsx
+
+const messages: Record<string, Record<string, string>> = {
+  "en-US": en,
+  "es-ES": es,
+};
+
+export function App() {
+  const locale = window.openai.locale ?? "en-US";
+  return (
+    
+
+{/* Render UI with <FormattedMessage> or useIntl() */}
+
+  );
+}
+```
+
+## Bundle for the iframe
+
+Once you are done writing your React component, you can build it into a single JavaScript module that the server can inline:
+
+```json
+// package.json
+{
+  "scripts": {
+    "build": "esbuild src/component.tsx --bundle --format=esm --outfile=dist/component.js"
+  }
+}
+```
+
+Run `npm run build` to produce `dist/component.js`. If esbuild complains about missing dependencies, confirm you ran `npm install` in the `web/` directory and that your imports match installed package names (e.g., `@react-dnd/html5-backend` vs `react-dnd-html5-backend`).
+
+## Embed the component in the server response
+
+See the [Set up your server docs](/apps-sdk/build/mcp-server#) for how to embed the component in your MCP server response.
+
+Component UI templates are the recommended path for production.
+
+During development you can rebuild the component bundle whenever your React code changes and hot-reload the server.
+
+# Build your MCP server
+
+By the end of this guide, you’ll know how to connect your backend MCP server to ChatGPT, define tools, register UI templates, and tie everything together using the widget runtime. You’ll build a working foundation for a ChatGPT App that returns structured data, renders an interactive widget, and keeps your model, server, and UI in sync. If you prefer to dive straight into the implementation, you can skip ahead to the [example](#example) at the end.
+## Overview 
+
+### What an MCP server does for your app
+
+ChatGPT Apps have three components:
+
+- **Your MCP server** defines tools, enforces auth, returns data, and points each tool to a UI bundle.
+- **The widget/UI bundle** renders inside ChatGPT’s iframe, reading data and widget-runtime globals exposed through `window.openai`.
+- **The model** decides when to call tools and narrates the experience using the structured data you return.
+
+A solid server implementation keeps those boundaries clean so you can iterate on UI and data independently. Remember: you build the MCP server and define the tools, but ChatGPT’s model chooses when to call them based on the metadata you provide.
+
+### Before you begin
+
+Pre-requisites:
+
+- Comfortable with TypeScript or Python and a web bundler (Vite, esbuild, etc.).
+- MCP server reachable over HTTP (local is fine to start).
+- Built UI bundle that exports a root script (React or vanilla).
+
+Example project layout:
+
+```
+your-chatgpt-app/
+├─ server/
+│  └─ src/index.ts          # MCP server + tool handlers
+├─ web/
+│  ├─ src/component.tsx     # React widget
+│  └─ dist/app.{js,css}  # Bundled assets referenced by the server
+└─ package.json
+```
+
+## Architecture flow
+
+1. A user prompt causes ChatGPT to call one of your MCP tools.
+2. Your server runs the handler, fetches authoritative data, and returns `structuredContent`, `_meta`, and UI metadata.
+3. ChatGPT loads the HTML template linked in the tool descriptor (served as `text/html+skybridge`) and injects the payload through `window.openai`.
+4. The widget renders from `window.openai.toolOutput`, persists UI state with `window.openai.setWidgetState`, and can call tools again via `window.openai.callTool`.
+5. The model reads `structuredContent` to narrate what happened, so keep it tight and idempotent—ChatGPT may retry tool calls.
+
+```
+User prompt
+   ↓
+ChatGPT model ──► MCP tool call ──► Your server ──► Tool response (`structuredContent`, `_meta`, `content`)
+   │                                                   │
+   └───── renders narration ◄──── widget iframe ◄──────┘
+                              (HTML template + `window.openai`)
+```
+
+## Understand the `window.openai` widget runtime
+
+The sandboxed iframe exposes a single global object:
+
+Key capabilities include:
+
+- **State & data:** `toolInput`, `toolOutput`, `toolResponseMetadata`, and `widgetState` carry tool data and persisted UI state.
+- **Tool + messaging APIs:** `callTool` and `sendFollowUpMessage` let the widget invoke tools or post user-authored follow-ups.
+- **File handling:** `uploadFile` and `getFileDownloadUrl` cover image uploads and previews.
+- **Layout + host controls:** `requestDisplayMode`, `requestModal`, `notifyIntrinsicHeight`, and `openExternal` manage layout and host navigation.
+- **Context signals:** `theme`, `displayMode`, `maxHeight`, `safeArea`, `view`, `userAgent`, and `locale` let you adapt UI and copy.
+
+For the full `window.openai` reference, see the [ChatGPT UI guide](/apps-sdk/build/chatgpt-ui#understand-the-windowopenai-api).
+
+Use `requestModal` when you need a host-controlled overlay—for example, open a checkout or detail view anchored to an “Add to cart” button so shoppers can review options without forcing the inline widget to resize.
+
+Subscribe to any of these fields with `useOpenAiGlobal` so multiple components stay in sync.
+
+Here's an example React component that reads `toolOutput` and persists UI state with `setWidgetState`: 
+For more information on how to build your UI, check out the [ChatGPT UI guide](https://developers.openai.com/apps-sdk/build/chatgpt-ui).
+```tsx
+// Example helper hook that keeps state
+// in sync with the widget runtime via window.openai.setWidgetState.
+
+export function KanbanList() {
+  const [widgetState, setWidgetState] = useWidgetState(() => ({ selectedTask: null }));
+  const tasks = window.openai.toolOutput?.tasks ?? [];
+
+  return tasks.map((task) => (
+    <button
+      key={task.id}
+      data-selected={widgetState?.selectedTask === task.id}
+      onClick={() => setWidgetState((prev) => ({ ...prev, selectedTask: task.id }))}
+    >
+      {task.title}
+    </button>
+  ));
+}
+```
+
+If you're not using React, you don’t need a helper like useWidgetState. Vanilla JS widgets can read and write window.openai directly—for example, window.openai.toolOutput or window.openai.setWidgetState(state).
+
+## Pick an SDK
+
+Apps SDK works with any MCP implementation, but the official SDKs are the quickest way to get started. They ship tool/schema helpers, HTTP server scaffolding, resource registration utilities, and end-to-end type safety so you can stay focused on business logic:
+
+- **Python SDK** – Iterate quickly with FastMCP or FastAPI. Repo: [`modelcontextprotocol/python-sdk`](https://github.com/modelcontextprotocol/python-sdk).
+- **TypeScript SDK** – Ideal when your stack is already Node/React. Repo: [`modelcontextprotocol/typescript-sdk`](https://github.com/modelcontextprotocol/typescript-sdk), published as `@modelcontextprotocol/sdk`. Docs live on [modelcontextprotocol.io](https://modelcontextprotocol.io/).
+
+Install whichever SDK matches your backend language, then follow the steps below.
+
+```bash
+# TypeScript / Node
+npm install @modelcontextprotocol/sdk zod
+
+# Python
+pip install mcp
+```
+
+## Build your MCP server
+
+### Step 1 – Register a component template
+Each UI bundle is exposed as an MCP resource whose `mimeType` is `text/html+skybridge`, signaling to ChatGPT that it should treat the payload as a sandboxed HTML entry point and inject the widget runtime. In other words, `text/html+skybridge` marks the file as a widget template instead of generic HTML.
+
+Register the template and include metadata for borders, domains, and CSP rules:
+
+```ts
+// Registers the Kanban widget HTML entry point served to ChatGPT.
+
+const server = new McpServer({ name: "kanban-server", version: "1.0.0" });
+const HTML = readFileSync("web/dist/kanban.js", "utf8");
+const CSS = readFileSync("web/dist/kanban.css", "utf8");
+
+server.registerResource(
+  "kanban-widget",
+  "ui://widget/kanban-board.html",
+  {},
+  async () => ({
+    contents: [
+      {
+        uri: "ui://widget/kanban-board.html",
+        mimeType: "text/html+skybridge",
+        text: `
+<div id="kanban-root"></div>
+<style>${CSS}</style>
+<script type="module">${HTML}</script>
+        `.trim(),
+        _meta: {
+          "openai/widgetPrefersBorder": true,
+          "openai/widgetDomain": "https://chatgpt.com",
+          "openai/widgetCSP": {
+            connect_domains: ["https://chatgpt.com"], // example API domain
+            resource_domains: ["https://*.oaistatic.com"], // example CDN allowlist
+            // Optional: allow embedding specific iframe origins. See “frame_domains” docs.
+            frame_domains: ["https://*.example-embed.com"],
+          },
+        },
+      },
+    ],
+  })
+);
+```
+
+If you need to embed iframes inside your widget, use `frame_domains` to declare an allowlist of origins. Without `frame_domains` set, subframes are blocked by default. Because iframe content is harder for us to inspect, widgets that set `frame_domains` are reviewed with extra scrutiny and may not be approved for directory distribution.
+
+**Best practice:** When you change your widget’s HTML/JS/CSS in a breaking way, give the template a new URI (or use a new file name) so ChatGPT always loads the updated bundle instead of a cached one.
+
+### Step 2 – Describe tools
+
+Tools are the contract the model reasons about. Define one tool per user intent (e.g., `list_tasks`, `update_task`). Each descriptor should include:
+
+- Machine-readable name and human-readable title.
+- JSON schema for arguments (`zod`, JSON Schema, or dataclasses).
+- `_meta["openai/outputTemplate"]` pointing to the template URI.
+- Optional `_meta` for invoking/invoked strings, `widgetAccessible`, read-only hints, etc.
+
+*The model inspects these descriptors to decide when a tool fits the user’s request, so treat names, descriptions, and schemas as part of your UX.*
+
+Design handlers to be **idempotent**—the model may retry calls.
+
+```ts
+// Example app that exposes a kanban-board tool with schema, metadata, and handler.
+
+server.registerTool(
+  "kanban-board",
+  {
+    title: "Show Kanban Board",
+    inputSchema: { workspace: z.string() },
+    _meta: {
+      "openai/outputTemplate": "ui://widget/kanban-board.html",
+      "openai/toolInvocation/invoking": "Preparing the board…",
+      "openai/toolInvocation/invoked": "Board ready.",
+    },
+  },
+  async ({ workspace }) => {
+    const board = await loadBoard(workspace);
+    return {
+      structuredContent: board.summary,
+      content: [{ type: "text", text: `Showing board ${workspace}` }],
+      _meta: board.details,
+    };
+  }
+);
+```
+
+### Step 3 – Return structured data and metadata
+
+Every tool response can include three sibling payloads:
+
+- **`structuredContent`** – concise JSON the widget uses *and* the model reads. Include only what the model should see.
+- **`content`** – optional narration (Markdown or plaintext) for the model’s response.
+- **`_meta`** – large or sensitive data exclusively for the widget. `_meta` never reaches the model.
+
+```ts
+// Returns concise structuredContent for the model plus rich _meta for the widget.
+async function loadKanbanBoard(workspace: string) {
+  const tasks = await db.fetchTasks(workspace);
+  return {
+    structuredContent: {
+      columns: ["todo", "in-progress", "done"].map((status) => ({
+        id: status,
+        title: status.replace("-", " "),
+        tasks: tasks.filter((task) => task.status === status).slice(0, 5),
+      })),
+    },
+    content: [
+      {
+        type: "text",
+        text: "Here's the latest snapshot. Drag cards in the widget to update status.",
+      },
+    ],
+    _meta: {
+      tasksById: Object.fromEntries(tasks.map((task) => [task.id, task])),
+      lastSyncedAt: new Date().toISOString(),
+    },
+  };
+}
+```
+
+The widget reads those payloads through `window.openai.toolOutput` and `window.openai.toolResponseMetadata`, while the model only sees `structuredContent`/`content`.
+
+### Step 4 – Run locally
+
+1. Build your UI bundle (`npm run build` inside `web/`).
+2. Start the MCP server (Node, Python, etc.).
+3. Use [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) early and often to call `http://localhost:<port>/mcp`, list roots, and verify your widget renders correctly. Inspector mirrors ChatGPT’s widget runtime and catches issues before deployment.
+
+For a TypeScript project, that usually looks like:
+
+```bash
+npm run build       # compile server + widget
+node dist/index.js  # start the compiled MCP server
+```
+
+### Step 5 – Expose an HTTPS endpoint
+
+ChatGPT requires HTTPS. During development, tunnel localhost with ngrok (or similar):
+
+```bash
+ngrok http <port>
+# Forwarding: https://<subdomain>.ngrok.app -> http://127.0.0.1:<port>
+```
+
+Use the ngrok URL when creating a connector in ChatGPT developer mode. For production, deploy to a low-latency HTTPS host (Cloudflare Workers, Fly.io, Vercel, AWS, etc.).
+
+## Example
+
+Here’s a stripped-down TypeScript server plus vanilla widget. For full projects, reference the public [Apps SDK examples](https://github.com/openai/openai-apps-sdk-examples).
+
+```ts
+// server/src/index.ts
+
+const server = new McpServer({ name: "hello-world", version: "1.0.0" });
+
+server.registerResource("hello", "ui://widget/hello.html", {}, async () => ({
+  contents: [
+    {
+      uri: "ui://widget/hello.html",
+      mimeType: "text/html+skybridge",
+      text: `
+<div id="root"></div>
+<script type="module" src="https://example.com/hello-widget.js"></script>
+      `.trim(),
+    },
+  ],
+}));
+
+server.registerTool(
+  "hello_widget",
+  {
+    title: "Show hello widget",
+    inputSchema: { name: { type: "string" } },
+    _meta: { "openai/outputTemplate": "ui://widget/hello.html" },
+  },
+  async ({ name }) => ({
+    structuredContent: { message: `Hello ${name}!` },
+    content: [{ type: "text", text: `Greeting ${name}` }],
+    _meta: {},
+  })
+);
+```
+
+```js
+// hello-widget.js
+const root = document.getElementById("root");
+const { message } = window.openai.toolOutput ?? { message: "Hi!" };
+root.textContent = message;
+```
+
+## Troubleshooting
+
+- **Widget doesn’t render** – Ensure the template resource returns `mimeType: "text/html+skybridge"` and that the bundled JS/CSS URLs resolve inside the sandbox.
+- **`window.openai` is undefined** – The host only injects the widget runtime for `text/html+skybridge` templates; double-check the MIME type and that the widget loaded without CSP violations.
+- **CSP or CORS failures** – Use `openai/widgetCSP` to allow the exact domains you fetch from; the sandbox blocks everything else.
+- **Stale bundles keep loading** – Cache-bust template URIs or file names whenever you deploy breaking changes.
+- **Structured payloads are huge** – Trim `structuredContent` to what the model truly needs; oversized payloads degrade model performance and slow rendering.
+
+## Advanced capabilities
+
+### Component-initiated tool calls
+
+Set `_meta["openai/widgetAccessible"]` on the tool descriptor to `true` if the widget should call tools on its own (e.g., refresh data on a button click). That opt-in enables `window.openai.callTool`.
+
+```json
+"_meta": {
+  "openai/outputTemplate": "ui://widget/kanban-board.html",
+  "openai/widgetAccessible": true
+}
+```
+
+#### Tool visibility
+
+Set `_meta["openai/visibility"]` on the tool descriptor to `"private"` when a tool should be callable from your widget but hidden from the model. This helps avoid awkward prompts or unsafe UX. Visibility defaults to `"public"`; private tools still work with `window.openai.callTool`.
+
+```json
+"_meta": {
+  "openai/outputTemplate": "ui://widget/kanban-board.html",
+  "openai/widgetAccessible": true,
+  "openai/visibility": "private"
+}
+```
+
+### Files out (file params)
+
+If your tool accepts user-provided files, declare file parameters with `_meta["openai/fileParams"]`. The value is a list of top-level input schema fields that should be treated as files. Nested file fields are not supported.
+
+Each file param must be an object with this shape:
+
+```json
+{
+  "download_url": "https://...",
+  "file_id": "file_..."
+}
+```
+
+Example:
+
+```ts
+server.registerTool(
+  "process_image",
+  {
+    title: "process_image",
+    description: "Processes an image",
+    inputSchema: {
+      type: "object",
+      properties: {
+        imageToProcess: {
+          type: "object",
+          properties: {
+            download_url: { type: "string" },
+            file_id: { type: "string" }
+          },
+          required: ["download_url", "file_id"],
+          additionalProperties: false
+        }
+      },
+      required: ["imageToProcess"],
+      additionalProperties: false
+    },
+    _meta: {
+      "openai/outputTemplate": "ui://widget/widget.html",
+      "openai/fileParams": ["imageToProcess"]
+    }
+  },
+  async ({ imageToProcess }) => {
+    return {
+      content: [],
+      structuredContent: {
+        download_url: imageToProcess.download_url,
+        file_id: imageToProcess.file_id
+      }
+    };
+  }
+);
+```
+
+### Content security policy (CSP)
+
+Set `_meta["openai/widgetCSP"]` on the widget resource so the sandbox knows which domains to allow for `connect-src`, `img-src`, `frame-src`, etc. This is required before broad distribution.
+
+```json
+"_meta": {
+  "openai/widgetCSP": {
+    connect_domains: ["https://api.example.com"],
+    resource_domains: ["https://persistent.oaistatic.com"],
+    redirect_domains: ["https://checkout.example.com"],
+    frame_domains: ["https://*.example-embed.com"]
+  }
+}
+```
+
+- `connect_domains` – hosts your widget can fetch from.
+- `resource_domains` – hosts for static assets like images, fonts, and scripts.
+- `redirect_domains` – optional; hosts allowed to receive `openExternal` redirects without the safe-link modal. ChatGPT appends a `redirectUrl` query parameter to help external flows return to the conversation.
+- `frame_domains` – optional; hosts your widget may embed as iframes. Widgets without `frame_domains` cannot render subframes.
+
+Caution: Using `frame_domains` is discouraged and should only be done when embedding iframes is core to your experience (for example, a code editor or notebook environment). Apps that declare `frame_domains` are subject to higher scrutiny at review time and are likely to be rejected or held back from broad distribution.
+
+### Widget domains
+
+Set `_meta["openai/widgetDomain"]` on the widget resource when you need a dedicated origin (e.g., for API key allowlists). ChatGPT renders the widget under `<domain>.web-sandbox.oaiusercontent.com`, which also enables the fullscreen punch-out button.
+
+```json
+"_meta": {
+  "openai/widgetCSP": {
+    connect_domains: ["https://api.example.com"],
+    resource_domains: ["https://persistent.oaistatic.com"]
+  },
+  "openai/widgetDomain": "https://chatgpt.com"
+}
+```
+
+### Component descriptions
+
+Set `_meta["openai/widgetDescription"]` on the widget resource to let the widget describe itself, reducing redundant text beneath the widget.
+
+```json
+"_meta": {
+  "openai/widgetCSP": {
+    connect_domains: ["https://api.example.com"],
+    resource_domains: ["https://persistent.oaistatic.com"]
+  },
+  "openai/widgetDomain": "https://chatgpt.com",
+  "openai/widgetDescription": "Shows an interactive zoo directory rendered by get_zoo_animals."
+}
+```
+
+### Localized content
+
+ChatGPT sents the requested locale in `_meta["openai/locale"]` (with `_meta["webplus/i18n"]` as a legacy key) in the client request. Use RFC 4647 matching to select the closest supported locale, echo it back in your responses, and format numbers/dates accordingly.
+
+### Client context hints
+
+ChatGPT may also sent hints in the client request metadata like `_meta["openai/userAgent"]` and `_meta["openai/userLocation"]`. These can be hepful for tailoring analytics or formatting, but **never** rely on them for authorization.
+
+Once your templates, tools, and widget runtime are wired up, the fastest way to refine your app is to use ChatGPT itself: call your tools in a real conversation, watch your logs, and debug the widget with browser devtools. When everything looks good, put your MCP server behind HTTPS and your app is ready for users.
+
+## Security reminders
+
+- Treat `structuredContent`, `content`, `_meta`, and widget state as user-visible—never embed API keys, tokens, or secrets.
+- Do not rely on `_meta["openai/userAgent"]`, `_meta["openai/locale"]`, or other hints for authorization; enforce auth inside your MCP server and backing APIs.
+- Avoid exposing admin-only or destructive tools unless the server verifies the caller’s identity and intent.
+
+# Deploy your app
+
+## Deployment options
+
+Once you have a working MCP server and component bundle, host them behind a stable HTTPS endpoint. Deployment platforms that work well with Apps SDK include:
+
+- **Managed containers** – Fly.io, Render, or Railway for quick spin-up and automatic TLS.
+- **Cloud serverless** – Google Cloud Run or Azure Container Apps if you need scale-to-zero, keeping in mind that long cold starts can interrupt streaming HTTP.
+- **Kubernetes** – for teams that already run clusters. Front your pods with an ingress controller that supports server-sent events.
+
+Regardless of platform, make sure `/mcp` stays responsive, supports streaming responses, and returns appropriate HTTP status codes for errors.
+
+## Local development
+
+During development you can expose your local server to ChatGPT using a tunnel such as ngrok:
+
+```bash
+ngrok http 2091
+# https://<subdomain>.ngrok.app/mcp → http://127.0.0.1:2091/mcp
+```
+
+Keep the tunnel running while you iterate on your connector. When you change code:
+
+1. Rebuild the component bundle (`npm run build`).
+2. Restart your MCP server.
+3. Refresh the connector in ChatGPT settings to pull the latest metadata.
+
+## Environment configuration
+
+- **Secrets** – store API keys or OAuth client secrets outside your repo. Use platform-specific secret managers and inject them as environment variables.
+- **Logging** – log tool-call IDs, request latency, and error payloads. This helps debug user reports once the connector is live.
+- **Observability** – monitor CPU, memory, and request counts so you can right-size your deployment.
+
+## Dogfood and rollout
+
+Before launching broadly:
+
+1. **Gate access** – keep your connector behind developer mode or a Statsig experiment flag until you are confident in stability.
+2. **Run golden prompts** – exercise the discovery prompts you drafted during planning and note precision/recall changes with each release.
+3. **Capture artifacts** – record screenshots or screen captures showing the component in MCP Inspector and ChatGPT for reference.
+
+When you are ready for production, update directory metadata, confirm auth and storage are configured correctly, and publish change notes in [Release Notes](/apps-sdk/release-notes).
+
+## Next steps
+
+- Connect your deployed endpoint to ChatGPT using the steps in [Connect from ChatGPT](/apps-sdk/deploy/connect-chatgpt).
+- Validate tooling and telemetry with the [Test your integration](/apps-sdk/deploy/testing) guide.
+- Keep a troubleshooting playbook handy via [Troubleshooting](/apps-sdk/deploy/troubleshooting) so on-call responders can quickly diagnose issues.
+
+# Connect from ChatGPT
+
+## Before you begin
+
+You can test your app in ChatGPT with your account using [developer mode](https://platform.openai.com/docs/guides/developer-mode).
+
+Please note that publishing your app for public access is not available at the moment, but we will accept submissions later this year. You can learn more in our [ChatGPT app review guidelines](/apps-sdk/app-developer-guidelines).
+
+To turn on developer mode, navigate to **Settings → Apps & Connectors → Advanced settings (bottom of the page)**.
+
+From there, you can toggle developer mode if you organization allows it.
+
+Once developer mode is active you will see a **Create** button under **Settings → Apps & Connectors**.
+
+As of November 13th, 2025, ChatGPT Apps are supported on all plans, including
+  Business, Enterprise, and Education plans.
+
+## Create a connector
+
+Once you have developer mode enabled, you can create a connector for your app in ChatGPT.
+
+1. Ensure your MCP server is reachable over HTTPS (for local development, you can expose a local server to the public internet via a tool such as [ngrok](https://ngrok.com/) or [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)).
+2. In ChatGPT, navigate to **Settings → Connectors → Create**.
+3. Provide the metadata for your connector:
+   - **Connector name** – a user-facing title such as _Kanban board_.
+   - **Description** – explain what the connector does and when to use it. The model uses this text during discovery.
+   - **Connector URL** – the public `/mcp` endpoint of your server (for example `https://abc123.ngrok.app/mcp`).
+4. Click **Create**. If the connection succeeds you will see a list of the tools your server advertises. If it fails, refer to the [Testing](/apps-sdk/deploy/testing) guide to debug your app with MCP Inspector or the API Playground.
+
+## Try the app
+
+Once your connector is created, you can try it out in a new ChatGPT conversation.
+
+1. Open a new chat in ChatGPT.
+2. Click the **+** button near the message composer, and click **More**.
+3. Choose the connector for your app in the list of available tools. This will add your app to the conversation context for the model to use.
+4. Prompt the model to invoke tools by saying related to your app. For example, “What are my available tasks?” for a Kanban board app.
+
+ChatGPT will display tool-call payloads in the UI so you can confirm inputs and outputs. Write tools will require manual confirmation unless you choose to remember approvals for the conversation.
+
+## Refreshing metadata
+
+Whenever you change your tools list or descriptions, you can refresh your MCP server's metadata in ChatGPT.
+
+1. Update your MCP server and redeploy it (unless you are using a local server).
+2. In **Settings → Connectors**, click into your connector and choose **Refresh**.
+3. Verify the tool list updates and try a few prompts to test the updated flows.
+
+## Using other clients
+
+You can connect to your MCP server on other clients.
+
+- **API Playground** – visit the [platform playground](`https://platform.openai.com/chat`), and add your MCP server to the conversation: open **Tools → Add → MCP Server**, and paste the same HTTPS endpoint. This is useful when you want raw request/response logs.
+- **Mobile clients** – once the connector is linked on ChatGPT web, it will be available on ChatGPT mobile apps as well. Test mobile layouts early if your component has custom controls.
+
+With the connector linked you can move on to validation, experiments, and eventual rollout.
+
+# Connect from ChatGPT
+
+## Before you begin
+
+You can test your app in ChatGPT with your account using [developer mode](https://platform.openai.com/docs/guides/developer-mode).
+
+Please note that publishing your app for public access is not available at the moment, but we will accept submissions later this year. You can learn more in our [ChatGPT app review guidelines](/apps-sdk/app-developer-guidelines).
+
+To turn on developer mode, navigate to **Settings → Apps & Connectors → Advanced settings (bottom of the page)**.
+
+From there, you can toggle developer mode if you organization allows it.
+
+Once developer mode is active you will see a **Create** button under **Settings → Apps & Connectors**.
+
+As of November 13th, 2025, ChatGPT Apps are supported on all plans, including
+  Business, Enterprise, and Education plans.
+
+## Create a connector
+
+Once you have developer mode enabled, you can create a connector for your app in ChatGPT.
+
+1. Ensure your MCP server is reachable over HTTPS (for local development, you can expose a local server to the public internet via a tool such as [ngrok](https://ngrok.com/) or [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)).
+2. In ChatGPT, navigate to **Settings → Connectors → Create**.
+3. Provide the metadata for your connector:
+   - **Connector name** – a user-facing title such as _Kanban board_.
+   - **Description** – explain what the connector does and when to use it. The model uses this text during discovery.
+   - **Connector URL** – the public `/mcp` endpoint of your server (for example `https://abc123.ngrok.app/mcp`).
+4. Click **Create**. If the connection succeeds you will see a list of the tools your server advertises. If it fails, refer to the [Testing](/apps-sdk/deploy/testing) guide to debug your app with MCP Inspector or the API Playground.
+
+## Try the app
+
+Once your connector is created, you can try it out in a new ChatGPT conversation.
+
+1. Open a new chat in ChatGPT.
+2. Click the **+** button near the message composer, and click **More**.
+3. Choose the connector for your app in the list of available tools. This will add your app to the conversation context for the model to use.
+4. Prompt the model to invoke tools by saying related to your app. For example, “What are my available tasks?” for a Kanban board app.
+
+ChatGPT will display tool-call payloads in the UI so you can confirm inputs and outputs. Write tools will require manual confirmation unless you choose to remember approvals for the conversation.
+
+## Refreshing metadata
+
+Whenever you change your tools list or descriptions, you can refresh your MCP server's metadata in ChatGPT.
+
+1. Update your MCP server and redeploy it (unless you are using a local server).
+2. In **Settings → Connectors**, click into your connector and choose **Refresh**.
+3. Verify the tool list updates and try a few prompts to test the updated flows.
+
+## Using other clients
+
+You can connect to your MCP server on other clients.
+
+- **API Playground** – visit the [platform playground](`https://platform.openai.com/chat`), and add your MCP server to the conversation: open **Tools → Add → MCP Server**, and paste the same HTTPS endpoint. This is useful when you want raw request/response logs.
+- **Mobile clients** – once the connector is linked on ChatGPT web, it will be available on ChatGPT mobile apps as well. Test mobile layouts early if your component has custom controls.
+
+With the connector linked you can move on to validation, experiments, and eventual rollout.
+
+ChatGPT Developer mode
+======================
+
+Full MCP client access for apps and tools.
+
+What is ChatGPT developer mode
+------------------------------
+
+ChatGPT developer mode is a beta feature that provides full Model Context Protocol (MCP) client support for all tools, both read and write. It's powerful but dangerous, and is intended for developers who understand how to safely configure and test apps. When using developer mode, watch for [prompt injections and other risks](https://platform.openai.com/docs/mcp), model mistakes on write actions that could destroy data, and malicious MCPs that attempt to steal information.
+
+How to use
+----------
+
+*   **Eligibility:** Available in beta to Pro, Plus, Business, Enterprise and Education accounts on the web.
+    
+*   **Enable developer mode:** Go to [**Settings → Apps**](https://chatgpt.com/#settings/Connectors) → [**Advanced settings → Developer mode**](https://chatgpt.com/#settings/Connectors/Advanced).
+    
+*   **Create Apps from MCPs:**
+    
+    *   Open [ChatGPT Apps settings](https://chatgpt.com/#settings/Connectors).
+    *   Click on "Create app" next to **Advanced settings** and create an app for your remote MCP server. It will appear in the composer's "Developer Mode" tool later during conversations. The "Create app" button will only show if you are in Developer mode.
+        *   Supported MCP protocols: SSE and streaming HTTP.
+        *   Authentication supported: OAuth, No Authentication, and Mixed Authentication
+            *   For OAuth, if static credentials are provided, then they will be used. Otherwise, dynamic client registration will be used to create the credentials.
+            *   Mixed authentication is supporting Oauth and No Authentication. This means the initialize and list tools APIs are no auth, and tools will be Oauth or Noauth based on the security schemes set on their tool metadata.
+    *   Created apps will show under "Drafts" in the app settings.
+*   **Manage tools:** In app settings there is a details page per app. Use that to toggle tools on or off and refresh apps to pull new tools and descriptions from the MCP server.
+    
+*   **Use apps in conversations:** Choose **Developer mode** from the Plus menu and select the apps for the conversation. You may need to explore different prompting techniques to call the correct tools. For example:
+    
+    *   Be explicit: "Use the "Acme CRM" app's "update\_record" tool to …". When needed, include the server label and tool name.
+    *   Disallow alternatives to avoid ambiguity: "Do not use built-in browsing or other tools; only use the Acme CRM connector."
+    *   Disambiguate similar tools: "Prefer `Calendar.create_event` for meetings; do not use `Reminders.create_task` for scheduling."
+    *   Specify input shape and sequencing: "First call `Repo.read_file` with `{ path: "…" }`. Then call `Repo.write_file` with the modified content. Do not call other tools."
+    *   If multiple apps overlap, state preferences up front (e.g., "Use `CompanyDB` for authoritative data; use other sources only if `CompanyDB` returns no results").
+    *   Developer mode does not require `search`/`fetch` tools. Any tools your connector exposes (including write actions) are available, subject to confirmation settings.
+    *   See more guidance in [Using tools](/docs/guides/tools) and [Prompting](/docs/guides/prompting).
+    *   Improve tool selection with better tool descriptions: In your MCP server, write action-oriented tool names and descriptions that include "Use this when…" guidance, note disallowed/edge cases, and add parameter descriptions (and enums) to help the model choose the right tool among similar ones and avoid built-in tools when inappropriate.
+    
+    Examples:
+    
+    ```
+    Schedule a 30‑minute meeting tomorrow at 3pm PT with
+    alice@example.com and bob@example.com using "Calendar.create_event".
+    Do not use any other scheduling tools.
+    ```
+    
+    ```
+    Create a pull request using "GitHub.open_pull_request" from branch
+    "feat-retry" into "main" with title "Add retry logic" and body "…".
+    Do not push directly to main.
+    ```
+    
+*   **Reviewing and confirming tool calls:**
+    
+    *   Inspect JSON tool payloads verify correctness and debug problems. For each tool call, you can use the carat to expand and collapse the tool call details. Full JSON contents of the tool input and output are available.
+    *   Write actions by default require confirmation. Carefully review the tool input which will be sent to a write action to ensure the behavior is as desired. Incorrect write actions can inadvertently destroy, alter, or share data!
+    *   Read-only detection: We respect the `readOnlyHint` tool annotation (see [MCP tool annotations](https://modelcontextprotocol.io/legacy/concepts/tools#available-tool-annotations)). Tools without this hint are treated as write actions.
+    *   You can choose to remember the approve or deny choice for a given tool for a conversation, which means it will apply that choice for the rest of that conversation. Because of this, you should only allow a tool to remember the approve choice if you know and trust the underlying application to make further write actions without your approval. New conversations will prompt for confirmation again. Refreshing the same conversation will also prompt for confirmation again on subsequent turns.n
+Further documentation _251225_112118.txt
+Exibindo Further documentation _251225_112118.txt.

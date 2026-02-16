@@ -1,0 +1,76 @@
+Políticas de uso
+Em vigor a partir de: 29 de outubro de 2025 
+Atualizamos estas políticas. Saiba mais aqui (abre em uma nova janela). Veja a versão anterior aqui. 
+Nosso objetivo é que nossas ferramentas sejam usadas com segurança e responsabilidade e, ao mesmo tempo, que você tenha controle máximo sobre o uso delas. A elaboração de nossas Políticas de Uso leva em consideração alguns aspectos importantes. 
+Capacitamos os usuários a inovar com a IA. Desenvolvemos produtos de IA que potencializam a utilidade e a liberdade, sem descuidar da segurança. As Políticas de Uso são apenas uma maneira de esclarecer as expectativas quanto ao uso de nossos produtos em um ecossistema de segurança mais amplo que estabelece medidas de proteção responsáveis para todos os nossos serviços. Você pode obter mais informações sobre nossa abordagem de segurança e nosso compromisso com a personalização, a transparência e a liberdade intelectual para explorar, discutir e criar com IA. 
+O uso responsável é uma prioridade compartilhada. Presumimos que nossos usuários agem da melhor maneira. Nossos termos e políticas, incluindo estas Políticas de Uso, estabelecem um limite mínimo razoável para o uso aceitável. Nossas regras não substituem requisitos legais, deveres profissionais ou obrigações éticas que devem influenciar a maneira como as pessoas utilizam a IA. É responsabilidade das pessoas usar adequadamente nossos serviços. O usuário que violar ou burlar nossas regras e medidas de proteção poderá perder o acesso aos nossos sistemas ou sofrer outras sanções. 
+Desenvolvemos nossos serviços priorizando a segurança. Monitoramos e aplicamos as políticas por meio de medidas de proteção da privacidade e processos de revisão claros. Fornecemos aos desenvolvedores orientações e ferramentas de moderação práticas para que eles consigam dar suporte aos usuários finais. Publicamos o que nossos sistemas podem e não podem fazer, divulgamos pesquisas e atualizações e disponibilizamos uma maneira simples de denunciar o uso indevido. 
+Atualizamos nossos serviços à medida que aprendemos. A cada dia as pessoas descobrem novas maneiras de usar nossos sistemas. Por isso, atualizamos as regras para garantir que elas não se tornem excessivamente restritivas e para proteger melhor nossos usuários. Reservamos todos os direitos de limitar o acesso se tivermos motivos razoáveis para julgar que é necessário proteger nosso serviço, nossos usuários ou qualquer outra pessoa. Você pode recorrer se acreditar que erramos ao aplicar nossa política. Nesse caso, tomaremos providências para corrigir a situação. Para acompanhar todas as atualizações de nossas Políticas de Uso, preencha este formulário. 
+Ao utilizar os serviços OpenAI, você deve seguir as seguintes Políticas de Uso: 
+• Proteja as pessoas.
+Todos têm direito à segurança. Por isso, nossos serviços não podem ser utilizados para estes fins:
+• ameaças, intimidações, assédio ou difamação
+• promoção ou facilitação de suicídio, automutilação ou distúrbio alimentar
+• conteúdo de violência sexual ou intimidade não consentida
+• terrorismo ou violência, incluindo violência por intolerância
+• criação, compra ou uso de armas, incluindo armas convencionais ou químicas, biológicas, radiológicas, nucleares e explosivas
+• atividades, bens ou serviços ilícitos
+• destruição, comprometimento ou violação de sistemas ou bens de outras pessoas, incluindo atividade cibernética mal-intencionada ou abusiva ou tentativas de infringir direitos de propriedade intelectual de outrem
+• apostas com dinheiro real
+• fornecimento de consultoria personalizada que exija licença, como consultoria jurídica ou médica, sem o envolvimento adequado de um profissional licenciado
+• testes de segurança não solicitados
+• desvio de nossas medidas de segurança
+• segurança ou inteligência nacional sem nossa análise e aprovação 
+• Respeite a privacidade.
+As pessoas têm direito à privacidade. Por isso, não admitimos tentativas de violação da privacidade dos outros, incluindo agregação, monitoramento, perfilamento ou distribuição de informações privadas ou sensíveis de pessoas sem a autorização delas. Além disso, o uso de nossos serviços é proibido para estes fins:
+• bancos de dados de reconhecimento facial sem a autorização do titular dos dados
+• identificação biométrica remota em tempo real em espaços públicos
+• uso da imagem de alguém, incluindo imagem fotorrealista ou voz, sem a devida autorização do titular de maneira a gerar confusão sobre a autenticidade da imagem
+• avaliação ou classificação de pessoas com base na conduta social, nas características pessoais ou em dados biométricos (incluindo classificação social, perfilamento ou inferência de atributos sensíveis)
+• inferência relacionada às emoções de uma pessoa em ambientes de trabalho e educacionais, salvo quando necessária por motivos médicos ou de segurança
+• avaliação ou previsão do risco de uma pessoa cometer uma infração penal com base unicamente em suas características pessoais ou perfilamento 
+• Garanta a segurança de menores de idade.
+Crianças e adolescentes merecem proteção especial. Nossos serviços foram criados para evitar danos e promover o bem-estar e nunca devem ser usados para explorar, pôr em risco ou sexualizar qualquer pessoa com menos de 18 anos. Denunciamos todos os materiais que contêm aparente abuso sexual infantil ou que comprometem a segurança de crianças ao National Center for Missing and Exploited Children dos EUA. É proibido o uso de nossos serviços para estes fins:
+• material de abuso sexual infantil, sem importar se alguma parte dele é gerada por IA ou não
+• aliciamento de menores
+• exposição de menores a conteúdo impróprio para sua idade, como conteúdo com imagens de automutilação, sexo ou violência
+• promoção de dietas insalubres ou exercícios inadequados para menores
+• humilhação ou outros tipos de condutas estigmatizantes relativas a tipos corporais ou à aparência de menores
+• desafios perigosos para menores
+• simulação sexual ou de violência com menores
+• acesso de menores a produtos ou atividades com restrição de idade 
+• Capacite as pessoas.
+Cada pessoa deve ser capaz de tomar decisões sobre sua própria vida e a vida de sua comunidade. Por esse motivo, não permitimos que nossos serviços sejam usados para manipular ou enganar pessoas, interferir no exercício de direitos humanos, explorar vulnerabilidades pessoais ou intervir na capacidade da pessoa de se informar ou acessar serviços essenciais, incluindo qualquer tipo de uso para:
+• desonestidade acadêmica
+• falsidade, fraude, golpe, spam ou falsa identidade
+• campanha política, lobby, interferência em eleição estrangeira ou do país ou atividades de desmobilização
+• automação de decisões importantes em áreas sensíveis sem análise humana em: 
+• infraestrutura essencial
+• educação
+• habitação
+• emprego
+• atividades financeiras e crédito
+• seguro
+• legal
+• área médica
+• serviços governamentais essenciais
+• componentes de segurança de produtos
+• segurança nacional
+• migração
+• manutenção da ordem pública 
+Registro de alterações
+• 29/10/2025: Atualizamos nossas Políticas de Uso para que reflitam um conjunto universal de políticas para todos os produtos e serviços da OpenAI.
+• 29/01/2025: Atualizamos nossas políticas universais para esclarecer as proibições previstas em lei.
+• 10/01/2024: Atualizamos nossas Políticas de Uso para serem mais claras e fornecer orientações mais específicas para cada serviço.
+• 15/02/2023: Unificamos nossas políticas de uso e conteúdo em um único conjunto de políticas de uso e fornecemos orientações mais específicas sobre quais atividades não permitimos em setores considerados de alto risco.
+• 09/11/2022: Não exigimos mais que você registre suas aplicações junto à OpenAI. Em vez disso, usaremos uma combinação de métodos automatizados e manuais para monitorar violações de políticas.
+• 25/10/2022: Atualizamos o processo de revisão de aplicativos (os desenvolvedores não precisam mais esperar pela aprovação após o envio, desde que cumpram nossas políticas). Mudamos para uma abordagem baseada em resultados e atualizamos as Melhores Práticas de Segurança.
+• 07/06/2022: Reestruturação em categorias de aplicativos e requisitos correspondentes.
+• 09/03/2022: Reestruturação em “Revisão de aplicativos”.
+• 19/01/2022: Simplificação das diretrizes de redação e edição de textos persuasivos e artigos.
+• 15/11/2021: Adição da seção “Diretrizes de Conteúdo”; alterações nos tópicos sobre usos quase sempre aprovados e usos não permitidos; renomeando o documento de “Diretrizes de Casos de Uso” para “Diretrizes de Uso”.
+• 04/08/2021: Atualização com informações relacionadas à geração de código.
+• 12/03/2021: Inclusão de requisitos detalhados caso a caso; pequenas edições de texto e ordenação.
+• 26/02/2021: Esclarecimento sobre a proibição de geradores de Tweet e Instagram.
+Open ai usage policies_251225_095929.txt
+Exibindo Open ai usage policies_251225_095929.txt.
