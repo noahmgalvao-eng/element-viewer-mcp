@@ -133,7 +133,7 @@ export const CUSTOM_DATA: Record<string, ElementCustomData> = {
     properties: {
       bulkModulusGPa: 3.1,
       latentHeatFusion: 59590,
-      latentHeatVaporization: 2000000, 
+      latentHeatVaporization: 2000000,
       specificHeatSolid: 757,
       specificHeatLiquid: 800,
       specificHeatGas: 520,
