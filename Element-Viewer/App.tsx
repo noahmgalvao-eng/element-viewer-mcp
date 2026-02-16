@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useSyncExternalStore } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PeriodicTableSelector from './components/Simulator/PeriodicTableSelector';
 import ControlPanel from './components/Simulator/ControlPanel';
 import SimulationUnit from './components/Simulator/SimulationUnit';
@@ -6,25 +6,9 @@ import ElementPropertiesMenu from './components/Simulator/ElementPropertiesMenu'
 import RecordingStatsModal from './components/Simulator/RecordingStatsModal';
 import { ELEMENTS } from './data/elements';
 import { ChemicalElement, PhysicsState } from './types';
+// Import new hook
+import { useChatGPT } from './hooks/useChatGPT';
 import { Settings2, X, Play, Pause, Circle, Square, Maximize2, Minimize2 } from 'lucide-react';
-
-// --- ChatGPT Apps SDK Integration ---
-const SET_GLOBALS_EVENT = 'openai:set_globals';
-
-function useOpenAiGlobal<K extends string>(key: K): any | null {
-    return useSyncExternalStore(
-        (onChange) => {
-            if (typeof window === 'undefined') return () => { };
-            const handler = (event: any) => {
-                if (event.detail?.globals?.[key] !== undefined) onChange();
-            };
-            window.addEventListener(SET_GLOBALS_EVENT, handler, { passive: true });
-            return () => window.removeEventListener(SET_GLOBALS_EVENT, handler);
-        },
-        () => (window as any).openai?.[key] ?? null,
-        () => null
-    );
-}
 
 interface ContextMenuData {
     x: number;
@@ -55,14 +39,27 @@ function App() {
     const [contextMenu, setContextMenu] = useState<ContextMenuData | null>(null);
     const [isInteracting, setIsInteracting] = useState(false);
 
-    // ChatGPT SDK globals
-    const displayMode = useOpenAiGlobal('displayMode');
-    const maxHeight = useOpenAiGlobal('maxHeight');
-    const safeArea = useOpenAiGlobal('safeArea');
-    const isFullscreen = displayMode === 'fullscreen';
+    // ChatGPT SDK integration
+    const {
+        displayMode,
+        maxHeight,
+        safeArea,
+        isFullscreen,
+        requestDisplayMode,
+        toolInput,
+        callTool
+    } = useChatGPT();
 
     // Safe area insets from ChatGPT SDK (avoids overlapping ChatGPT's own controls)
     const insets = safeArea?.insets ?? { top: 0, bottom: 0, left: 0, right: 0 };
+
+    // Log tool inputs for debugging (e.g., when ChatGPT sends "knowledge")
+    useEffect(() => {
+        if (toolInput && Object.keys(toolInput).length > 0) {
+            console.log('Received Tool Input:', toolInput);
+            // Future: Handle knowledge or actions here
+        }
+    }, [toolInput]);
 
     // Recording State
     const [isRecording, setIsRecording] = useState(false);
@@ -230,11 +227,14 @@ function App() {
   `;
 
     // --- FULLSCREEN HANDLER ---
-    const handleToggleFullscreen = (e: React.MouseEvent) => {
+    const handleToggleFullscreen = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        const api = (window as any).openai ?? (window as any).webplus;
-        if (api?.requestDisplayMode) {
-            api.requestDisplayMode({ mode: isFullscreen ? 'inline' : 'fullscreen' });
+        const targetMode = isFullscreen ? 'inline' : 'fullscreen';
+
+        try {
+            await requestDisplayMode(targetMode);
+        } catch (error) {
+            console.error("Failed to toggle fullscreen:", error);
         }
     };
 
@@ -298,7 +298,7 @@ function App() {
             fixed z-40 flex flex-col gap-4 transition-all duration-300
             ${isSidebarOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
                 style={{ top: `${24 + insets.top}px`, left: `${24 + insets.left}px` }}
-        `}
+
             >
                 {/* Settings Button */}
                 <button
@@ -328,83 +328,83 @@ function App() {
                 p-3 backdrop-blur border rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] 
                 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12
                 ${isRecording
-                        ? 'bg-red-900/80 border-red-500 text-white animate-pulse'
-                        : 'bg-slate-800/60 border-slate-600 text-red-500 hover:bg-slate-700'
-                    }
+                            ? 'bg-red-900/80 border-red-500 text-white animate-pulse'
+                            : 'bg-slate-800/60 border-slate-600 text-red-500 hover:bg-slate-700'
+                        }
             `}
-                title={isRecording ? "Stop Recording" : "Start Recording"}
-            >
-                {isRecording ? <Square size={20} fill="currentColor" /> : <Circle size={20} fill="currentColor" />}
-            </button>
+                    title={isRecording ? "Stop Recording" : "Start Recording"}
+                >
+                    {isRecording ? <Square size={20} fill="currentColor" /> : <Circle size={20} fill="currentColor" />}
+                </button>
 
-            {/* Speed Button */}
-            <button
-                onClick={handleToggleSpeed}
-                className={`${floatingBtnClass} text-white font-bold`}
-                title="Toggle Simulation Speed"
-            >
-                <span className="text-xs">{timeScale}x</span>
-            </button>
+                {/* Speed Button */}
+                <button
+                    onClick={handleToggleSpeed}
+                    className={`${floatingBtnClass} text-white font-bold`}
+                    title="Toggle Simulation Speed"
+                >
+                    <span className="text-xs">{timeScale}x</span>
+                </button>
 
-        </div>
-
-            {/* --- FULLSCREEN TOGGLE (Always visible, top-right, highest z-index) --- */ }
-    <button
-        onClick={handleToggleFullscreen}
-        className="fixed z-[60] p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
-        style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
-        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-    >
-        {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-    </button>
-
-    {/* --- MAIN VISUALIZATION CANVAS (Seamless Grid) --- */ }
-    <main className={`w-full h-full grid gap-0 ${gridClass} bg-slate-950`}>
-        {selectedElements.map((el) => (
-            <div
-                key={el.atomicNumber}
-                className="relative w-full h-full border-r border-b border-white/5 last:border-0"
-            >
-                <SimulationUnit
-                    element={el}
-                    globalTemp={temperature}
-                    globalPressure={pressure}
-                    layoutScale={{ quality: qualityScale, visual: 1.0 }}
-                    showParticles={showParticles}
-                    totalElements={count}
-                    timeScale={timeScale}
-                    isPaused={isPaused}
-                    onInspect={handleInspect(el)}
-                    onRegister={registerSimulationUnit}
-                />
             </div>
-        ))}
-    </main>
 
-    {/* --- CONTEXT MENU OVERLAY (Properties) --- */ }
-    {
-        contextMenu && (
-            <ElementPropertiesMenu
-                data={contextMenu}
-                onClose={() => setContextMenu(null)}
-                onSetTemperature={(t) => {
-                    setTemperature(t);
-                    setContextMenu(null);
-                }}
-                onSetPressure={setPressure}
-            />
-        )
-    }
+            {/* --- FULLSCREEN TOGGLE (Always visible, top-right, highest z-index) --- */}
+            <button
+                onClick={handleToggleFullscreen}
+                className="fixed z-[60] p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
+                style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
+                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            >
+                {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+            </button>
 
-    {/* --- RECORDING STATS OVERLAY --- */ }
-    {
-        recordingResults && (
-            <RecordingStatsModal
-                recordings={recordingResults}
-                onClose={() => setRecordingResults(null)}
-            />
-        )
-    }
+            {/* --- MAIN VISUALIZATION CANVAS (Seamless Grid) --- */}
+            <main className={`w-full h-full grid gap-0 ${gridClass} bg-slate-950`}>
+                {selectedElements.map((el) => (
+                    <div
+                        key={el.atomicNumber}
+                        className="relative w-full h-full border-r border-b border-white/5 last:border-0"
+                    >
+                        <SimulationUnit
+                            element={el}
+                            globalTemp={temperature}
+                            globalPressure={pressure}
+                            layoutScale={{ quality: qualityScale, visual: 1.0 }}
+                            showParticles={showParticles}
+                            totalElements={count}
+                            timeScale={timeScale}
+                            isPaused={isPaused}
+                            onInspect={handleInspect(el)}
+                            onRegister={registerSimulationUnit}
+                        />
+                    </div>
+                ))}
+            </main>
+
+            {/* --- CONTEXT MENU OVERLAY (Properties) --- */}
+            {
+                contextMenu && (
+                    <ElementPropertiesMenu
+                        data={contextMenu}
+                        onClose={() => setContextMenu(null)}
+                        onSetTemperature={(t) => {
+                            setTemperature(t);
+                            setContextMenu(null);
+                        }}
+                        onSetPressure={setPressure}
+                    />
+                )
+            }
+
+            {/* --- RECORDING STATS OVERLAY --- */}
+            {
+                recordingResults && (
+                    <RecordingStatsModal
+                        recordings={recordingResults}
+                        onClose={() => setRecordingResults(null)}
+                    />
+                )
+            }
 
         </div >
     );

@@ -1,0 +1,18 @@
+
+> matter-simulator-sdk@0.0.0 build
+> vite build && cp vercel.json dist/
+
+[36mvite v6.4.1 [32mbuilding for production...[36m[39m
+
+/index.css doesn't exist at build time, it will remain unchanged to be resolved at runtime
+transforming...
+[32mâœ“[39m 1719 modules transformed.
+rendering chunks...
+[plugin vite:singlefile] 
+
+[plugin vite:singlefile] Inlining: index-qs7Tg9it.js
+computing gzip size...
+[2mdist/[22m[32mindex.html  [39m[1m[2m491.98 kB[22m[1m[22m[2m â”‚ gzip: 125.52 kB[22m
+[32mâœ“ built in 3.98s[39m
+'cp' nÆo ‚ reconhecido como um comando interno
+ou externo, um programa oper vel ou um arquivo em lotes.
