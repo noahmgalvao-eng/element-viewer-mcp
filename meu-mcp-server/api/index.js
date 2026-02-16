@@ -4,6 +4,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // --- CONFIGURAÇÃO ---
 const app = express();
@@ -14,7 +17,7 @@ const server = new McpServer({
   version: "1.0.0"
 });
 
-// URL DO FRONTEND
+// URL DO FRONTEND (Mantido para referências, mas o conteúdo é servido localmente)
 const MINHA_URL_WEBAPP = "https://element-viewer.vercel.app";
 
 // --- 1. FERRAMENTAS OBRIGATÓRIAS (SEARCH & FETCH) ---
@@ -70,92 +73,24 @@ server.registerTool(
 );
 
 // --- 2. SUA FERRAMENTA UI ---
-const htmlContent = `
-<!DOCTYPE html>
-<html style="height: 100%; margin: 0;">
-  <body style="height: 100%; margin: 0; overflow: hidden; font-family: sans-serif;">
-    <style>
-      .control-btn {
-        position: absolute;
-        bottom: 20px;
-        z-index: 1000;
-        padding: 10px 15px;
-        background-color: #333;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        opacity: 0.8;
-        transition: opacity 0.2s;
-      }
-      .control-btn:hover {
-        opacity: 1;
-      }
-      #fullscreen-btn {
-        right: 20px;
-      }
-      #exit-fullscreen-btn {
-        right: 120px; /* Positioned to the left of the fullscreen button */
-      }
-    </style>
-    
-    <!-- Botões atualizados para usar o novo handler -->
-    <button id="exit-fullscreen-btn" class="control-btn" onclick="handleRequestDisplayMode('inline')">Sair da Tela Cheia</button>
-    <button id="fullscreen-btn" class="control-btn" onclick="handleRequestDisplayMode('fullscreen')">Tela Cheia</button>
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const HTML_PATH = path.resolve(__dirname, "../../Element-Viewer/dist/index.html");
 
-    <script>
-      /**
-       * Implementation based on kitchen-sink-lite handleRequestDisplayMode
-       */
-      const handleRequestDisplayMode = async (mode) => {
-        if (!window.openai?.requestDisplayMode) {
-          console.log("requestDisplayMode unavailable (defaulted to inline)");
-          return;
-        }
+let htmlContent = "";
 
-        try {
-          const result = await window.openai.requestDisplayMode({ mode });
-          console.log("requestDisplayMode(" + mode + ") -> " + (result?.mode ?? "unknown"));
-        } catch (error) {
-          console.error("Failed to request display mode:", error);
-        }
-      };
-
-      // Expose to global scope for onclick handlers
-      window.handleRequestDisplayMode = handleRequestDisplayMode;
-
-      // Automatic Fullscreen on Load with Retry
-      // Mantemos a tentativa automática mas usando a nova função
-      window.addEventListener('load', () => {
-        // Tenta imediatamente
-        handleRequestDisplayMode('fullscreen');
-
-        // Tenta novamente algumas vezes caso a API demore a injetar
-        let attempts = 0;
-        const maxAttempts = 10;
-        
-        const tryFullScreen = setInterval(() => {
-            attempts++;
-            if (window.openai) {
-                // Se já conseguimos acessar window.openai, tentamos mais uma vez e paramos
-                handleRequestDisplayMode('fullscreen');
-                clearInterval(tryFullScreen);
-            } else if (attempts >= maxAttempts) {
-                console.warn("Could not find window.openai after multiple attempts");
-                clearInterval(tryFullScreen);
-            }
-        }, 500); // Check every 500ms
-      });
-    </script>
-    <iframe 
-      src="${MINHA_URL_WEBAPP}" 
-      style="width: 100%; height: 100%; border: none;"
-      allow="camera; microphone; geolocation; fullscreen"
-      allowfullscreen
-    ></iframe>
-  </body>
-</html>
-`;
+try {
+  if (fs.existsSync(HTML_PATH)) {
+    htmlContent = fs.readFileSync(HTML_PATH, "utf-8");
+    console.log(`[INIT] HTML carregado com sucesso de: ${HTML_PATH}`);
+  } else {
+    console.error(`[INIT] ERRO: Arquivo HTML não encontrado em: ${HTML_PATH}`);
+    htmlContent = "<html><body><h1>Erro: Build do frontend não encontrado. Execute 'npm run build' no diretório Element-Viewer.</h1></body></html>";
+  }
+} catch (error) {
+  console.error(`[INIT] Erro ao ler HTML:`, error);
+  htmlContent = `<html><body><h1>Erro interno ao carregar frontend: ${error.message}</h1></body></html>`;
+}
 
 server.registerResource(
   "app-ui",
@@ -172,9 +107,7 @@ server.registerResource(
         "openai/widgetCSP": {
           "connect_domains": [MINHA_URL_WEBAPP],
           "resource_domains": [MINHA_URL_WEBAPP, MINHA_URL_WEBAPP + "/", "https://assets.gadget.dev", "https://app-assets.gadget.dev"],
-          "frame_domains": [MINHA_URL_WEBAPP, MINHA_URL_WEBAPP + "/"],
-          "frame_src": [MINHA_URL_WEBAPP, MINHA_URL_WEBAPP + "/"],
-          "child_src": [MINHA_URL_WEBAPP, MINHA_URL_WEBAPP + "/"]
+          // frame_domains removido pois não estamos mais usando iframe
         },
       },
     }],
