@@ -7,8 +7,89 @@ import RecordingStatsModal from './components/Simulator/RecordingStatsModal';
 import { ELEMENTS } from './data/elements';
 import { ChemicalElement, PhysicsState } from './types';
 // Import new hook
-import { Settings2, X, Play, Pause, Circle, Square, Maximize2, Minimize2, PictureInPicture2, Info } from 'lucide-react';
+import { Settings, Play, Pause, RotateCcw, FastForward, Settings2, X, Circle, Square } from "lucide-react";
 
+
+// --- Inline Icons to separate from external dependencies ---
+
+const IconBookOpen = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+    >
+        <path d="M12 7v14" />
+        <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+    </svg>
+);
+
+const IconPiP = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+    >
+        <path d="M2 10h6V4" />
+        <path d="m2 4 6 6" />
+        <path d="M21 10V7a2 2 0 0 0-2-2h-7" />
+        <path d="M3 14v2a2 2 0 0 0 2 2h3" />
+        <rect x="12" y="14" width="10" height="7" rx="1" />
+    </svg>
+);
+
+const IconMaximize = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+    >
+        <path d="M15 3h6v6" />
+        <path d="m21 3-7 7" />
+        <path d="m3 21 7-7" />
+        <path d="M9 21H3v-6" />
+    </svg>
+);
+
+const IconMinimize = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+    >
+        <path d="m14 10 7-7" />
+        <path d="M20 10h-6V4" />
+        <path d="m3 21 7-7" />
+        <path d="M4 14h6v6" />
+    </svg>
+);
 
 interface ContextMenuData {
     x: number;
@@ -350,14 +431,6 @@ function App() {
                 style={{ top: `${24 + insets.top}px`, left: `${24 + insets.left}px` }}
 
             >
-                {/* Info / AI Context Button */}
-                <button
-                    onClick={handleInfoClick}
-                    className={`${floatingBtnClass} text-purple-400 border-purple-500/50 hover:bg-purple-900/40`}
-                    title="Ask ChatGPT about this"
-                >
-                    <Info size={24} />
-                </button>
 
                 {/* Settings Button */}
                 <button
@@ -406,32 +479,42 @@ function App() {
                 </button>
 
             </div>
-
             {/* --- DISPLAY MODES (Always visible, top-right, highest z-index) --- */}
             <div
-                className="fixed z-[100] flex gap-2"
+                className="fixed z-[100] grid grid-cols-2 gap-2 pointer-events-auto"
                 style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
             >
-                {/* PiP Toggle */}
+                {/* Row 1, Col 1: PiP Toggle */}
                 <button
                     onClick={handleTogglePiP}
                     className="p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
                     title="Picture-in-Picture"
                 >
-                    <PictureInPicture2 size={20} />
+                    <IconPiP size={20} />
                 </button>
 
-                {/* Fullscreen Toggle */}
+                {/* Row 1, Col 2: Fullscreen Toggle */}
                 <button
                     onClick={handleToggleFullscreen}
                     className="p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
                     title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
                 >
-                    {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+                    {isFullscreen ? <IconMinimize size={20} /> : <IconMaximize size={20} />}
+                </button>
+
+                {/* Row 2, Col 1: Empty (Spacer) */}
+                <div />
+
+                {/* Row 2, Col 2: Info / AI Context Button */}
+                <button
+                    onClick={handleInfoClick}
+                    className="p-3 bg-slate-800/80 backdrop-blur border border-cyan-500/50 rounded-full text-cyan-400 shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
+                    title="Ask ChatGPT about this"
+                >
+                    <IconBookOpen size={24} />
                 </button>
             </div>
 
-            {/* --- MAIN VISUALIZATION CANVAS (Seamless Grid) --- */}
             <main className={`w-full h-full grid gap-0 ${gridClass} bg-slate-950`}>
                 {selectedElements.map((el) => (
                     <div
