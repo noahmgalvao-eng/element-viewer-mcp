@@ -143,55 +143,52 @@ function App() {
         simulationRegistry
     });
 
-    // Safe area insets from ChatGPT SDK (avoids overlapping ChatGPT's own controls)
-    const insets = safeArea?.insets ?? { top: 0, bottom: 0, left: 0, right: 0 };
+    // Safe area insets with robust fallback
+    const insets = {
+        top: safeArea?.insets?.top ?? 0,
+        bottom: safeArea?.insets?.bottom ?? 0,
+        left: safeArea?.insets?.left ?? 0,
+        right: safeArea?.insets?.right ?? 0
+    };
 
     // Recording State
     const [isRecording, setIsRecording] = useState(false);
     const [recordingStartData, setRecordingStartData] = useState<Map<number, PhysicsState>>(new Map());
     const [recordingResults, setRecordingResults] = useState<{ element: ChemicalElement, start: PhysicsState, end: PhysicsState }[] | null>(null);
 
-    // Registry to access child physics states on demand
-    // (Managed in hook now or declared above)
-
-
     // --- CHATGPT WIDGET STATE SYNC ---
-    // Este effect sincroniza o estado da simulação com o ChatGPT em tempo real
+    // Dedicated function to sync state - only called when necessary
+    const syncStateToChatGPT = () => {
+        if (typeof window !== 'undefined' && window.openai?.setWidgetState) {
+            // Coleta os dados exatos do que o usuário está vendo agora
+            const elementsData = selectedElements.map(el => {
+                const getter = simulationRegistry.current.get(el.atomicNumber);
+                const currentState = getter ? getter() : null;
+                return {
+                    nome: el.name,
+                    simbolo: el.symbol,
+                    estado_da_materia: currentState ? currentState.state : "Desconhecido",
+                    temperatura_atual_K: currentState ? currentState.temperature.toFixed(2) : temperature.toFixed(2)
+                };
+            });
+
+            // Envia para a memória invisível do ChatGPT
+            window.openai.setWidgetState({
+                ambiente: {
+                    temperatura_alvo_K: temperature.toFixed(2),
+                    pressao_Pa: pressure.toExponential(2)
+                },
+                elementos_visiveis: elementsData
+            });
+        }
+    };
+
+    // Sync when elements change
     useEffect(() => {
-        const syncStateToChatGPT = () => {
-            if (typeof window !== 'undefined' && window.openai?.setWidgetState) {
-                // Coleta os dados exatos do que o usuário está vendo agora
-                const elementsData = selectedElements.map(el => {
-                    const getter = simulationRegistry.current.get(el.atomicNumber);
-                    const currentState = getter ? getter() : null;
-                    return {
-                        nome: el.name,
-                        simbolo: el.symbol,
-                        estado_da_materia: currentState ? currentState.state : "Desconhecido",
-                        temperatura_atual_K: currentState ? currentState.temperature.toFixed(2) : temperature.toFixed(2)
-                    };
-                });
-
-                // Envia para a memória invisível do ChatGPT
-                window.openai.setWidgetState({
-                    ambiente: {
-                        temperatura_alvo_K: temperature.toFixed(2),
-                        pressao_Pa: pressure.toExponential(2)
-                    },
-                    elementos_visiveis: elementsData
-                });
-            }
-        };
-
-        // Dispara sempre que houver mudanças na UI
         syncStateToChatGPT();
+    }, [selectedElements]);
 
-        // Configura um loop a cada 2 segundos para capturar as mudanças de fase (sólido -> líquido, etc)
-        // enquanto a temperatura sobe/desce animadamente pelo seu motor de física
-        const intervalId = setInterval(syncStateToChatGPT, 2000);
-
-        return () => clearInterval(intervalId);
-    }, [temperature, pressure, selectedElements]);
+    // Note: Temperature/Pressure sync is now handled by onFinalChange in ControlPanel
 
     // --- SELECTION LOGIC ---
     const handleElementSelect = (el: ChemicalElement) => {
@@ -419,6 +416,7 @@ function App() {
                         showParticles={showParticles}
                         setShowParticles={setShowParticles}
                         onInteractionChange={setIsInteracting}
+                        onFinalChange={syncStateToChatGPT}
                     />
                 </div>
             </aside>
