@@ -252,7 +252,7 @@ function App() {
 
     return (
         <div
-            className="relative w-screen h-screen bg-slate-900 overflow-hidden flex"
+            className={`relative w-screen ${isFullscreen ? 'h-screen' : 'h-[600px]'} bg-slate-900 overflow-hidden flex`}
             style={{
                 maxHeight: isFullscreen && maxHeight ? maxHeight : undefined,
                 height: isFullscreen && maxHeight ? maxHeight : undefined,
