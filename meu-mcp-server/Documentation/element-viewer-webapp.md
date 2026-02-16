@@ -34,6 +34,7 @@ Element-Viewer/
 │
 ├── hooks/
 │   ├── usePhysics.ts           # Hook principal — game loop de física
+│   ├── useChatGPT.ts           # Hook de integração com ChatGPT Apps SDK (Window.openai)
 │   └── physics/
 │       ├── thermodynamics.ts   # Motor termodinâmico (enthalpy, fases, Clausius-Clapeyron)
 │       ├── geometry.ts         # Cálculos geométricos (compressão, bounds)
@@ -242,6 +243,27 @@ Simula ~50 partículas com comportamento por estado:
 | `periodic_table_source.ts` | Dados brutos da tabela periódica (285KB) |
 
 **Fontes de dados citadas:** Wikipedia (1), Mendeleev (2), PubChem (3), Angstrom (4), Wolfram (5)
+
+---
+
+## Integração ChatGPT SDK
+
+O app foi projetado para rodar nativamente dentro do ChatGPT via **OpenAI Apps SDK**.
+
+### `useChatGPT.ts` — Hook de Integração
+
+Localizado em `hooks/useChatGPT.ts`, este hook encapsula toda a comunicação com `window.openai`.
+
+**Funcionalidades:**
+- **Sincronização de Estado**: Mantém `displayMode` (inline/fullscreen), `theme` (light/dark), e `safeArea` em sincronia com o ChatGPT.
+- **Full Screen**: Exposição do método `requestDisplayMode('fullscreen')` para expandir o widget.
+- **Type Safety**: Utiliza definições de tipos (`types.ts`) alinhadas com o SDK oficial (`OpenAiGlobals`, `API`).
+- **Tooling (Futuro)**: Preparado para receber `toolInput` (conhecimento do chat) e enviar `callTool` (ações para o chat).
+
+### Adaptações no `App.tsx`
+- **Botão Fullscreen**: Utiliza `requestDisplayMode` para alternar entre linha e tela cheia.
+- **Safe Areas**: Respeita as margens (`insets`) fornecidas pelo SDK para evitar sobreposição com a UI do ChatGPT.
+- **Logging**: Monitora `toolInput` no console para debug de integrações futuras.
 
 ---
 
