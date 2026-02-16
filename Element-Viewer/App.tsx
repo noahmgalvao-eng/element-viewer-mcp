@@ -58,7 +58,11 @@ function App() {
     // ChatGPT SDK globals
     const displayMode = useOpenAiGlobal('displayMode');
     const maxHeight = useOpenAiGlobal('maxHeight');
+    const safeArea = useOpenAiGlobal('safeArea');
     const isFullscreen = displayMode === 'fullscreen';
+
+    // Safe area insets from ChatGPT SDK (avoids overlapping ChatGPT's own controls)
+    const insets = safeArea?.insets ?? { top: 0, bottom: 0, left: 0, right: 0 };
 
     // Recording State
     const [isRecording, setIsRecording] = useState(false);
@@ -291,8 +295,9 @@ function App() {
             {/* --- FLOATING CONTROLS (Settings, Pause, Speed, Record) --- */}
             <div
                 className={`
-            fixed top-6 left-6 z-40 flex flex-col gap-4 transition-all duration-300
-            ${isSidebarOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}
+            fixed z-40 flex flex-col gap-4 transition-all duration-300
+            ${isSidebarOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
+                style={{ top: `${24 + insets.top}px`, left: `${24 + insets.left}px` }}
         `}
             >
                 {/* Settings Button */}
@@ -323,79 +328,85 @@ function App() {
                 p-3 backdrop-blur border rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] 
                 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12
                 ${isRecording
-                            ? 'bg-red-900/80 border-red-500 text-white animate-pulse'
-                            : 'bg-slate-800/60 border-slate-600 text-red-500 hover:bg-slate-700'
-                        }
+                        ? 'bg-red-900/80 border-red-500 text-white animate-pulse'
+                        : 'bg-slate-800/60 border-slate-600 text-red-500 hover:bg-slate-700'
+                    }
             `}
-                    title={isRecording ? "Stop Recording" : "Start Recording"}
-                >
-                    {isRecording ? <Square size={20} fill="currentColor" /> : <Circle size={20} fill="currentColor" />}
-                </button>
+                title={isRecording ? "Stop Recording" : "Start Recording"}
+            >
+                {isRecording ? <Square size={20} fill="currentColor" /> : <Circle size={20} fill="currentColor" />}
+            </button>
 
-                {/* Speed Button */}
-                <button
-                    onClick={handleToggleSpeed}
-                    className={`${floatingBtnClass} text-white font-bold`}
-                    title="Toggle Simulation Speed"
-                >
-                    <span className="text-xs">{timeScale}x</span>
-                </button>
-
-                {/* Fullscreen Toggle */}
-                <button
-                    onClick={handleToggleFullscreen}
-                    className={floatingBtnClass}
-                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-                >
-                    {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-                </button>
-            </div>
-
-            {/* --- MAIN VISUALIZATION CANVAS (Seamless Grid) --- */}
-            <main className={`w-full h-full grid gap-0 ${gridClass} bg-slate-950`}>
-                {selectedElements.map((el) => (
-                    <div
-                        key={el.atomicNumber}
-                        className="relative w-full h-full border-r border-b border-white/5 last:border-0"
-                    >
-                        <SimulationUnit
-                            element={el}
-                            globalTemp={temperature}
-                            globalPressure={pressure}
-                            layoutScale={{ quality: qualityScale, visual: 1.0 }}
-                            showParticles={showParticles}
-                            totalElements={count}
-                            timeScale={timeScale}
-                            isPaused={isPaused}
-                            onInspect={handleInspect(el)}
-                            onRegister={registerSimulationUnit}
-                        />
-                    </div>
-                ))}
-            </main>
-
-            {/* --- CONTEXT MENU OVERLAY (Properties) --- */}
-            {contextMenu && (
-                <ElementPropertiesMenu
-                    data={contextMenu}
-                    onClose={() => setContextMenu(null)}
-                    onSetTemperature={(t) => {
-                        setTemperature(t);
-                        setContextMenu(null);
-                    }}
-                    onSetPressure={setPressure}
-                />
-            )}
-
-            {/* --- RECORDING STATS OVERLAY --- */}
-            {recordingResults && (
-                <RecordingStatsModal
-                    recordings={recordingResults}
-                    onClose={() => setRecordingResults(null)}
-                />
-            )}
+            {/* Speed Button */}
+            <button
+                onClick={handleToggleSpeed}
+                className={`${floatingBtnClass} text-white font-bold`}
+                title="Toggle Simulation Speed"
+            >
+                <span className="text-xs">{timeScale}x</span>
+            </button>
 
         </div>
+
+            {/* --- FULLSCREEN TOGGLE (Always visible, top-right, highest z-index) --- */ }
+    <button
+        onClick={handleToggleFullscreen}
+        className="fixed z-[60] p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
+        style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
+        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+    >
+        {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+    </button>
+
+    {/* --- MAIN VISUALIZATION CANVAS (Seamless Grid) --- */ }
+    <main className={`w-full h-full grid gap-0 ${gridClass} bg-slate-950`}>
+        {selectedElements.map((el) => (
+            <div
+                key={el.atomicNumber}
+                className="relative w-full h-full border-r border-b border-white/5 last:border-0"
+            >
+                <SimulationUnit
+                    element={el}
+                    globalTemp={temperature}
+                    globalPressure={pressure}
+                    layoutScale={{ quality: qualityScale, visual: 1.0 }}
+                    showParticles={showParticles}
+                    totalElements={count}
+                    timeScale={timeScale}
+                    isPaused={isPaused}
+                    onInspect={handleInspect(el)}
+                    onRegister={registerSimulationUnit}
+                />
+            </div>
+        ))}
+    </main>
+
+    {/* --- CONTEXT MENU OVERLAY (Properties) --- */ }
+    {
+        contextMenu && (
+            <ElementPropertiesMenu
+                data={contextMenu}
+                onClose={() => setContextMenu(null)}
+                onSetTemperature={(t) => {
+                    setTemperature(t);
+                    setContextMenu(null);
+                }}
+                onSetPressure={setPressure}
+            />
+        )
+    }
+
+    {/* --- RECORDING STATS OVERLAY --- */ }
+    {
+        recordingResults && (
+            <RecordingStatsModal
+                recordings={recordingResults}
+                onClose={() => setRecordingResults(null)}
+            />
+        )
+    }
+
+        </div >
     );
 }
 
