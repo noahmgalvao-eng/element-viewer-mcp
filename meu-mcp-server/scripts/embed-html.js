@@ -28,6 +28,16 @@ if (!fs.existsSync(HTML_INPUT)) {
 const htmlRaw = fs.readFileSync(HTML_INPUT, "utf-8");
 console.log(`[embed-html] HTML lido: ${htmlRaw.length} caracteres`);
 
+const REQUIRED_MARKER = "Picture-in-Picture";
+if (!htmlRaw.includes(REQUIRED_MARKER)) {
+    console.error(`[embed-html] ERRO: marcador obrigatório \"${REQUIRED_MARKER}\" não encontrado no bundle.`);
+    console.error("[embed-html] Isso pode indicar que o dist/index.html está desatualizado.");
+    console.error("[embed-html] Refaça o build do Element-Viewer antes de publicar.");
+    process.exit(1);
+}
+
+console.log(`[embed-html] Marcador obrigatório encontrado: \"${REQUIRED_MARKER}\"`);
+
 // Escapar backticks e ${} para uso seguro dentro de template literal
 const escaped = htmlRaw
     .replace(/\\/g, "\\\\")

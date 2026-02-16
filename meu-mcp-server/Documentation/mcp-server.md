@@ -158,14 +158,35 @@ Todas as requisições são redirecionadas para a função serverless `api/index
 
 ```bash
 # Iniciar servidor localmente
-npm start         # node api/index.js
-npm run dev       # node api/index.js
+npm start               # node api/index.js
+npm run dev             # node api/index.js
 
 # Gerar HTML embedado
-npm run embed     # node scripts/embed-html.js
+npm run embed           # node scripts/embed-html.js
+
+# Release oficial do widget (build frontend + embed)
+npm run release:widget  # npm --prefix ../Element-Viewer run build && npm run embed
 ```
 
-O script `embed` lê o build do Element-Viewer (`dist/index.html`) e gera `api/html-content.js` com o HTML como uma string exportada. Isso permite que o servidor MCP sirva o webapp completo sem depender de URLs externas.
+O script `embed` lê o build do Element-Viewer (`dist/index.html`) e gera `api/html-content.js` com o HTML como uma string exportada. Ele também valida a presença da string **"Picture-in-Picture"** no artifact para detectar build antigo antes de publicar.
+
+O script `release:widget` consolida o fluxo obrigatório de release em um único comando: primeiro executa o build do frontend (`Element-Viewer`) e depois atualiza o embed no servidor MCP.
+
+## Fluxo Oficial de Deploy
+
+A ordem abaixo é **obrigatória** para evitar publicar bundle desatualizado:
+
+1. **Build frontend**
+   - Execute `npm --prefix ../Element-Viewer run build` (ou `npm run release:widget` no diretório `meu-mcp-server`).
+2. **Embed do HTML no MCP**
+   - Execute `npm run embed` (já incluído no `release:widget`).
+   - O processo falha automaticamente se o marker `Picture-in-Picture` não estiver presente no `dist/index.html`.
+3. **Deploy do MCP server**
+   - Faça o deploy do `meu-mcp-server` na Vercel somente após os dois passos anteriores.
+
+### Validação em CI
+
+O workflow `.github/workflows/embed-sync-check.yml` falha PRs em que `Element-Viewer/App.tsx` foi alterado sem atualização correspondente de `meu-mcp-server/api/html-content.js`.
 
 ---
 

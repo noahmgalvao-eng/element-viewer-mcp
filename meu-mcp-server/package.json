@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node api/index.js",
     "dev": "node api/index.js",
-    "embed": "node scripts/embed-html.js"
+    "embed": "node scripts/embed-html.js",
+    "release:widget": "npm --prefix ../Element-Viewer run build && npm run embed"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.3",
