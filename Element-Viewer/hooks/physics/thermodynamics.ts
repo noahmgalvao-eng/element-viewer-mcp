@@ -1,6 +1,11 @@
-
 import { ChemicalElement, MatterState } from '../../types';
 import { SimulationMutableState } from './types';
+import {
+    calculateMeltingPoint,
+    calculateBoilingPoint,
+    calculateSublimationPoint,
+    predictMatterState
+} from './phaseCalculations';
 
 interface ThermodynamicsInput {
     simState: SimulationMutableState;
@@ -64,7 +69,7 @@ export const calculateThermodynamics = ({
     let T_melt = 0;
     let T_boil = 0;
     let T_sub = 0;
-    
+
     // --- SUBLIMATION PATH ---
     if (isSublimationRegime && triplePoint && enthalpyFusionJmol) {
         // 1. Calculate Sublimation Enthalpy (J/mol)
@@ -72,7 +77,7 @@ export const calculateThermodynamics = ({
         const molarMassKg = element.mass / 1000;
         const dH_vap_mol = enthalpyVapJmol || (L_VAPORIZATION * molarMassKg);
         const dH_sub_mol = enthalpyFusionJmol + dH_vap_mol;
-        
+
         // 2. Clausius-Clapeyron for Sublimation
         // 1/T_sub = 1/T_trip - (R * ln(P/P_trip) / dH_sub)
         // FIX: Clamp pressure to avoid -Infinity at 0 Pa
@@ -84,10 +89,10 @@ export const calculateThermodynamics = ({
         // 3. Phase Energy Boundaries
         // Solid -> Gas (No Liquid)
         const L_SUB = L_FUSION + L_VAPORIZATION; // Approximation in J/kg for simulation energy bucket
-        
+
         const H_sub_start = SAMPLE_MASS * C_SOLID * T_sub;
         const H_sub_end = H_sub_start + (SAMPLE_MASS * L_SUB);
-        
+
         // FIX: Use <= to ensure absolute zero (Enthalpy=0) is treated as Solid
         if (simState.enthalpy <= H_sub_start) {
             currentTemp = simState.enthalpy / (SAMPLE_MASS * C_SOLID);
@@ -113,63 +118,10 @@ export const calculateThermodynamics = ({
 
     } else {
         // --- STANDARD SIMON-GLATZEL & CLAUSIUS PATH ---
-        
-        // --- ROBUST MELTING POINT CALCULATION (SIMON-GLATZEL) ---
-        const calculateTMelt = (p: number): number => {
-            const { properties, specialBehavior } = element;
-            const T_ref = properties.meltingPointK;
-            const P_ref = 101325;
 
-            // 1. HELIUM EXCEPTION (Absolute Cutoff)
-            if (specialBehavior?.cantFreezeBelowPa) {
-                if (p < specialBehavior.cantFreezeBelowPa) return 0;
-            }
-
-            // 2. WATER-LIKE EXCEPTION (Linear Descent)
-            // Simon-Glatzel is not suitable for negative slopes (leads to NaN).
-            if (specialBehavior?.isWaterLike) {
-                const slope = -7.4e-8; // K/Pa approximation for ice
-                const deltaP = p - P_ref;
-                return Math.max(0, T_ref + (slope * deltaP));
-            }
-
-            // PREPARE SIMON-GLATZEL PARAMS
-            const a = properties.simonA_Pa || ((properties.bulkModulusGPa || 50) * 1e9 * 0.05);
-            const c = properties.simonC || 2.0;
-
-            // Helper for SG Calculation
-            const solveSG = (targetP: number) => {
-                 const term = ((targetP - P_ref) / a) + 1;
-                 if (term < 0) return 0; // Physics safety
-                 return T_ref * Math.pow(term, (1 / c));
-            };
-
-            // 3. TURNOVER EXCEPTION (Sodium/Lithium)
-            if (specialBehavior?.highPressureTurnover) {
-                const PEAK_P = 3e9; // ~3 GPa turnover point
-                if (p < PEAK_P) {
-                    return solveSG(p);
-                } else {
-                    const maxT = solveSG(PEAK_P);
-                    const excess = p - PEAK_P;
-                    const dropRate = 5e-8; // K/Pa decay
-                    return Math.max(0, maxT - (excess * dropRate));
-                }
-            }
-
-            return solveSG(p);
-        };
-
-        T_melt = calculateTMelt(pressure);
-
-        // --- BOILING POINT CALCULATION (Clausius-Clapeyron Approximation) ---
-        const dH_vap = enthalpyVapJmol || 97000; 
-        const logPressureTerm = Math.log(Math.max(1, pressure) / 101325);
-        const denominator = (1 / T_boil_std) - ( (R * logPressureTerm) / dH_vap );
-        T_boil = (denominator <= 0.0001) ? 50000 : (1 / denominator);
-        
-        // Ensure Boiling doesn't cross Melting (Physics sanity for simulation)
-        if (T_boil < T_melt) T_boil = T_melt + 0.1;
+        // Use shared helper - exact same math
+        T_melt = calculateMeltingPoint(element, pressure);
+        T_boil = calculateBoilingPoint(element, pressure, T_melt);
 
         // --- PHASE DETECTION (Standard) ---
         const H_melt_start = SAMPLE_MASS * C_SOLID * T_melt;
@@ -215,7 +167,7 @@ export const calculateThermodynamics = ({
     // --- STATE MACHINE (SCF Transitions & Standard) ---
     let phase: MatterState = detectedPhase;
     let scfTransitionProgress = 0;
-    
+
     // SCF LOGIC
     if (isSupercritical) {
         // ENTERING or STAYING SCF
@@ -227,11 +179,11 @@ export const calculateThermodynamics = ({
             const currentCp = phase === MatterState.GAS ? C_GAS : C_LIQUID;
             const elementInertia = (element.mass / 20) * (currentCp / 1000);
             const physicsCalculatedTime = (0.6 * Math.max(0.8, elementInertia)) / timeScale;
-            
-            const isComingFromLiquid = simState.lastStableState === MatterState.LIQUID || 
-                                       simState.lastStableState === MatterState.SOLID || 
-                                       simState.lastStableState === MatterState.MELTING ||
-                                       simState.lastStableState === MatterState.BOILING;
+
+            const isComingFromLiquid = simState.lastStableState === MatterState.LIQUID ||
+                simState.lastStableState === MatterState.SOLID ||
+                simState.lastStableState === MatterState.MELTING ||
+                simState.lastStableState === MatterState.BOILING;
 
             const minDuration = isComingFromLiquid ? 2.5 : 1.0;
             simState.transitionDuration = Math.max(minDuration, physicsCalculatedTime);
@@ -243,7 +195,7 @@ export const calculateThermodynamics = ({
 
         const isTimerDone = progress >= 1;
         const isSettled = simState.areAllParticlesSettled;
-        
+
         const requiresMechanicalLock = simState.lastStableState !== MatterState.GAS;
         const isReady = requiresMechanicalLock ? (isTimerDone && isSettled) : isTimerDone;
 
@@ -257,23 +209,23 @@ export const calculateThermodynamics = ({
     } else {
         // EXITING SCF (or Normal)
         if (simState.lastStableState === MatterState.SUPERCRITICAL) {
-             if (!simState.isTransitioning) {
+            if (!simState.isTransitioning) {
                 simState.isTransitioning = true;
                 simState.transitionStartTime = simState.simTime;
                 simState.transitionDuration = Math.max(1.0, 2.0 / timeScale);
-             }
+            }
 
-             const elapsed = simState.simTime - simState.transitionStartTime;
-             const progress = Math.min(1, elapsed / simState.transitionDuration);
-             scfTransitionProgress = 1 - progress;
+            const elapsed = simState.simTime - simState.transitionStartTime;
+            const progress = Math.min(1, elapsed / simState.transitionDuration);
+            scfTransitionProgress = 1 - progress;
 
-             if (progress < 1) {
-                 phase = MatterState.TRANSITION_SCF;
-             } else {
-                 simState.isTransitioning = false;
-                 simState.lastStableState = detectedPhase; 
-                 phase = detectedPhase;
-             }
+            if (progress < 1) {
+                phase = MatterState.TRANSITION_SCF;
+            } else {
+                simState.isTransitioning = false;
+                simState.lastStableState = detectedPhase;
+                phase = detectedPhase;
+            }
         }
     }
 
@@ -282,7 +234,7 @@ export const calculateThermodynamics = ({
     const meltRounded = Math.round(T_melt);
     const boilRounded = Math.round(T_boil);
     const subRounded = Math.round(T_sub);
-    
+
     // TRIPLE POINT DETECTION
     let isTriplePoint = false;
     if (triplePoint && !isSupercritical && !isSublimationRegime) {
@@ -299,31 +251,31 @@ export const calculateThermodynamics = ({
     const isEquilibriumBoil = !isSupercritical && !isSublimationRegime && !isTriplePoint && targetRounded === boilRounded;
 
     let powerInput = 0;
-    
+
     if (isTriplePoint) {
         // ... Triple Point Logic ...
         const time = simState.simTime;
-        const oscillation = Math.sin(time * 1.5); 
-        const tripleMeltRatio = 0.675 + (oscillation * 0.075); 
+        const oscillation = Math.sin(time * 1.5);
+        const tripleMeltRatio = 0.675 + (oscillation * 0.075);
         const H_melt_end = (SAMPLE_MASS * C_SOLID * T_melt) + (SAMPLE_MASS * L_FUSION);
         const targetEnthalpy = H_melt_end;
         powerInput = (targetEnthalpy - simState.enthalpy) * 2.0;
         phase = MatterState.EQUILIBRIUM_TRIPLE;
-        currentTemp = T_melt; 
+        currentTemp = T_melt;
         meltProgress = tripleMeltRatio;
-        boilProgress = 0.15; 
+        boilProgress = 0.15;
         sublimationProgress = 0;
 
     } else if (isEquilibriumSub) {
         // SUBLIMATION EQUILIBRIUM LOGIC
         const time = simState.simTime;
-        const oscillation = Math.sin(time * 1.5); 
+        const oscillation = Math.sin(time * 1.5);
         const targetRatio = 0.5 + (oscillation * 0.2); // Oscillate roughly half-sublimated
         // Re-calculate enthalpy bounds for sub
         const L_SUB = L_FUSION + L_VAPORIZATION;
         const H_sub_start = SAMPLE_MASS * C_SOLID * T_sub;
         const targetEnthalpy = H_sub_start + (SAMPLE_MASS * L_SUB * targetRatio);
-        
+
         powerInput = (targetEnthalpy - simState.enthalpy) * 5.0;
         phase = MatterState.EQUILIBRIUM_SUB;
         currentTemp = T_sub;
@@ -331,23 +283,23 @@ export const calculateThermodynamics = ({
 
     } else if (isEquilibriumMelt) {
         const time = simState.simTime;
-        const oscillation = Math.sin(time * 1.5); 
-        const targetRatio = 0.45 + (oscillation * 0.25); 
+        const oscillation = Math.sin(time * 1.5);
+        const targetRatio = 0.45 + (oscillation * 0.25);
         const H_melt_start = SAMPLE_MASS * C_SOLID * T_melt;
         const targetEnthalpy = H_melt_start + (SAMPLE_MASS * L_FUSION * targetRatio);
-        powerInput = (targetEnthalpy - simState.enthalpy) * 5.0; 
+        powerInput = (targetEnthalpy - simState.enthalpy) * 5.0;
         phase = MatterState.EQUILIBRIUM_MELT;
         currentTemp = T_melt;
         meltProgress = targetRatio;
 
     } else if (isEquilibriumBoil) {
         const time = simState.simTime;
-        const oscillation = Math.sin(time * 2.5); 
+        const oscillation = Math.sin(time * 2.5);
         const targetRatio = 0.25 + (oscillation * 0.15); // Gas Ratio
         const H_melt_end = (SAMPLE_MASS * C_SOLID * T_melt) + (SAMPLE_MASS * L_FUSION);
         const H_boil_start = H_melt_end + (SAMPLE_MASS * C_LIQUID * (T_boil - T_melt));
         const targetEnthalpy = H_boil_start + (SAMPLE_MASS * L_VAPORIZATION * targetRatio);
-        powerInput = (targetEnthalpy - simState.enthalpy) * 5.0; 
+        powerInput = (targetEnthalpy - simState.enthalpy) * 5.0;
         phase = MatterState.EQUILIBRIUM_BOIL;
         currentTemp = T_boil;
         boilProgress = targetRatio;
@@ -363,7 +315,7 @@ export const calculateThermodynamics = ({
         const thermalMass = SAMPLE_MASS * activeSpecificHeat;
         powerInput = (thermalMass / THERMAL_TAU) * (targetEnvTemp - currentTemp);
     }
-    
+
     // Update State Enthalpy
     simState.enthalpy += powerInput * dt;
     if (simState.enthalpy < 0) simState.enthalpy = 0;

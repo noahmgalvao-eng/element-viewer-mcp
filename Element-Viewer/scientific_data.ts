@@ -20,8 +20,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "448412.7_5"
     },
     "phaseTemperatures": {
-      "meltingK": "13.99_2",
-      "boilingK": "20.271_2"
+      "meltingK": "13.99_10",
+      "boilingK": "20.28_10",
+      "triplePointTempK": "13.8033_12",
+      "triplePointPressKPa": "7.04_10"
     }
   },
   "He": {
@@ -40,8 +42,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "20736.51_5"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "4.222_2"
+      "meltingK": "0.95*_10",
+      "boilingK": "4.22_10",
+      "triplePointTempK": "2.1768_12",
+      "triplePointPressKPa": "5.048_12"
     }
   },
   "Li": {
@@ -62,8 +66,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "21181556.2_5"
     },
     "phaseTemperatures": {
-      "meltingK": "453.65_2",
-      "boilingK": "1615.15_2"
+      "meltingK": "453.65_10",
+      "boilingK": "1615_10",
+      "triplePointTempK": "453.65_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Be": {
@@ -84,8 +90,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "32955389.02_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1560.15_2",
-      "boilingK": "2741.15_2"
+      "meltingK": "1560_10",
+      "boilingK": "2742_10",
+      "triplePointTempK": "1560_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "B": {
@@ -106,8 +114,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "46901017.58_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2350.15_2",
-      "boilingK": "4273.15_2"
+      "meltingK": "2349_10",
+      "boilingK": "4200_10",
+      "triplePointTempK": "2348_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "C": {
@@ -129,8 +139,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "59528765.3_5"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "4098.15_2"
+      "meltingK": "3825*_10",
+      "boilingK": "5103_10",
+      "triplePointTempK": "4765_11",
+      "triplePointPressKPa": "10132_11"
     }
   },
   "N": {
@@ -153,8 +165,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "199186.12_5"
     },
     "phaseTemperatures": {
-      "meltingK": "63.15_2",
-      "boilingK": "77.355_2"
+      "meltingK": "63.15_10",
+      "boilingK": "77.36_10",
+      "triplePointTempK": "63.151_12",
+      "triplePointPressKPa": "12.523_12"
     }
   },
   "O": {
@@ -175,8 +189,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "213138.32_5"
     },
     "phaseTemperatures": {
-      "meltingK": "54.36_2",
-      "boilingK": "90.188_2"
+      "meltingK": "54.36_10",
+      "boilingK": "90.20_10",
+      "triplePointTempK": "54.3584_12",
+      "triplePointPressKPa": "0.14625_11"
     }
   },
   "F": {
@@ -197,8 +213,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "172119.73_5"
     },
     "phaseTemperatures": {
-      "meltingK": "53.48_2",
-      "boilingK": "85.04_2"
+      "meltingK": "53.48_10",
+      "boilingK": "85.03_10",
+      "triplePointTempK": "53.48_10",
+      "triplePointPressKPa": "0.252_12"
     }
   },
   "Ne": {
@@ -217,8 +235,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "86720.81_5"
     },
     "phaseTemperatures": {
-      "meltingK": "24.56_2",
-      "boilingK": "27.104_2"
+      "meltingK": "24.56_10",
+      "boilingK": "27.07_10",
+      "triplePointTempK": "24.5561_12",
+      "triplePointPressKPa": "43.332_11"
     }
   },
   "Na": {
@@ -239,8 +259,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "4249716.42_5"
     },
     "phaseTemperatures": {
-      "meltingK": "370.944_2",
-      "boilingK": "1156.09_2"
+      "meltingK": "370.94_10",
+      "boilingK": "1156_10",
+      "triplePointTempK": "371.0_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "Mg": {
@@ -261,8 +283,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "5266406.09_5"
     },
     "phaseTemperatures": {
-      "meltingK": "923.15_2",
-      "boilingK": "1363.15_2"
+      "meltingK": "923_10",
+      "boilingK": "1363_10",
+      "triplePointTempK": "923_10",
+      "triplePointPressKPa": "0.0004_10"
     }
   },
   "Al": {
@@ -283,8 +307,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "10859276.98_5"
     },
     "phaseTemperatures": {
-      "meltingK": "933.473_2",
-      "boilingK": "2792.15_2"
+      "meltingK": "933.47_10",
+      "boilingK": "2792_10",
+      "triplePointTempK": "933.47_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Si": {
@@ -306,8 +332,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "12782624.18_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1687.15_2",
-      "boilingK": "3538.15_2"
+      "meltingK": "1687_10",
+      "boilingK": "3533_10",
+      "triplePointTempK": "1687_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "P": {
@@ -330,8 +358,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "400338.84_5"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "317.3_10",
+      "boilingK": "550_10",
+      "triplePointTempK": "317.3_10",
+      "triplePointPressKPa": "0.003_10"
     }
   },
   "S": {
@@ -355,8 +385,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "305676.86_5"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "717.76_2"
+      "meltingK": "388.36_10",
+      "boilingK": "717.8_10",
+      "triplePointTempK": "388.36_10",
+      "triplePointPressKPa": "< 0.001_10"
     }
   },
   "Cl": {
@@ -381,8 +413,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "287729.2_5"
     },
     "phaseTemperatures": {
-      "meltingK": "171.65_2",
-      "boilingK": "239.11_2"
+      "meltingK": "171.6_10",
+      "boilingK": "239.1_10",
+      "triplePointTempK": "172.17_12",
+      "triplePointPressKPa": "1.39_12"
     }
   },
   "Ar": {
@@ -401,8 +435,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "162711.52_5"
     },
     "phaseTemperatures": {
-      "meltingK": "83.81_2",
-      "boilingK": "87.302_2"
+      "meltingK": "83.81_10",
+      "boilingK": "87.3_10",
+      "triplePointTempK": "83.8058_12",
+      "triplePointPressKPa": "68.891_12"
     }
   },
   "K": {
@@ -423,8 +459,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1966837.43_5"
     },
     "phaseTemperatures": {
-      "meltingK": "336.65_2",
-      "boilingK": "1032.15_2"
+      "meltingK": "336.7_10",
+      "boilingK": "1032_10",
+      "triplePointTempK": "336.7_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "Ca": {
@@ -445,8 +483,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "3867458.46_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1115.15_2",
-      "boilingK": "1757.15_2"
+      "meltingK": "1115_10",
+      "boilingK": "1757_10",
+      "triplePointTempK": "1115_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "Sc": {
@@ -467,8 +507,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "7073597.53_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1814.15_2",
-      "boilingK": "3109.15_2"
+      "meltingK": "1814_10",
+      "boilingK": "3103_10",
+      "triplePointTempK": "1814_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Ti": {
@@ -489,8 +531,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "8878768.25_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1943.15_2",
-      "boilingK": "3560.15_2"
+      "meltingK": "1941_10",
+      "boilingK": "3560_10",
+      "triplePointTempK": "1941_10",
+      "triplePointPressKPa": "0.0053_10"
     }
   },
   "V": {
@@ -511,8 +555,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "8892553.22_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2183.15_2",
-      "boilingK": "3680.15_2"
+      "meltingK": "2183_10",
+      "boilingK": "3680_10",
+      "triplePointTempK": "2183_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Cr": {
@@ -534,8 +580,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "6519719.75_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2180.15_2",
-      "boilingK": "2944.15_2"
+      "meltingK": "2180_10",
+      "boilingK": "2944_10",
+      "triplePointTempK": "2180_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Mn": {
@@ -558,8 +606,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "4004510.97_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1519.15_2",
-      "boilingK": "2334.15_2"
+      "meltingK": "1519_10",
+      "boilingK": "2334_10",
+      "triplePointTempK": "1519_10",
+      "triplePointPressKPa": "< 1e-4_10"
     }
   },
   "Fe": {
@@ -581,8 +631,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "6213627_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1811.15_2",
-      "boilingK": "3134.15_2"
+      "meltingK": "1811_10",
+      "boilingK": "3134_10",
+      "triplePointTempK": "1811_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Co": {
@@ -604,8 +656,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "6363137.22_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1768.15_2",
-      "boilingK": "3200.15_2"
+      "meltingK": "1768_10",
+      "boilingK": "3200_10",
+      "triplePointTempK": "1768_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Ni": {
@@ -626,8 +680,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "6440247.11_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1728.15_2",
-      "boilingK": "3186.15_2"
+      "meltingK": "1728_10",
+      "boilingK": "3186_10",
+      "triplePointTempK": "1728_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Cu": {
@@ -648,8 +704,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "4720989.52_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1357.77_2",
-      "boilingK": "2833.15_2"
+      "meltingK": "1357.77_10",
+      "boilingK": "2835_10",
+      "triplePointTempK": "1357.77_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Zn": {
@@ -670,8 +728,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1820128.48_5"
     },
     "phaseTemperatures": {
-      "meltingK": "692.677_2",
-      "boilingK": "1180.15_2"
+      "meltingK": "692.68_10",
+      "boilingK": "1180_10",
+      "triplePointTempK": "692.65_11",
+      "triplePointPressKPa": "0.065_11"
     }
   },
   "Ga": {
@@ -692,8 +752,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "3671672.19_5"
     },
     "phaseTemperatures": {
-      "meltingK": "302.9146_2",
-      "boilingK": "2502.15_2"
+      "meltingK": "302.91_10",
+      "boilingK": "2477_10",
+      "triplePointTempK": "302.9166_12",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Ge": {
@@ -716,8 +778,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "4598650.7_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1211.4_2",
-      "boilingK": "3106.15_2"
+      "meltingK": "1211.4_10",
+      "boilingK": "3093_10",
+      "triplePointTempK": "1211.4_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "As": {
@@ -740,8 +804,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "432452.09_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1090.15_2",
-      "boilingK": "889.15_2"
+      "meltingK": "887*_10",
+      "boilingK": "887_10",
+      "triplePointTempK": "1090_11",
+      "triplePointPressKPa": "3628_11"
     }
   },
   "Se": {
@@ -765,8 +831,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "329234.78_5"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "958.15_2"
+      "meltingK": "494_10",
+      "boilingK": "958_10",
+      "triplePointTempK": "494_10",
+      "triplePointPressKPa": "< 1e-4_10"
     }
   },
   "Br": {
@@ -790,8 +858,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "185222.27_5"
     },
     "phaseTemperatures": {
-      "meltingK": "265.95_2",
-      "boilingK": "331.95_2"
+      "meltingK": "265.8_10",
+      "boilingK": "332_10",
+      "triplePointTempK": "265.9_10",
+      "triplePointPressKPa": "5.2_10"
     }
   },
   "Kr": {
@@ -812,8 +882,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "107639.8_5"
     },
     "phaseTemperatures": {
-      "meltingK": "115.78_2",
-      "boilingK": "119.735_2"
+      "meltingK": "115.78_10",
+      "boilingK": "119.93_10",
+      "triplePointTempK": "115.775_12",
+      "triplePointPressKPa": "73.2_12"
     }
   },
   "Rb": {
@@ -834,8 +906,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "830722.21_5"
     },
     "phaseTemperatures": {
-      "meltingK": "312.45_2",
-      "boilingK": "961.15_2"
+      "meltingK": "312.45_10",
+      "boilingK": "961_10",
+      "triplePointTempK": "312.41_12",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Sr": {
@@ -856,8 +930,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1563569.96_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1050.15_2",
-      "boilingK": "1650.15_2"
+      "meltingK": "1050_10",
+      "boilingK": "1655_10",
+      "triplePointTempK": "1050_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "Y": {
@@ -878,8 +954,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "4274184.91_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1795.15_2",
-      "boilingK": "3618.15_2"
+      "meltingK": "1799_10",
+      "boilingK": "3609_10",
+      "triplePointTempK": "1799_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Zr": {
@@ -900,8 +978,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "6357975.97_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2127.15_2",
-      "boilingK": "4679.15_2"
+      "meltingK": "2128_10",
+      "boilingK": "4682_10",
+      "triplePointTempK": "2128_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Nb": {
@@ -922,8 +1002,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "7426831.98_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2750.15_2",
-      "boilingK": "5014.15_2"
+      "meltingK": "2750_10",
+      "boilingK": "5017_10",
+      "triplePointTempK": "2750_10",
+      "triplePointPressKPa": "< 1e-8_10"
     }
   },
   "Mo": {
@@ -945,8 +1027,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "6253256.9_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2895.15_2",
-      "boilingK": "4912.15_2"
+      "meltingK": "2896_10",
+      "boilingK": "4912_10",
+      "triplePointTempK": "2896_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Tc": {
@@ -968,8 +1052,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "5617563.81_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2430.15_2",
-      "boilingK": "4535.15_2"
+      "meltingK": "2430_10",
+      "boilingK": "4538_10",
+      "triplePointTempK": "2430_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Ru": {
@@ -991,8 +1077,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "5738597.01_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2606.15_2",
-      "boilingK": "4420.15_2"
+      "meltingK": "2607_10",
+      "boilingK": "4423_10",
+      "triplePointTempK": "2607_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Rh": {
@@ -1013,8 +1101,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "4810238.52_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2236.15_2",
-      "boilingK": "3968.15_2"
+      "meltingK": "2237_10",
+      "boilingK": "3968_10",
+      "triplePointTempK": "2237_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Pd": {
@@ -1036,8 +1126,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "3570757.38_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1827.95_2",
-      "boilingK": "3236.15_2"
+      "meltingK": "1828.05_10",
+      "boilingK": "3236_10",
+      "triplePointTempK": "1825_11",
+      "triplePointPressKPa": "0.0035_11"
     }
   },
   "Ag": {
@@ -1058,8 +1150,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2363996.06_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1234.93_2",
-      "boilingK": "2435.15_2"
+      "meltingK": "1234.93_10",
+      "boilingK": "2435_10",
+      "triplePointTempK": "1234.93_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "Cd": {
@@ -1080,8 +1174,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "889568.91_5"
     },
     "phaseTemperatures": {
-      "meltingK": "594.219_2",
-      "boilingK": "1040.15_2"
+      "meltingK": "594.22_10",
+      "boilingK": "1040_10",
+      "triplePointTempK": "594.22_10",
+      "triplePointPressKPa": "0.001_10"
     }
   },
   "In": {
@@ -1102,8 +1198,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2003170.23_5"
     },
     "phaseTemperatures": {
-      "meltingK": "429.7485_2",
-      "boilingK": "2300.15_2"
+      "meltingK": "429.75_10",
+      "boilingK": "2345_10",
+      "triplePointTempK": "429.7436_12",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Sn": {
@@ -1126,8 +1224,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2442928.14_5"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "2859.15_2"
+      "meltingK": "505.08_10",
+      "boilingK": "2875_10",
+      "triplePointTempK": "505.08_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Sb": {
@@ -1150,8 +1250,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "550262.81_5"
     },
     "phaseTemperatures": {
-      "meltingK": "903.778_2",
-      "boilingK": "1860.15_2"
+      "meltingK": "903.78_10",
+      "boilingK": "1860_10",
+      "triplePointTempK": "903.78_10",
+      "triplePointPressKPa": "0.0001_10"
     }
   },
   "Te": {
@@ -1175,8 +1277,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "376175.55_5"
     },
     "phaseTemperatures": {
-      "meltingK": "722.66_2",
-      "boilingK": "1261.15_2"
+      "meltingK": "722.66_10",
+      "boilingK": "1261_10",
+      "triplePointTempK": "722.66_10",
+      "triplePointPressKPa": "0.0001_10"
     }
   },
   "I": {
@@ -1201,8 +1305,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "164690.81_5"
     },
     "phaseTemperatures": {
-      "meltingK": "386.85_2",
-      "boilingK": "457.55_2"
+      "meltingK": "386.85_10",
+      "boilingK": "457_10",
+      "triplePointTempK": "386.65_12",
+      "triplePointPressKPa": "12.07_12"
     }
   },
   "Xe": {
@@ -1225,8 +1331,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "96273.22_5"
     },
     "phaseTemperatures": {
-      "meltingK": "161.4_2",
-      "boilingK": "165.051_2"
+      "meltingK": "161.4_10",
+      "boilingK": "165.1_10",
+      "triplePointTempK": "161.405_12",
+      "triplePointPressKPa": "81.61973_12"
     }
   },
   "Cs": {
@@ -1247,8 +1355,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "481545.33_5"
     },
     "phaseTemperatures": {
-      "meltingK": "301.65_2",
-      "boilingK": "944.15_2"
+      "meltingK": "301.7_10",
+      "boilingK": "944_10",
+      "triplePointTempK": "301.7_10",
+      "triplePointPressKPa": "0.0001_10"
     }
   },
   "Ba": {
@@ -1269,8 +1379,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1019464.49_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1000.15_2",
-      "boilingK": "2118.15_2"
+      "meltingK": "1000_10",
+      "boilingK": "2170_10",
+      "triplePointTempK": "1000_10",
+      "triplePointPressKPa": "< 1e-4_10"
     }
   },
   "La": {
@@ -1291,8 +1403,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2879656.22_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1193.15_2",
-      "boilingK": "3737.15_2"
+      "meltingK": "1193_10",
+      "boilingK": "3737_10",
+      "triplePointTempK": "1193_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Ce": {
@@ -1314,8 +1428,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2497930.29_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1072.15_2",
-      "boilingK": "3716.15_2"
+      "meltingK": "1068_10",
+      "boilingK": "3716_10",
+      "triplePointTempK": "1068_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Pr": {
@@ -1336,8 +1452,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2341959.27_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1204.15_2",
-      "boilingK": "3793.15_2"
+      "meltingK": "1208_10",
+      "boilingK": "3793_10",
+      "triplePointTempK": "1208_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Nd": {
@@ -1358,8 +1476,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1975846.15_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1289.15_2",
-      "boilingK": "3347.15_2"
+      "meltingK": "1297_10",
+      "boilingK": "3347_10",
+      "triplePointTempK": "1297_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Pm": {
@@ -1380,8 +1500,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2001204.03_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1315.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1315_10",
+      "boilingK": "3273_10",
+      "triplePointTempK": "1315_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Sm": {
@@ -1402,8 +1524,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1163873.37_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1345.15_2",
-      "boilingK": "2067.15_2"
+      "meltingK": "1345_10",
+      "boilingK": "2067_10",
+      "triplePointTempK": "1345_10",
+      "triplePointPressKPa": "0.0001_10"
     }
   },
   "Eu": {
@@ -1425,8 +1549,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1151588.53_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1095.15_2",
-      "boilingK": "1802.15_2"
+      "meltingK": "1099_10",
+      "boilingK": "1802_10",
+      "triplePointTempK": "1099_10",
+      "triplePointPressKPa": "0.0001_10"
     }
   },
   "Gd": {
@@ -1447,8 +1573,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1939586.65_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1586.15_2",
-      "boilingK": "3546.15_2"
+      "meltingK": "1585_10",
+      "boilingK": "3546_10",
+      "triplePointTempK": "1585_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Tb": {
@@ -1469,8 +1597,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1856217.4_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1632.15_2",
-      "boilingK": "3503.15_2"
+      "meltingK": "1629_10",
+      "boilingK": "3503_10",
+      "triplePointTempK": "1629_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Dy": {
@@ -1491,8 +1621,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1723076.92_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1685.15_2",
-      "boilingK": "2840.15_2"
+      "meltingK": "1680_10",
+      "boilingK": "2840_10",
+      "triplePointTempK": "1680_10",
+      "triplePointPressKPa": "0.0001_10"
     }
   },
   "Ho": {
@@ -1513,8 +1645,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1606739.04_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1745.15_2",
-      "boilingK": "2973.15_2"
+      "meltingK": "1734_10",
+      "boilingK": "2993_10",
+      "triplePointTempK": "1734_10",
+      "triplePointPressKPa": "0.0001_10"
     }
   },
   "Er": {
@@ -1535,8 +1669,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1703944.18_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1802.15_2",
-      "boilingK": "3141.15_2"
+      "meltingK": "1802_10",
+      "boilingK": "3141_10",
+      "triplePointTempK": "1802_10",
+      "triplePointPressKPa": "0.0001_10"
     }
   },
   "Tm": {
@@ -1557,8 +1693,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1479865.95_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1818.15_2",
-      "boilingK": "2223.15_2"
+      "meltingK": "1818_10",
+      "boilingK": "2223_10",
+      "triplePointTempK": "1818_10",
+      "triplePointPressKPa": "0.0001_10"
     }
   },
   "Yb": {
@@ -1579,8 +1717,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "924614.98_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1097.15_2",
-      "boilingK": "1469.15_2"
+      "meltingK": "1097_10",
+      "boilingK": "1469_10",
+      "triplePointTempK": "1097_10",
+      "triplePointPressKPa": "0.001_10"
     }
   },
   "Lu": {
@@ -1601,8 +1741,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2371878.55_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1936.15_2",
-      "boilingK": "3675.15_2"
+      "meltingK": "1925_10",
+      "boilingK": "3675_10",
+      "triplePointTempK": "1925_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Hf": {
@@ -1623,8 +1765,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "3529609.5_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2506.15_2",
-      "boilingK": "4873.15_2"
+      "meltingK": "2506_10",
+      "boilingK": "4876_10",
+      "triplePointTempK": "2506_10",
+      "triplePointPressKPa": "< 1e-8_10"
     }
   },
   "Ta": {
@@ -1645,8 +1789,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "4067469.59_5"
     },
     "phaseTemperatures": {
-      "meltingK": "3290.15_2",
-      "boilingK": "5728.15_2"
+      "meltingK": "3290_10",
+      "boilingK": "5731_10",
+      "triplePointTempK": "3290_10",
+      "triplePointPressKPa": "< 1e-8_10"
     }
   },
   "W": {
@@ -1668,8 +1814,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "4351610.1_5"
     },
     "phaseTemperatures": {
-      "meltingK": "3687.15_2",
-      "boilingK": "5828.15_2"
+      "meltingK": "3695_10",
+      "boilingK": "5828_10",
+      "triplePointTempK": "3695_10",
+      "triplePointPressKPa": "< 1e-11_10"
     }
   },
   "Re": {
@@ -1690,8 +1838,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "3786109.01_5"
     },
     "phaseTemperatures": {
-      "meltingK": "3458.15_2",
-      "boilingK": "5863.15_2"
+      "meltingK": "3459_10",
+      "boilingK": "5869_10",
+      "triplePointTempK": "3459_10",
+      "triplePointPressKPa": "< 1e-9_10"
     }
   },
   "Os": {
@@ -1712,8 +1862,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "3311780.48_5"
     },
     "phaseTemperatures": {
-      "meltingK": "3306.15_2",
-      "boilingK": "5281.15_2"
+      "meltingK": "3306_10",
+      "boilingK": "5285_10",
+      "triplePointTempK": "3306_10",
+      "triplePointPressKPa": "< 1e-9_10"
     }
   },
   "Ir": {
@@ -1735,8 +1887,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2913373.95_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2719.15_2",
-      "boilingK": "4701.15_2"
+      "meltingK": "2719_10",
+      "boilingK": "4701_10",
+      "triplePointTempK": "2719_10",
+      "triplePointPressKPa": "< 1e-8_10"
     }
   },
   "Pt": {
@@ -1758,8 +1912,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2511738.53_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2041.35_2",
-      "boilingK": "4098.15_2"
+      "meltingK": "2041.4_10",
+      "boilingK": "4098_10",
+      "triplePointTempK": "2045_11",
+      "triplePointPressKPa": "2.0e-4_11"
     }
   },
   "Au": {
@@ -1780,8 +1936,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1675411.22_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1337.33_2",
-      "boilingK": "3109.15_2"
+      "meltingK": "1337.33_10",
+      "boilingK": "3129_10",
+      "triplePointTempK": "1337.33_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Hg": {
@@ -1803,8 +1961,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "295126.43_5"
     },
     "phaseTemperatures": {
-      "meltingK": "234.321_2",
-      "boilingK": "629.769_2"
+      "meltingK": "234.32_10",
+      "boilingK": "629.88_10",
+      "triplePointTempK": "234.3156_12",
+      "triplePointPressKPa": "1.65e-7_12"
     }
   },
   "Tl": {
@@ -1826,8 +1986,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "807319.7_5"
     },
     "phaseTemperatures": {
-      "meltingK": "577.15_2",
-      "boilingK": "1746.15_2"
+      "meltingK": "577_10",
+      "boilingK": "1746_10",
+      "triplePointTempK": "577_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "Pb": {
@@ -1849,8 +2011,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "859073.36_5"
     },
     "phaseTemperatures": {
-      "meltingK": "600.612_2",
-      "boilingK": "2022.15_2"
+      "meltingK": "600.61_10",
+      "boilingK": "2022_10",
+      "triplePointTempK": "600.61_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "Bi": {
@@ -1871,8 +2035,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "765622.04_5"
     },
     "phaseTemperatures": {
-      "meltingK": "544.552_2",
-      "boilingK": "1837.15_2"
+      "meltingK": "544.7_10",
+      "boilingK": "1837_10",
+      "triplePointTempK": "544.7_10",
+      "triplePointPressKPa": "< 1e-4_10"
     }
   },
   "Po": {
@@ -1895,8 +2061,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "478468.9_5"
     },
     "phaseTemperatures": {
-      "meltingK": "527.15_2",
-      "boilingK": "1235.15_2"
+      "meltingK": "527_10",
+      "boilingK": "1235_10",
+      "triplePointTempK": "527_10",
+      "triplePointPressKPa": "0.01_10"
     }
   },
   "At": {
@@ -1918,8 +2086,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "190476.19_5"
     },
     "phaseTemperatures": {
-      "meltingK": "575.15_2",
-      "boilingK": "N/A"
+      "meltingK": "575_10",
+      "boilingK": "610_10",
+      "triplePointTempK": "575_10",
+      "triplePointPressKPa": "0.1_10"
     }
   },
   "Rn": {
@@ -1938,8 +2108,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "76576.58_5"
     },
     "phaseTemperatures": {
-      "meltingK": "202.15_2",
-      "boilingK": "211.45_2"
+      "meltingK": "202_10",
+      "boilingK": "211.3_10",
+      "triplePointTempK": "202_10",
+      "triplePointPressKPa": "70_10"
     }
   },
   "Fr": {
@@ -1960,8 +2132,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "286995.52_5"
     },
     "phaseTemperatures": {
-      "meltingK": "294.15_2",
-      "boilingK": "N/A"
+      "meltingK": "300_10",
+      "boilingK": "950_10",
+      "triplePointTempK": "300_10",
+      "triplePointPressKPa": "0.001_10"
     }
   },
   "Ra": {
@@ -1982,8 +2156,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "553097.35_5"
     },
     "phaseTemperatures": {
-      "meltingK": "969.15_2",
-      "boilingK": "N/A"
+      "meltingK": "973_10",
+      "boilingK": "2010_10",
+      "triplePointTempK": "973_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "Ac": {
@@ -2004,8 +2180,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1762114.54_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1323.15_2",
-      "boilingK": "3473.15_2"
+      "meltingK": "1500_10",
+      "boilingK": "3471_10",
+      "triplePointTempK": "1500_10",
+      "triplePointPressKPa": "< 1e-6_10"
     }
   },
   "Th": {
@@ -2026,8 +2204,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2284111.59_5"
     },
     "phaseTemperatures": {
-      "meltingK": "2023.15_2",
-      "boilingK": "5058.15_2"
+      "meltingK": "2023_10",
+      "boilingK": "5061_10",
+      "triplePointTempK": "2023_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Pa": {
@@ -2048,8 +2228,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "2034316.06_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1845.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1841_10",
+      "boilingK": "4300_10",
+      "triplePointTempK": "1841_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "U": {
@@ -2070,8 +2252,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1764491.55_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1408.15_2",
-      "boilingK": "4404.15_2"
+      "meltingK": "1405.3_10",
+      "boilingK": "4404_10",
+      "triplePointTempK": "1405.3_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Np": {
@@ -2092,8 +2276,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1413502.11_5"
     },
     "phaseTemperatures": {
-      "meltingK": "917.15_2",
-      "boilingK": "N/A"
+      "meltingK": "912_10",
+      "boilingK": "4175_10",
+      "triplePointTempK": "998*_10",
+      "triplePointPressKPa": "3200*_10"
     }
   },
   "Pu": {
@@ -2114,8 +2300,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "1331967.21_5"
     },
     "phaseTemperatures": {
-      "meltingK": "913.15_2",
-      "boilingK": "3501.15_2"
+      "meltingK": "912.5_10",
+      "boilingK": "3508_10",
+      "triplePointTempK": "912.5_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Am": {
@@ -2136,8 +2324,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "981481.4815_5"
     },
     "phaseTemperatures": {
-      "meltingK": "1449.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1449_10",
+      "boilingK": "2880_10",
+      "triplePointTempK": "1449_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Cm": {
@@ -2158,8 +2348,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "1618.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1613_10",
+      "boilingK": "3383_10",
+      "triplePointTempK": "1613_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Bk": {
@@ -2180,8 +2372,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "1259.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1259_10",
+      "boilingK": "2900_10",
+      "triplePointTempK": "1259_10",
+      "triplePointPressKPa": "< 1e-7_10"
     }
   },
   "Cf": {
@@ -2202,8 +2396,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "1173.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1173_10",
+      "boilingK": "1743_10",
+      "triplePointTempK": "1173_10",
+      "triplePointPressKPa": "< 1e-5_10"
     }
   },
   "Es": {
@@ -2224,8 +2420,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "1133.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1133_10",
+      "boilingK": "1269_10",
+      "triplePointTempK": "1133_10",
+      "triplePointPressKPa": "0.001_10"
     }
   },
   "Fm": {
@@ -2246,8 +2444,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "1800.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1800*_10",
+      "boilingK": "2200*_10",
+      "triplePointTempK": "1800_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Md": {
@@ -2268,8 +2468,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "1100.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1100*_10",
+      "boilingK": "1500*_10",
+      "triplePointTempK": "1100_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "No": {
@@ -2290,8 +2492,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "1100.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1100*_10",
+      "boilingK": "1500*_10",
+      "triplePointTempK": "1100_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Lr": {
@@ -2312,8 +2516,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "1900.15_2",
-      "boilingK": "N/A"
+      "meltingK": "1900*_10",
+      "boilingK": "2500*_10",
+      "triplePointTempK": "1900_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Rf": {
@@ -2334,8 +2540,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "2400*_10",
+      "boilingK": "5800*_10",
+      "triplePointTempK": "2400_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Db": {
@@ -2354,8 +2562,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "2800*_10",
+      "boilingK": "6000*_10",
+      "triplePointTempK": "2800_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Sg": {
@@ -2374,8 +2584,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "3000*_10",
+      "boilingK": "6100*_10",
+      "triplePointTempK": "3000_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Bh": {
@@ -2394,8 +2606,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "3200*_10",
+      "boilingK": "6300*_10",
+      "triplePointTempK": "3200_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Hs": {
@@ -2414,8 +2628,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "3500*_10",
+      "boilingK": "6500*_10",
+      "triplePointTempK": "3500_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Mt": {
@@ -2434,8 +2650,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "3800*_10",
+      "boilingK": "6700*_10",
+      "triplePointTempK": "3800_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Ds": {
@@ -2454,8 +2672,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "4000*_10",
+      "boilingK": "7000*_10",
+      "triplePointTempK": "4000_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Rg": {
@@ -2474,8 +2694,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "4200*_10",
+      "boilingK": "7200*_10",
+      "triplePointTempK": "4200_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Cn": {
@@ -2494,8 +2716,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "283*_10",
+      "boilingK": "340*_10",
+      "triplePointTempK": "283*_10",
+      "triplePointPressKPa": "25*_10"
     }
   },
   "Nh": {
@@ -2514,8 +2738,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "700_10",
+      "boilingK": "1400_10",
+      "triplePointTempK": "700_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Fl": {
@@ -2534,8 +2760,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "200_10",
+      "boilingK": "210_10",
+      "triplePointTempK": "200_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Mc": {
@@ -2554,8 +2782,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "670_10",
+      "boilingK": "1400_10",
+      "triplePointTempK": "670_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Lv": {
@@ -2574,8 +2804,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "708_10",
+      "boilingK": "1100_10",
+      "triplePointTempK": "708_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Ts": {
@@ -2594,8 +2826,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "723_10",
+      "boilingK": "883_10",
+      "triplePointTempK": "723_10",
+      "triplePointPressKPa": "N/A_10"
     }
   },
   "Og": {
@@ -2614,8 +2848,10 @@ export const SCIENTIFIC_DATA = {
       "vaporization": "N/A"
     },
     "phaseTemperatures": {
-      "meltingK": "N/A",
-      "boilingK": "N/A"
+      "meltingK": "325*_9",
+      "boilingK": "450*_9",
+      "triplePointTempK": "325_10",
+      "triplePointPressKPa": "N/A_10"
     }
   }
 } as const;

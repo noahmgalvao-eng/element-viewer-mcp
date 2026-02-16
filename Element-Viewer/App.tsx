@@ -7,8 +7,7 @@ import RecordingStatsModal from './components/Simulator/RecordingStatsModal';
 import { ELEMENTS } from './data/elements';
 import { ChemicalElement, PhysicsState } from './types';
 // Import new hook
-import { useChatGPT } from './hooks/useChatGPT';
-import { Settings2, X, Play, Pause, Circle, Square, Maximize2, Minimize2, PictureInPicture2 } from 'lucide-react';
+import { Settings2, X, Play, Pause, Circle, Square, Maximize2, Minimize2, PictureInPicture2, Info } from 'lucide-react';
 
 
 interface ContextMenuData {
@@ -23,6 +22,10 @@ interface RecordingSnapshot {
     element: ChemicalElement;
     state: PhysicsState;
 }
+
+import { useElementViewerChat } from './hooks/useElementViewerChat';
+
+// ... (existing interfaces)
 
 function App() {
     // State for Selection (Array for Multi-Element)
@@ -41,38 +44,35 @@ function App() {
     const [contextMenu, setContextMenu] = useState<ContextMenuData | null>(null);
     const [isInteracting, setIsInteracting] = useState(false);
 
-    // ChatGPT SDK integration
+    // Refs
+    const sidebarRef = useRef<HTMLElement>(null);
+    const simulationRegistry = useRef<Map<number, () => PhysicsState>>(new Map());
+
+    // ChatGPT Integration Hook
     const {
-        displayMode,
         maxHeight,
         safeArea,
         isFullscreen,
         requestDisplayMode,
-        toolInput,
-        callTool
-    } = useChatGPT();
+        handleInfoClick
+    } = useElementViewerChat({
+        globalTemperature: temperature,
+        globalPressure: pressure,
+        selectedElements,
+        simulationRegistry
+    });
 
     // Safe area insets from ChatGPT SDK (avoids overlapping ChatGPT's own controls)
     const insets = safeArea?.insets ?? { top: 0, bottom: 0, left: 0, right: 0 };
-
-    // Log tool inputs for debugging (e.g., when ChatGPT sends "knowledge")
-    useEffect(() => {
-        if (toolInput && Object.keys(toolInput).length > 0) {
-            console.log('Received Tool Input:', toolInput);
-            // Future: Handle knowledge or actions here
-        }
-    }, [toolInput]);
 
     // Recording State
     const [isRecording, setIsRecording] = useState(false);
     const [recordingStartData, setRecordingStartData] = useState<Map<number, PhysicsState>>(new Map());
     const [recordingResults, setRecordingResults] = useState<{ element: ChemicalElement, start: PhysicsState, end: PhysicsState }[] | null>(null);
 
-    // Refs for Click Outside logic
-    const sidebarRef = useRef<HTMLElement>(null);
-
     // Registry to access child physics states on demand
-    const simulationRegistry = useRef<Map<number, () => PhysicsState>>(new Map());
+    // (Managed in hook now or declared above)
+
 
     // --- SELECTION LOGIC ---
     const handleElementSelect = (el: ChemicalElement) => {
@@ -312,6 +312,15 @@ function App() {
                 style={{ top: `${24 + insets.top}px`, left: `${24 + insets.left}px` }}
 
             >
+                {/* Info / AI Context Button */}
+                <button
+                    onClick={handleInfoClick}
+                    className={`${floatingBtnClass} text-purple-400 border-purple-500/50 hover:bg-purple-900/40`}
+                    title="Ask ChatGPT about this"
+                >
+                    <Info size={24} />
+                </button>
+
                 {/* Settings Button */}
                 <button
                     onClick={(e) => {
