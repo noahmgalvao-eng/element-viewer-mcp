@@ -262,6 +262,7 @@ Localizado em `hooks/useChatGPT.ts`, este hook encapsula toda a comunicação co
 
 ### Adaptações no `App.tsx`
 - **Botão Fullscreen**: Utiliza `requestDisplayMode` para alternar entre linha e tela cheia.
+- **Botão Picture-in-Picture (PiP)**: Novo botão para modo flutuante (`requestDisplayMode('pip')`).
 - **Safe Areas**: Respeita as margens (`insets`) fornecidas pelo SDK para evitar sobreposição com a UI do ChatGPT.
 - **Logging**: Monitora `toolInput` no console para debug de integrações futuras.
 

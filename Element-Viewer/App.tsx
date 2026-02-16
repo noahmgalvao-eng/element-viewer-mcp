@@ -8,7 +8,8 @@ import { ELEMENTS } from './data/elements';
 import { ChemicalElement, PhysicsState } from './types';
 // Import new hook
 import { useChatGPT } from './hooks/useChatGPT';
-import { Settings2, X, Play, Pause, Circle, Square, Maximize2, Minimize2 } from 'lucide-react';
+import { Settings2, X, Play, Pause, Circle, Square, Maximize2, Minimize2, PictureInPicture2 } from 'lucide-react';
+
 
 interface ContextMenuData {
     x: number;
@@ -16,6 +17,7 @@ interface ContextMenuData {
     element: ChemicalElement;
     physicsState: PhysicsState;
 }
+
 
 interface RecordingSnapshot {
     element: ChemicalElement;
@@ -226,6 +228,16 @@ function App() {
       flex items-center justify-center w-12 h-12
   `;
 
+    // --- PIP HANDLER ---
+    const handleTogglePiP = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            await requestDisplayMode('pip');
+        } catch (error) {
+            console.error("Failed to enter PiP mode:", error);
+        }
+    };
+
     // --- FULLSCREEN HANDLER ---
     const handleToggleFullscreen = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -348,15 +360,29 @@ function App() {
 
             </div>
 
-            {/* --- FULLSCREEN TOGGLE (Always visible, top-right, highest z-index) --- */}
-            <button
-                onClick={handleToggleFullscreen}
-                className="fixed z-[60] p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
+            {/* --- DISPLAY MODES (Always visible, top-right, highest z-index) --- */}
+            <div
+                className="fixed z-[60] flex gap-2"
                 style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
-                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
             >
-                {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-            </button>
+                {/* PiP Toggle */}
+                <button
+                    onClick={handleTogglePiP}
+                    className="p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
+                    title="Picture-in-Picture"
+                >
+                    <PictureInPicture2 size={20} />
+                </button>
+
+                {/* Fullscreen Toggle */}
+                <button
+                    onClick={handleToggleFullscreen}
+                    className="p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
+                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                >
+                    {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+                </button>
+            </div>
 
             {/* --- MAIN VISUALIZATION CANVAS (Seamless Grid) --- */}
             <main className={`w-full h-full grid gap-0 ${gridClass} bg-slate-950`}>
