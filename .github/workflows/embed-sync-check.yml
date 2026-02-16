@@ -1,0 +1,46 @@
+name: Embed Sync Check
+
+on:
+  pull_request:
+    paths:
+      - 'Element-Viewer/App.tsx'
+      - 'meu-mcp-server/api/html-content.js'
+      - '.github/workflows/embed-sync-check.yml'
+
+jobs:
+  validate-embed-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure embedded HTML was updated with App.tsx changes
+        run: |
+          set -euo pipefail
+
+          BASE_SHA='${{ github.event.pull_request.base.sha }}'
+          HEAD_SHA='${{ github.sha }}'
+
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")"
+
+          APP_CHANGED=false
+          EMBED_CHANGED=false
+
+          if echo "$CHANGED_FILES" | grep -qx 'Element-Viewer/App.tsx'; then
+            APP_CHANGED=true
+          fi
+
+          if echo "$CHANGED_FILES" | grep -qx 'meu-mcp-server/api/html-content.js'; then
+            EMBED_CHANGED=true
+          fi
+
+          echo "App.tsx alterado: $APP_CHANGED"
+          echo "html-content.js alterado: $EMBED_CHANGED"
+
+          if [ "$APP_CHANGED" = true ] && [ "$EMBED_CHANGED" = false ]; then
+            echo 'ERRO: Element-Viewer/App.tsx foi alterado sem atualização de meu-mcp-server/api/html-content.js.'
+            echo "Execute: npm --prefix meu-mcp-server run release:widget"
+            exit 1
+          fi
