@@ -362,16 +362,20 @@ function App() {
 
             {/* --- DISPLAY MODES (Always visible, top-right, highest z-index) --- */}
             <div
-                className="fixed z-[100] flex gap-2"
+                className="fixed z-[9999] flex gap-2"
                 style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
             >
                 {/* PiP Toggle */}
                 <button
-                    onClick={handleTogglePiP}
-                    className="p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
-                    title="Picture-in-Picture"
+                    onClick={(e) => {
+                        console.log("PiP Button Clicked");
+                        handleTogglePiP(e);
+                    }}
+                    className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-300 flex items-center justify-center gap-2 font-bold ring-2 ring-white/50"
+                    title="Enter Picture-in-Picture"
                 >
                     <PictureInPicture2 size={20} />
+                    <span className="text-xs uppercase">PiP</span>
                 </button>
 
                 {/* Fullscreen Toggle */}
