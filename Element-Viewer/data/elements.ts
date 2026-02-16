@@ -44,7 +44,7 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     return fallback;
   };
 
-  // HELPER: Parse Scientific Values (handles '*', 'N/A', and numeric suffixes like '_5')
+  // HELPER: Parse Scientific Values (handles '*', 'N/A', '<', '>', '~', and numeric suffixes like '_5')
   const parseSciValue = (input: string | number | undefined, fallback: number) => {
     if (input === undefined || input === null) return { val: fallback, str: undefined, source: undefined };
 
@@ -60,20 +60,21 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     const suffixMatch = str.match(/_(\d+)$/);
     if (suffixMatch) {
       sourceId = parseInt(suffixMatch[1], 10);
-      str = str.replace(/_(\d+)$/, ''); // Remove suffix for value parsing
+      str = str.replace(/_(\d+)$/, ''); // Remove suffix for parsing
     }
 
-    // 2. Parse Value (Handle '*' for estimate)
-    // parseFloat stops at non-numeric characters generally, but let's be safe
-    // If original string had *, keep it in result str for UI
-    const cleanStr = str.replace('*', '');
+    // 2. Parse Value (Handle special chars)
+    // Remove '*', '<', '>', '~' for numeric parsing, but keep logic in mind
+    // keeping str as is (minus suffix) for display is usually good, but we might want to clean * for display?
+    // The previous code kept * in str for display.
+    const cleanStr = str.replace(/[*<>~]/g, '');
     const val = parseFloat(cleanStr);
 
-    const isValid = !isNaN(val) && val >= 0; // Allow 0 for specific cases like pressure
+    const isValid = !isNaN(val) && val >= 0;
 
     return {
       val: isValid ? val : fallback,
-      str: str, // Keep original string (with *) for display, but without suffix
+      str: str, // Keep original string (e.g. "< 1e-5*") for display
       source: sourceId
     };
   };
@@ -164,6 +165,9 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   // Bulk Modulus (Layer 3)
   const rawBulk = specificLegacyProps.bulkModulusGPa;
   const displayBulk = rawBulk !== undefined ? `${rawBulk} GPa` : "N/A";
+
+  // MASS PARSING
+  const massRes = parseSciValue(scientific?.mass, source.atomic_mass);
 
   // 3. Construct Properties Object adhering to Merge Strategy
   const properties: ElementProperties = {
@@ -266,7 +270,8 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
       electronShells: source.shells ? source.shells.length : 0
     },
 
-    mass: source.atomic_mass,
+    mass: massRes.val, // Use scientific val (or fallback)
+    massSource: massRes.source, // NEW: Capture Source
     category: customData.category || SODIUM_FALLBACK.category || 'metal',
 
     properties,
