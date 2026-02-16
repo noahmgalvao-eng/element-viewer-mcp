@@ -27,9 +27,14 @@ function createElementViewerServer() {
           _meta: {
             "openai/widgetPrefersBorder": true,
             "openai/widgetDomain": "https://chatgpt.com",
+            "openai/widgetDescription": "Element Viewer interativo para explorar estados da materia e transicoes de fase.",
             "openai/widgetCSP": {
               connect_domains: ["https://chatgpt.com"],
-              resource_domains: ["https://*.oaistatic.com"],
+              resource_domains: [
+                "https://*.oaistatic.com",
+                "https://cdn.tailwindcss.com",
+                "https://esm.sh",
+              ],
             },
           },
         },
@@ -43,29 +48,29 @@ function createElementViewerServer() {
     {
       title: "Abrir Element Viewer",
       description:
-        "Abre a interface interativa do simulador de física/química Element Viewer. Use quando o usuário quiser visualizar ou interagir com estados da matéria.",
+        "Abre a interface interativa do simulador de fisica/quimica Element Viewer. Use quando o usuario quiser visualizar ou interagir com estados da materia.",
       inputSchema: z.object({}),
       _meta: {
         "openai/outputTemplate": "ui://widget/element-viewer.html",
-        "openai/toolInvocation/invoking": "Abrindo Element Viewer…",
+        "openai/toolInvocation/invoking": "Abrindo Element Viewer...",
         "openai/toolInvocation/invoked": "Element Viewer pronto.",
         "openai/widgetAccessible": true,
       },
     },
     async () => ({
-      // Aqui enviamos o estado inicial para o ChatGPT já começar com contexto
+      // Estado inicial para o ChatGPT comecar com contexto
       structuredContent: {
         app: "Element Viewer",
         status: "open",
         ambiente_inicial: {
           temperatura_K: 298.15,
-          pressao_Pa: 101325
-        }
+          pressao_Pa: 101325,
+        },
       },
       content: [
         {
           type: "text",
-          text: "Element Viewer aberto com sucesso. A simulação iniciou em Condições Normais de Temperatura e Pressão (298.15K, 1 atm).",
+          text: "Element Viewer aberto com sucesso. A simulacao iniciou em Condicoes Normais de Temperatura e Pressao (298.15K, 1 atm).",
         },
       ],
     })
