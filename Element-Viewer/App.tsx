@@ -5,7 +5,7 @@ import SimulationUnit from './components/Simulator/SimulationUnit';
 import ElementPropertiesMenu from './components/Simulator/ElementPropertiesMenu';
 import RecordingStatsModal from './components/Simulator/RecordingStatsModal';
 import { ELEMENTS } from './data/elements';
-import { ChemicalElement, MatterState, PhysicsState, SET_GLOBALS_EVENT_TYPE, SetGlobalsEvent } from './types';
+import { ChemicalElement, MatterState, PhysicsState } from './types';
 import { predictMatterState } from './hooks/physics/phaseCalculations';
 // Import new hook
 import { Play, Pause, Settings2, X, Circle, Square } from "lucide-react";
@@ -26,14 +26,11 @@ const IconIdeaBulb = ({ size = 24, className = "" }: { size?: number, className?
         strokeLinejoin="round"
         className={className}
     >
-        <path d="M9 18h6" />
-        <path d="M10 22h4" />
-        <path d="M12 2a7 7 0 0 0-4 12c.53.53 1 1.39 1 2.2V17h6v-.8c0-.81.47-1.67 1-2.2A7 7 0 0 0 12 2z" />
-        <path d="M12 6v1" />
-        <path d="M18 8l-.7.7" />
-        <path d="M6.7 8.7 6 8" />
-        <path d="M20 13h-1" />
-        <path d="M5 13H4" />
+        <circle cx="12" cy="10.5" r="5.5" fill="currentColor" opacity="0.18" stroke="none" />
+        <path d="M12 3.5a5 5 0 0 0-3.2 8.84c.62.53 1.2 1.47 1.2 2.45V16h4v-1.2c0-.98.58-1.92 1.2-2.45A5 5 0 0 0 12 3.5z" />
+        <path d="M10.5 18.2h3" />
+        <path d="M10 20.4h4" />
+        <path d="M12 2v1" />
     </svg>
 );
 
@@ -205,15 +202,6 @@ interface IAStructuredContent {
 
 const normalizeElementLookup = (value: string): string => value.trim().toLowerCase();
 
-const safeSerialize = (value: unknown): string => {
-    try {
-        const serialized = JSON.stringify(value);
-        return serialized ?? '__undefined__';
-    } catch {
-        return String(value);
-    }
-};
-
 const readOpenAiStructuredContent = (): unknown => {
     if (typeof window === 'undefined' || !window.openai) return null;
 
@@ -263,7 +251,6 @@ function App() {
     const simulationRegistry = useRef<Map<number, () => PhysicsState>>(new Map());
     const aiMessageTimeoutRef = useRef<number | null>(null);
     const lastProcessedAiTimestampRef = useRef(0);
-    const lastToolInputSnapshotRef = useRef('__init__');
     const syncStateToChatGPTRef = useRef<() => Promise<void>>(async () => { });
 
     // ChatGPT Integration Hook
@@ -411,29 +398,17 @@ function App() {
         };
     }, []);
 
-    // Sync current simulator state whenever the user sends a new prompt.
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
+    const scheduleSyncStateToChatGPT = () => {
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                void syncStateToChatGPTRef.current();
+            });
+        });
+    };
 
-        lastToolInputSnapshotRef.current = safeSerialize(window.openai?.toolInput ?? null);
-
-        const handleSetGlobals = (event: Event) => {
-            const setGlobalsEvent = event as SetGlobalsEvent;
-            const globals = setGlobalsEvent.detail?.globals;
-            if (!globals || !Object.prototype.hasOwnProperty.call(globals, 'toolInput')) return;
-
-            const nextSnapshot = safeSerialize(globals.toolInput ?? null);
-            if (nextSnapshot === lastToolInputSnapshotRef.current) return;
-
-            lastToolInputSnapshotRef.current = nextSnapshot;
-            void syncStateToChatGPTRef.current();
-        };
-
-        window.addEventListener(SET_GLOBALS_EVENT_TYPE, handleSetGlobals, { passive: true });
-        return () => {
-            window.removeEventListener(SET_GLOBALS_EVENT_TYPE, handleSetGlobals);
-        };
-    }, []);
+    const handleSliderRelease = () => {
+        scheduleSyncStateToChatGPT();
+    };
 
     // --- RADAR REATIVO DO CHATGPT (ATUALIZACAO EM TEMPO REAL) ---
     useEffect(() => {
@@ -516,10 +491,12 @@ function App() {
     // --- SELECTION LOGIC ---
     const handleElementSelect = (el: ChemicalElement) => {
         if (isRecording) return; // Prevent changing elements while recording
+        let didChangeSelection = false;
 
         if (!isMultiSelect) {
             // Single Mode: Replace
             setSelectedElements([el]);
+            didChangeSelection = true;
         } else {
             // Multi Mode: Toggle / FIFO
             const exists = selectedElements.find(e => e.atomicNumber === el.atomicNumber);
@@ -530,6 +507,7 @@ function App() {
                 // If removing the last one, don't allow empty array (fallback to default or keep one)
                 if (filtered.length === 0) return;
                 setSelectedElements(filtered);
+                didChangeSelection = true;
             } else {
                 // Add new
                 let newSelection = [...selectedElements, el];
@@ -538,8 +516,14 @@ function App() {
                     newSelection = newSelection.slice(1);
                 }
                 setSelectedElements(newSelection);
+                didChangeSelection = true;
             }
         }
+
+        if (didChangeSelection) {
+            scheduleSyncStateToChatGPT();
+        }
+
         // Close menu if switching elements
         setContextMenu(null);
     };
@@ -551,6 +535,7 @@ function App() {
         // If turning OFF, revert to just the last selected element
         if (!newValue && selectedElements.length > 1) {
             setSelectedElements([selectedElements[selectedElements.length - 1]]);
+            scheduleSyncStateToChatGPT();
         }
     };
     // 2. FUNÃ‡ÃƒO DE TOGGLE
@@ -747,6 +732,7 @@ function App() {
                         showParticles={showParticles}
                         setShowParticles={setShowParticles}
                         onInteractionChange={setIsInteracting}
+                        onSliderRelease={handleSliderRelease}
                     />
                 </div>
             </aside>
