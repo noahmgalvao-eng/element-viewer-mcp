@@ -5,7 +5,7 @@ import SimulationUnit from './components/Simulator/SimulationUnit';
 import ElementPropertiesMenu from './components/Simulator/ElementPropertiesMenu';
 import RecordingStatsModal from './components/Simulator/RecordingStatsModal';
 import { ELEMENTS } from './data/elements';
-import { ChemicalElement, MatterState, PhysicsState } from './types';
+import { ChemicalElement, MatterState, PhysicsState, SET_GLOBALS_EVENT_TYPE, SetGlobalsEvent } from './types';
 import { predictMatterState } from './hooks/physics/phaseCalculations';
 // Import new hook
 import { Play, Pause, Settings2, X, Circle, Square } from "lucide-react";
@@ -191,6 +191,51 @@ interface RecordingSnapshot {
     state: PhysicsState;
 }
 
+interface IAConfiguracao {
+    elementos?: string[] | null;
+    temperatura_K?: number | null;
+    pressao_Pa?: number | null;
+    interpretacao_do_modelo?: string | null;
+}
+
+interface IAStructuredContent {
+    configuracao_ia?: IAConfiguracao;
+    timestamp_atualizacao?: number;
+}
+
+const normalizeElementLookup = (value: string): string => value.trim().toLowerCase();
+
+const safeSerialize = (value: unknown): string => {
+    try {
+        const serialized = JSON.stringify(value);
+        return serialized ?? '__undefined__';
+    } catch {
+        return String(value);
+    }
+};
+
+const readOpenAiStructuredContent = (): unknown => {
+    if (typeof window === 'undefined' || !window.openai) return null;
+
+    const openaiWithStructured = window.openai as typeof window.openai & {
+        structuredContent?: unknown;
+    };
+
+    if (openaiWithStructured.structuredContent && typeof openaiWithStructured.structuredContent === 'object') {
+        return openaiWithStructured.structuredContent;
+    }
+
+    if (openaiWithStructured.toolOutput && typeof openaiWithStructured.toolOutput === 'object') {
+        const toolOutput = openaiWithStructured.toolOutput as Record<string, unknown>;
+        if (toolOutput.structuredContent && typeof toolOutput.structuredContent === 'object') {
+            return toolOutput.structuredContent;
+        }
+        return toolOutput;
+    }
+
+    return null;
+};
+
 import { useElementViewerChat } from './hooks/useElementViewerChat';
 
 // ... (existing interfaces)
@@ -211,10 +256,15 @@ function App() {
     const [isPaused, setIsPaused] = useState(false);
     const [contextMenu, setContextMenu] = useState<ContextMenuData | null>(null);
     const [isInteracting, setIsInteracting] = useState(false);
+    const [aiMessage, setAiMessage] = useState<string | null>(null);
 
     // Refs
     const sidebarRef = useRef<HTMLElement>(null);
     const simulationRegistry = useRef<Map<number, () => PhysicsState>>(new Map());
+    const aiMessageTimeoutRef = useRef<number | null>(null);
+    const lastProcessedAiTimestampRef = useRef(0);
+    const lastToolInputSnapshotRef = useRef('__init__');
+    const syncStateToChatGPTRef = useRef<() => Promise<void>>(async () => { });
 
     // ChatGPT Integration Hook
     const {
@@ -242,7 +292,7 @@ function App() {
     const [recordingStartData, setRecordingStartData] = useState<Map<number, PhysicsState>>(new Map());
     const [recordingResults, setRecordingResults] = useState<{ element: ChemicalElement, start: PhysicsState, end: PhysicsState }[] | null>(null);
     // --- CHATGPT STATE SYNC ---
-    // Called only at app boot and when Info is pressed.
+    // Called at app boot, when Info is pressed and when the user sends a new prompt.
     const syncStateToChatGPT = async () => {
         if (typeof window === 'undefined' || !window.openai?.setWidgetState) return;
 
@@ -334,6 +384,7 @@ function App() {
             elementos_visiveis: elementsData
         });
     };
+    syncStateToChatGPTRef.current = syncStateToChatGPT;
 
     const handleInfoButtonClick = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -357,6 +408,108 @@ function App() {
             cancelled = true;
             cancelAnimationFrame(raf1);
             cancelAnimationFrame(raf2);
+        };
+    }, []);
+
+    // Sync current simulator state whenever the user sends a new prompt.
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        lastToolInputSnapshotRef.current = safeSerialize(window.openai?.toolInput ?? null);
+
+        const handleSetGlobals = (event: Event) => {
+            const setGlobalsEvent = event as SetGlobalsEvent;
+            const globals = setGlobalsEvent.detail?.globals;
+            if (!globals || !Object.prototype.hasOwnProperty.call(globals, 'toolInput')) return;
+
+            const nextSnapshot = safeSerialize(globals.toolInput ?? null);
+            if (nextSnapshot === lastToolInputSnapshotRef.current) return;
+
+            lastToolInputSnapshotRef.current = nextSnapshot;
+            void syncStateToChatGPTRef.current();
+        };
+
+        window.addEventListener(SET_GLOBALS_EVENT_TYPE, handleSetGlobals, { passive: true });
+        return () => {
+            window.removeEventListener(SET_GLOBALS_EVENT_TYPE, handleSetGlobals);
+        };
+    }, []);
+
+    // --- RADAR REATIVO DO CHATGPT (ATUALIZACAO EM TEMPO REAL) ---
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const clearAiMessageTimeout = () => {
+            if (aiMessageTimeoutRef.current !== null) {
+                window.clearTimeout(aiMessageTimeoutRef.current);
+                aiMessageTimeoutRef.current = null;
+            }
+        };
+
+        const showAiMessage = (message: string) => {
+            setAiMessage(message);
+            clearAiMessageTimeout();
+            aiMessageTimeoutRef.current = window.setTimeout(() => {
+                setAiMessage(null);
+                aiMessageTimeoutRef.current = null;
+            }, 8000);
+        };
+
+        const verificarAtualizacoesIA = () => {
+            const rawContent = readOpenAiStructuredContent();
+            if (!rawContent || typeof rawContent !== 'object') return;
+
+            const content = rawContent as IAStructuredContent;
+            const { configuracao_ia, timestamp_atualizacao } = content;
+
+            if (
+                !configuracao_ia ||
+                typeof timestamp_atualizacao !== 'number' ||
+                timestamp_atualizacao <= lastProcessedAiTimestampRef.current
+            ) {
+                return;
+            }
+
+            lastProcessedAiTimestampRef.current = timestamp_atualizacao;
+
+            if (
+                typeof configuracao_ia.interpretacao_do_modelo === 'string' &&
+                configuracao_ia.interpretacao_do_modelo.trim().length > 0
+            ) {
+                showAiMessage(configuracao_ia.interpretacao_do_modelo);
+            }
+
+            if (typeof configuracao_ia.temperatura_K === 'number') {
+                setTemperature(Math.min(configuracao_ia.temperatura_K, 6000));
+            }
+
+            if (typeof configuracao_ia.pressao_Pa === 'number') {
+                setPressure(Math.min(configuracao_ia.pressao_Pa, 100000000000));
+            }
+
+            if (Array.isArray(configuracao_ia.elementos) && configuracao_ia.elementos.length > 0) {
+                const novosElementos = configuracao_ia.elementos
+                    .map((simboloIA) => {
+                        const lookup = normalizeElementLookup(simboloIA);
+                        return ELEMENTS.find((el) =>
+                            el.symbol.toLowerCase() === lookup ||
+                            el.name.toLowerCase() === lookup
+                        );
+                    })
+                    .filter((el): el is ChemicalElement => Boolean(el));
+
+                if (novosElementos.length > 0) {
+                    setSelectedElements(novosElementos.slice(0, 6));
+                }
+            }
+        };
+
+        const intervalId = window.setInterval(verificarAtualizacoesIA, 500);
+        verificarAtualizacoesIA();
+
+        return () => {
+            window.clearInterval(intervalId);
+            clearAiMessageTimeout();
         };
     }, []);
 
@@ -544,6 +697,14 @@ function App() {
                 height: isFullscreen && maxHeight ? maxHeight : undefined,
             }}
         >
+            {/* Banner inteligente flutuante */}
+            {aiMessage && (
+                <div className="absolute top-4 left-1/2 z-50 flex max-w-[90%] -translate-x-1/2 transform items-center gap-3 rounded-2xl border border-gray-200 bg-white/90 px-5 py-3 text-center text-sm text-gray-800 shadow-xl backdrop-blur-sm animate-in fade-in duration-300 md:max-w-md">
+                    <span className="text-xl">✨</span>
+                    <p className="font-medium leading-tight">{aiMessage}</p>
+                </div>
+            )}
+
 
             {/* --- SIDEBAR (Floating Glass Panel) --- */}
             <aside

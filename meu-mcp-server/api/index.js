@@ -42,35 +42,59 @@ function createElementViewerServer() {
     })
   );
 
-  // --- 2. REGISTER TOOL ---
+  // --- 2. REGISTER TOOL: ABRIR E ATUALIZAR SIMULADOR ---
   server.registerTool(
-    "abrir_app",
+    "abrir_simulador_interativo",
     {
-      title: "Abrir Element Viewer",
+      title: "Abrir ou Atualizar Element Viewer",
       description:
-        "Abre a interface interativa do simulador de fisica/quimica Element Viewer. Use quando o usuario quiser visualizar ou interagir com estados da materia.",
-      inputSchema: z.object({}),
+        "Use esta ferramenta para abrir o app OU para ATUALIZAR a visualizacao atual se o app ja estiver em tela cheia. O app reage em tempo real. Importante: Se o usuario pedir para 'adicionar' um elemento, voce DEVE consultar o widgetState atual, pegar os elementos que ja estao na tela e enviar a lista COMPLETA (antigos + novos) no parametro 'elementos'.",
+      inputSchema: z.object({
+        elementos: z
+          .array(z.string())
+          .max(6)
+          .optional()
+          .describe(
+            "Lista COMPLETA de simbolos quimicos para mostrar. Se vazio, mantem o que esta na tela."
+          ),
+        temperatura_K: z
+          .number()
+          .max(6000)
+          .optional()
+          .describe("Nova temperatura em Kelvin. Se nao especificada, deixe vazio."),
+        pressao_Pa: z
+          .number()
+          .max(100000000000)
+          .optional()
+          .describe("Nova pressao em Pascal. Se nao especificada, deixe vazio."),
+        mensagem_interpretacao: z
+          .string()
+          .describe(
+            "Frase curta em primeira pessoa sobre a acao. Ex: 'Adicionei o Oxigenio e aumentei a temperatura para 5000K na sua tela.'"
+          ),
+      }),
       _meta: {
+        "readOnlyHint": true,
         "openai/outputTemplate": "ui://widget/element-viewer.html",
-        "openai/toolInvocation/invoking": "Abrindo Element Viewer...",
-        "openai/toolInvocation/invoked": "Element Viewer pronto.",
         "openai/widgetAccessible": true,
       },
     },
-    async () => ({
-      // Estado inicial para o ChatGPT comecar com contexto
+    async (args) => ({
       structuredContent: {
         app: "Element Viewer",
         status: "open",
-        ambiente_inicial: {
-          temperatura_K: 298.15,
-          pressao_Pa: 101325,
+        timestamp_atualizacao: Date.now(),
+        configuracao_ia: {
+          elementos: args.elementos || null,
+          temperatura_K: args.temperatura_K || null,
+          pressao_Pa: args.pressao_Pa || null,
+          interpretacao_do_modelo: args.mensagem_interpretacao,
         },
       },
       content: [
         {
           type: "text",
-          text: "Element Viewer aberto com sucesso. A simulacao iniciou em Condicoes Normais de Temperatura e Pressao (298.15K, 1 atm).",
+          text: args.mensagem_interpretacao,
         },
       ],
     })

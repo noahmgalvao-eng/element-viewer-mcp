@@ -240,6 +240,7 @@ export type OpenAiGlobals<
   // state
   toolInput: ToolInput;
   toolOutput: ToolOutput | null;
+  structuredContent?: unknown;
   toolResponseMetadata: ToolResponseMetadata | null;
   widgetState: WidgetState | null;
   setWidgetState: (state: WidgetState) => Promise<void>;
