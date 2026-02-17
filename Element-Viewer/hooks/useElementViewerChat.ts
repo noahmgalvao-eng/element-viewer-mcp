@@ -32,9 +32,8 @@ export function useElementViewerChat({
         const baseContext = `Temperatura alvo ${globalTemperature.toFixed(1)} K e pressao ${globalPressure.toExponential(2)} Pa.`;
 
         const prompt = isMulti
-            ? `${baseContext} Compare os elementos visiveis e explique, em linguagem natural, o que esta acontecendo com cada um agora: fase atual, se esta aquecendo ou resfriando e quais transicoes de fase estao em andamento (incluindo equilibrios, ponto triplo e regime supercritico quando aparecerem). Cite cada elemento por nome e simbolo. Traga uma curiosidade cientifica curta e proativa relacionada. Nao cite nomes internos do sistema ou da interface.`
-            : `${baseContext} Explique, em linguagem natural, o que esta acontecendo com o elemento visivel agora: fase atual, tendencia termica (aquecendo/resfriando) e se ele esta em transicao de fase ou equilibrio (incluindo ponto triplo e regime supercritico quando aplicavel). Traga uma curiosidade cientifica curta e proativa relacionada. Nao cite nomes internos do sistema ou da interface.`;
-
+            ? `${baseContext} Avalie quais sao os elementos em contexto e o que esta acontecendo, se estiver estável, fale sobre o estado em que ele está, se estiver aquecendo, resfriando ou em transições de fase, fale sobre isso. Se houver mais de um elemento, compare as diferenças deles perante as mesmas condições de temperatura e pressão. Traga curiosidades cientificas interessantes e educativas sobre os elementos e/ou a situação atual que está acontecendo. Converse normal na sua resposta, sem citar tópicos obrigatórios na resposta e não cite nomes internos do sistema ou da interface`
+            : `${baseContext} Avalie qual elemento está em contexto e o que esta acontecendo, se estiver estável, fale sobre o estado em que ele está, se estiver aquecendo, resfriando ou em transições de fase, fale sobre isso. Se houver mais de um elemento, compare as diferenças deles perante as mesmas condições de temperatura e pressão. Traga curiosidades cientificas interessantes e educativas sobre os elementos e/ou a situação atual que está acontecendo. Converse normal na sua resposta, sem citar tópicos obrigatórios na resposta e não cite nomes internos do sistema ou da interface.`;
         await sendFollowUpMessage(prompt);
     };
 
