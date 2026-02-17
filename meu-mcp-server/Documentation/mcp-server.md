@@ -1,14 +1,14 @@
-# meu-mcp-server — Servidor MCP
+# meu-mcp-server â€” Servidor MCP
 
 > **URL de Deploy:** [https://element-viewer-mcp-server.vercel.app/](https://element-viewer-mcp-server.vercel.app/)  
-> **Diretório:** `meu-mcp-server/`  
+> **DiretÃ³rio:** `meu-mcp-server/`  
 > **Connector URL (ChatGPT):** `https://element-viewer-mcp-server.vercel.app/mcp`
 
 ---
 
 ## Objetivo
 
-O meu-mcp-server é um **servidor MCP (Model Context Protocol)** que funciona como conector entre o ChatGPT e o Element-Viewer. Ele segue a especificação do **OpenAI Apps SDK** para expor tools e resources que o ChatGPT pode invocar, permitindo que o webapp seja renderizado como um **widget iframe** dentro da interface do chat.
+O meu-mcp-server Ã© um **servidor MCP (Model Context Protocol)** que funciona como conector entre o ChatGPT e o Element-Viewer. Ele segue a especificaÃ§Ã£o do **OpenAI Apps SDK** para expor tools e resources que o ChatGPT pode invocar, permitindo que o webapp seja renderizado como um **widget iframe** dentro da interface do chat.
 
 ---
 
@@ -16,39 +16,39 @@ O meu-mcp-server é um **servidor MCP (Model Context Protocol)** que funciona co
 
 ```
 meu-mcp-server/
-├── api/
-│   ├── index.js              # Servidor Express + MCP (entry point)
-│   └── html-content.js       # HTML do webapp embedado (gerado pelo script)
-├── scripts/
-│   └── embed-html.js         # Script para gerar html-content.js a partir do build
-├── Documentation/            # Esta documentação
-├── package.json              # Dependências e scripts
-└── vercel.json               # Rewrites para Vercel serverless
+â”œâ”€â”€ api/
+â”‚   â”œâ”€â”€ index.js              # Servidor Express + MCP (entry point)
+â”‚   â””â”€â”€ html-content.js       # HTML do webapp embedado (gerado pelo script)
+â”œâ”€â”€ scripts/
+â”‚   â””â”€â”€ embed-html.js         # Script para gerar html-content.js a partir do build
+â”œâ”€â”€ Documentation/            # Esta documentaÃ§Ã£o
+â”œâ”€â”€ package.json              # DependÃªncias e scripts
+â””â”€â”€ vercel.json               # Rewrites para Vercel serverless
 ```
 
 ---
 
 ## Como Funciona
 
-### Fluxo de Requisição
+### Fluxo de RequisiÃ§Ã£o
 
 ```
-ChatGPT → POST /mcp → Express → McpServer (fresh instance) → Response
+ChatGPT â†’ POST /mcp â†’ Express â†’ McpServer (fresh instance) â†’ Response
 ```
 
-1. O ChatGPT envia uma requisição JSON-RPC para `POST /mcp`
-2. O Express recebe e cria uma **instância fresca** do McpServer (stateless)
-3. O servidor processa a requisição (list tools, call tool, read resource)
-4. A resposta é enviada de volta ao ChatGPT com JSON habilitado
-5. Servidor e transport são destruídos após a resposta (sem estado persistente)
+1. O ChatGPT envia uma requisiÃ§Ã£o JSON-RPC para `POST /mcp`
+2. O Express recebe e cria uma **instÃ¢ncia fresca** do McpServer (stateless)
+3. O servidor processa a requisiÃ§Ã£o (list tools, call tool, read resource)
+4. A resposta Ã© enviada de volta ao ChatGPT com JSON habilitado
+5. Servidor e transport sÃ£o destruÃ­dos apÃ³s a resposta (sem estado persistente)
 
-> **Importante:** O modo stateless (sem `sessionIdGenerator`) é obrigatório para deploy na Vercel, pois funções serverless não mantêm estado entre invocações.
+> **Importante:** O modo stateless (sem `sessionIdGenerator`) Ã© obrigatÃ³rio para deploy na Vercel, pois funÃ§Ãµes serverless nÃ£o mantÃªm estado entre invocaÃ§Ãµes.
 
 ---
 
 ## Componentes do Servidor (`api/index.js`)
 
-### 1. Resource — Widget HTML
+### 1. Resource â€” Widget HTML
 
 ```javascript
 server.registerResource(
@@ -73,19 +73,19 @@ server.registerResource(
 );
 ```
 
-| Campo | Valor | Descrição |
+| Campo | Valor | DescriÃ§Ã£o |
 |---|---|---|
-| `uri` | `ui://widget/element-viewer.html` | Identificador único do recurso |
-| `mimeType` | `text/html+skybridge` | Tipo de conteúdo — HTML renderizável como widget |
+| `uri` | `ui://widget/element-viewer.html` | Identificador Ãºnico do recurso |
+| `mimeType` | `text/html+skybridge` | Tipo de conteÃºdo â€” HTML renderizÃ¡vel como widget |
 | `widgetPrefersBorder` | `true` | Widget exibe com borda |
-| `widgetDomain` | `https://chatgpt.com` | Domínio de contexto do widget |
-| `widgetCSP` | `connect_domains`, `resource_domains` | Política de segurança de conteúdo |
+| `widgetDomain` | `https://chatgpt.com` | DomÃ­nio de contexto do widget |
+| `widgetCSP` | `connect_domains`, `resource_domains` | PolÃ­tica de seguranÃ§a de conteÃºdo |
 
-A propriedade `text` contém o **HTML completo** do webapp (gerado pelo build single-file do Vite), embedado diretamente no servidor através do arquivo `html-content.js`.
+A propriedade `text` contÃ©m o **HTML completo** do webapp (gerado pelo build single-file do Vite), embedado diretamente no servidor atravÃ©s do arquivo `html-content.js`.
 
 ---
 
-### 2. Tool — `abrir_app`
+### 2. Tool â€” `abrir_app`
 
 ```javascript
 server.registerTool(
@@ -93,10 +93,10 @@ server.registerTool(
   {
     title: "Abrir Element Viewer",
     description: "Abre a interface interativa do Element Viewer...",
-    inputSchema: z.object({}),       // Sem parâmetros de entrada
+    inputSchema: z.object({}),       // Sem parÃ¢metros de entrada
     _meta: {
       "openai/outputTemplate": "ui://widget/element-viewer.html",
-      "openai/toolInvocation/invoking": "Abrindo Element Viewer…",
+      "openai/toolInvocation/invoking": "Abrindo Element Viewerâ€¦",
       "openai/toolInvocation/invoked": "Element Viewer pronto.",
     },
   },
@@ -107,23 +107,23 @@ server.registerTool(
 );
 ```
 
-| Campo | Descrição |
+| Campo | DescriÃ§Ã£o |
 |---|---|
 | `title` | Nome da tool exibido na UI do ChatGPT |
 | `description` | Descritivo que o modelo usa para decidir quando invocar |
-| `inputSchema` | Schema Zod — objeto vazio (sem parâmetros) |
+| `inputSchema` | Schema Zod â€” objeto vazio (sem parÃ¢metros) |
 | `outputTemplate` | Aponta para o URI do resource (widget HTML) |
-| `toolInvocation/invoking` | Mensagem exibida durante a execução |
-| `toolInvocation/invoked` | Mensagem exibida após conclusão |
+| `toolInvocation/invoking` | Mensagem exibida durante a execuÃ§Ã£o |
+| `toolInvocation/invoked` | Mensagem exibida apÃ³s conclusÃ£o |
 | `structuredContent` | Dados estruturados para o ChatGPT consumir |
 
-> **O `outputTemplate` é a peça-chave** — ele conecta a tool ao resource, fazendo com que o ChatGPT renderize o widget HTML quando a tool é invocada.
+> **O `outputTemplate` Ã© a peÃ§a-chave** â€” ele conecta a tool ao resource, fazendo com que o ChatGPT renderize o widget HTML quando a tool Ã© invocada.
 
 ---
 
-### 3. Express App — Endpoints
+### 3. Express App â€” Endpoints
 
-| Método | Rota | Descrição |
+| MÃ©todo | Rota | DescriÃ§Ã£o |
 |---|---|---|
 | `OPTIONS` | `/mcp` | CORS preflight (retorna 204 com headers) |
 | `GET` | `/` | Health check ("Element Viewer MCP Server Running") |
@@ -135,78 +135,102 @@ server.registerTool(
 - `Access-Control-Allow-Headers: content-type, mcp-session-id`
 - `Access-Control-Expose-Headers: Mcp-Session-Id`
 
-> **Nota:** O middleware `express.json()` **NÃO** é utilizado. O SDK do MCP lê o body stream diretamente — se o Express parsear primeiro, o stream é consumido e o SDK recebe um body vazio (erro 400).
+> **Nota:** O middleware `express.json()` **NÃƒO** Ã© utilizado. O SDK do MCP lÃª o body stream diretamente â€” se o Express parsear primeiro, o stream Ã© consumido e o SDK recebe um body vazio (erro 400).
 
 ---
 
-## Configuração de Deploy (`vercel.json`)
+## Configuracao de Deploy (`vercel.json`)
 
 ```json
 {
   "version": 2,
+  "buildCommand": "npm run vercel-build",
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index" }
   ]
 }
 ```
 
-Todas as requisições são redirecionadas para a função serverless `api/index.js`.
+Todas as requisiÃ§Ãµes sÃ£o redirecionadas para a funÃ§Ã£o serverless `api/index.js`.
 
 ---
 
 ## Scripts
 
 ```bash
-# Iniciar servidor localmente
-npm start         # node api/index.js
-npm run dev       # node api/index.js
+# Sincroniza webapp -> html-content.js (build + embed)
+npm run sync:webapp
 
-# Gerar HTML embedado
-npm run embed     # node scripts/embed-html.js
+# Desenvolvimento local (agora sincroniza automaticamente via predev)
+npm run dev
+
+# Start local (agora sincroniza automaticamente via prestart)
+npm start
+
+# Build usado no deploy da Vercel (agora sincroniza automaticamente)
+npm run vercel-build
+
+# Opcional: embed direto para diagnostico
+npm run embed
 ```
 
-O script `embed` lê o build do Element-Viewer (`dist/index.html`) e gera `api/html-content.js` com o HTML como uma string exportada. Isso permite que o servidor MCP sirva o webapp completo sem depender de URLs externas.
+A sincronizacao agora e automatica no fluxo normal:
+
+1. `npm run dev` no MCP dispara `predev` e sincroniza o webapp antes de subir o servidor.
+2. `npm start` dispara `prestart` e sincroniza o webapp antes de iniciar.
+3. No deploy da Vercel, o `buildCommand` executa `npm run vercel-build`, que recompila o Element-Viewer e re-gera `api/html-content.js`.
+
+Nao e mais necessario executar `npm run embed` manualmente em fluxo comum.
+
+### Troubleshooting (root/path)
+
+- Se aparecer erro de path para `../Element-Viewer`, confirme que:
+  - o projeto da Vercel do MCP usa **Root Directory = `meu-mcp-server`**;
+  - o repositorio mantem `Element-Viewer/` e `meu-mcp-server/` como pastas irmas.
+- Se o sync falhar por dependencias, rode localmente:
+  - `cd Element-Viewer && npm install && npm run build`
+  - depois `cd ../meu-mcp-server && npm run sync:webapp`
 
 ---
+## DependÃªncias
 
-## Dependências
-
-| Pacote | Versão | Uso |
+| Pacote | VersÃ£o | Uso |
 |---|---|---|
 | `@modelcontextprotocol/sdk` | ^1.25.3 | SDK oficial MCP para registrar tools e resources |
 | `express` | ^5.2.1 | Framework HTTP para servir endpoints |
-| `zod` | ^3.25.76 | Validação de schemas (inputSchema das tools) |
+| `zod` | ^3.25.76 | ValidaÃ§Ã£o de schemas (inputSchema das tools) |
 
 ---
 
-## Integração com ChatGPT
+## IntegraÃ§Ã£o com ChatGPT
 
 Para conectar o servidor como app no ChatGPT:
 
-1. Acesse as configurações de apps/connectors do ChatGPT
+1. Acesse as configuraÃ§Ãµes de apps/connectors do ChatGPT
 2. Configure o **Connector URL** como: `https://element-viewer-mcp-server.vercel.app/mcp`
-3. O ChatGPT irá automaticamente:
-   - Enumerar tools disponíveis (`abrir_app`)
-   - Enumerar resources disponíveis (`element-viewer-widget`)
-   - Invocar a tool quando o usuário pedir para abrir o simulador
+3. O ChatGPT irÃ¡ automaticamente:
+   - Enumerar tools disponÃ­veis (`abrir_app`)
+   - Enumerar resources disponÃ­veis (`element-viewer-widget`)
+   - Invocar a tool quando o usuÃ¡rio pedir para abrir o simulador
    - Renderizar o widget HTML como iframe na interface
 
 ---
 
-## Documentação de Referência (SDK)
+## DocumentaÃ§Ã£o de ReferÃªncia (SDK)
 
-A pasta `Documentation/` contém documentação oficial do OpenAI Apps SDK:
+A pasta `Documentation/` contÃ©m documentaÃ§Ã£o oficial do OpenAI Apps SDK:
 
-| Arquivo | Conteúdo |
+| Arquivo | ConteÃºdo |
 |---|---|
-| `quickstart.txt` | Guia de início rápido do Apps SDK |
-| `chatgptdocs.md` | Documentação geral do ChatGPT para desenvolvedores |
-| `further documentation.txt` | Documentação avançada adicional |
+| `quickstart.txt` | Guia de inÃ­cio rÃ¡pido do Apps SDK |
+| `chatgptdocs.md` | DocumentaÃ§Ã£o geral do ChatGPT para desenvolvedores |
+| `further documentation.txt` | DocumentaÃ§Ã£o avanÃ§ada adicional |
 | `UI Guidelines.txt` | Diretrizes de interface para apps |
-| `ux principles.txt` | Princípios de UX para apps do ChatGPT |
-| `What makes a great chatgpt app.txt` | Boas práticas para apps |
-| `app submission.txt` | Processo de submissão para a loja |
-| `security & privacy.txt` | Requisitos de segurança e privacidade |
-| `openai usage policies.txt` | Políticas de uso da OpenAI |
-| `optimize metadata.txt` | Otimização de metadados do app |
-| `troubleshooting.txt` | Resolução de problemas comuns |
+| `ux principles.txt` | PrincÃ­pios de UX para apps do ChatGPT |
+| `What makes a great chatgpt app.txt` | Boas prÃ¡ticas para apps |
+| `app submission.txt` | Processo de submissÃ£o para a loja |
+| `security & privacy.txt` | Requisitos de seguranÃ§a e privacidade |
+| `openai usage policies.txt` | PolÃ­ticas de uso da OpenAI |
+| `optimize metadata.txt` | OtimizaÃ§Ã£o de metadados do app |
+| `troubleshooting.txt` | ResoluÃ§Ã£o de problemas comuns |
+

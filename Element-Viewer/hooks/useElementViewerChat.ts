@@ -1,19 +1,16 @@
-import React from 'react';
 import { useChatGPT } from './useChatGPT';
-import { ChemicalElement, PhysicsState } from '../types';
+import { ChemicalElement } from '../types';
 
 interface UseElementViewerChatProps {
     globalTemperature: number;
     globalPressure: number;
     selectedElements: ChemicalElement[];
-    simulationRegistry: React.MutableRefObject<Map<number, () => PhysicsState>>;
 }
 
 export function useElementViewerChat({
     globalTemperature,
     globalPressure,
-    selectedElements,
-    simulationRegistry
+    selectedElements
 }: UseElementViewerChatProps) {
 
     const {
@@ -25,26 +22,19 @@ export function useElementViewerChat({
         sendFollowUpMessage
     } = useChatGPT();
 
-    const handleInfoClick = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-
+    const handleInfoClick = async () => {
         if (!sendFollowUpMessage) {
-            console.warn("ChatGPT SDK: sendFollowUpMessage not available");
+            console.warn('ChatGPT SDK: sendFollowUpMessage not available');
             return;
         }
 
-        // Criamos um prompt dinâmico super direto. 
-        // O modelo usará o `widgetState` (sincronizado no App.tsx) para preencher os detalhes.
         const isMulti = selectedElements.length > 1;
-        const baseContext = `Temperatura alvo: ${globalTemperature.toFixed(1)}K | Pressão: ${globalPressure.toExponential(2)}Pa.`;
+        const baseContext = `Temperatura alvo ${globalTemperature.toFixed(1)} K e pressao ${globalPressure.toExponential(2)} Pa.`;
 
         const prompt = isMulti
-            ? `${baseContext} Leia o estado atual da simulação no seu widgetState e compare o comportamento dos elementos que estou vendo. Diga-me uma curiosidade científica sobre a diferença entre eles nestas condições.`
-            : `${baseContext} Leia o estado atual da simulação no seu widgetState e me dê uma curiosidade científica ou fato educativo sobre o que está acontecendo com este elemento nestas condições.`;
+            ? `${baseContext} Compare os elementos visiveis e explique, em linguagem natural, o que esta acontecendo com cada um agora: fase atual, se esta aquecendo ou resfriando e quais transicoes de fase estao em andamento (incluindo equilibrios, ponto triplo e regime supercritico quando aparecerem). Cite cada elemento por nome e simbolo. Traga uma curiosidade cientifica curta e proativa relacionada. Nao cite nomes internos do sistema ou da interface.`
+            : `${baseContext} Explique, em linguagem natural, o que esta acontecendo com o elemento visivel agora: fase atual, tendencia termica (aquecendo/resfriando) e se ele esta em transicao de fase ou equilibrio (incluindo ponto triplo e regime supercritico quando aplicavel). Traga uma curiosidade cientifica curta e proativa relacionada. Nao cite nomes internos do sistema ou da interface.`;
 
-        console.log("Enviando comando enxuto para o ChatGPT avaliar o widgetState:", prompt);
-
-        // Envia a mensagem inserindo-a no chat como se o usuário estivesse pedindo.
         await sendFollowUpMessage(prompt);
     };
 
@@ -58,3 +48,4 @@ export function useElementViewerChat({
         handleInfoClick
     };
 }
+

@@ -5,14 +5,15 @@ import SimulationUnit from './components/Simulator/SimulationUnit';
 import ElementPropertiesMenu from './components/Simulator/ElementPropertiesMenu';
 import RecordingStatsModal from './components/Simulator/RecordingStatsModal';
 import { ELEMENTS } from './data/elements';
-import { ChemicalElement, PhysicsState } from './types';
+import { ChemicalElement, MatterState, PhysicsState } from './types';
+import { predictMatterState } from './hooks/physics/phaseCalculations';
 // Import new hook
-import { Settings, Play, Pause, RotateCcw, FastForward, Settings2, X, Circle, Square } from "lucide-react";
+import { Play, Pause, Settings2, X, Circle, Square } from "lucide-react";
 
 
 // --- Inline Icons to separate from external dependencies ---
 
-const IconBookOpen = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
+const IconIdeaBulb = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         width={size}
@@ -25,10 +26,96 @@ const IconBookOpen = ({ size = 24, className = "" }: { size?: number, className?
         strokeLinejoin="round"
         className={className}
     >
-        <path d="M12 7v14" />
-        <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+        <path d="M9 18h6" />
+        <path d="M10 22h4" />
+        <path d="M12 2a7 7 0 0 0-4 12c.53.53 1 1.39 1 2.2V17h6v-.8c0-.81.47-1.67 1-2.2A7 7 0 0 0 12 2z" />
+        <path d="M12 6v1" />
+        <path d="M18 8l-.7.7" />
+        <path d="M6.7 8.7 6 8" />
+        <path d="M20 13h-1" />
+        <path d="M5 13H4" />
     </svg>
 );
+
+const roundTo = (value: number, digits = 2): number =>
+    Number(value.toFixed(digits));
+
+const phaseToReadable = (state: MatterState): string => {
+    switch (state) {
+        case MatterState.SOLID:
+            return 'solido';
+        case MatterState.MELTING:
+            return 'fusao (solido -> liquido)';
+        case MatterState.EQUILIBRIUM_MELT:
+            return 'equilibrio solido-liquido';
+        case MatterState.LIQUID:
+            return 'liquido';
+        case MatterState.BOILING:
+            return 'ebulicao/vaporizacao (liquido -> gas)';
+        case MatterState.EQUILIBRIUM_BOIL:
+            return 'equilibrio liquido-gas';
+        case MatterState.EQUILIBRIUM_TRIPLE:
+            return 'ponto triplo (solido + liquido + gas)';
+        case MatterState.SUBLIMATION:
+            return 'sublimacao (solido -> gas)';
+        case MatterState.EQUILIBRIUM_SUB:
+            return 'equilibrio solido-gas';
+        case MatterState.GAS:
+            return 'gas';
+        case MatterState.TRANSITION_SCF:
+            return 'transicao de fluido supercritico';
+        case MatterState.SUPERCRITICAL:
+            return 'fluido supercritico';
+        default:
+            return 'estado desconhecido';
+    }
+};
+
+const phaseToPresentPhases = (state: MatterState): string[] => {
+    switch (state) {
+        case MatterState.EQUILIBRIUM_TRIPLE:
+            return ['solido', 'liquido', 'gas'];
+        case MatterState.MELTING:
+        case MatterState.EQUILIBRIUM_MELT:
+            return ['solido', 'liquido'];
+        case MatterState.BOILING:
+        case MatterState.EQUILIBRIUM_BOIL:
+            return ['liquido', 'gas'];
+        case MatterState.SUBLIMATION:
+        case MatterState.EQUILIBRIUM_SUB:
+            return ['solido', 'gas'];
+        case MatterState.TRANSITION_SCF:
+        case MatterState.SUPERCRITICAL:
+            return ['fluido supercritico'];
+        case MatterState.LIQUID:
+            return ['liquido'];
+        case MatterState.GAS:
+            return ['gas'];
+        case MatterState.SOLID:
+        default:
+            return ['solido'];
+    }
+};
+
+const getSupportedEquilibria = (element: ChemicalElement): string[] => {
+    const hasTriplePoint = !!element.properties.triplePoint;
+    const canSublimationEq = hasTriplePoint && !!element.properties.enthalpyFusionJmol;
+
+    const equilibria = [
+        'EQUILIBRIUM_MELT (solido + liquido)',
+        'EQUILIBRIUM_BOIL (liquido + gas)'
+    ];
+
+    if (canSublimationEq) {
+        equilibria.push('EQUILIBRIUM_SUB (solido + gas)');
+    }
+
+    if (hasTriplePoint) {
+        equilibria.push('EQUILIBRIUM_TRIPLE (solido + liquido + gas)');
+    }
+
+    return equilibria;
+};
 
 const IconPiP = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
     <svg
@@ -139,8 +226,7 @@ function App() {
     } = useElementViewerChat({
         globalTemperature: temperature,
         globalPressure: pressure,
-        selectedElements,
-        simulationRegistry
+        selectedElements
     });
 
     // Safe area insets with robust fallback
@@ -155,40 +241,124 @@ function App() {
     const [isRecording, setIsRecording] = useState(false);
     const [recordingStartData, setRecordingStartData] = useState<Map<number, PhysicsState>>(new Map());
     const [recordingResults, setRecordingResults] = useState<{ element: ChemicalElement, start: PhysicsState, end: PhysicsState }[] | null>(null);
+    // --- CHATGPT STATE SYNC ---
+    // Called only at app boot and when Info is pressed.
+    const syncStateToChatGPT = async () => {
+        if (typeof window === 'undefined' || !window.openai?.setWidgetState) return;
 
-    // --- CHATGPT WIDGET STATE SYNC ---
-    // Dedicated function to sync state - only called when necessary
-    const syncStateToChatGPT = () => {
-        if (typeof window !== 'undefined' && window.openai?.setWidgetState) {
-            // Coleta os dados exatos do que o usuário está vendo agora
-            const elementsData = selectedElements.map(el => {
-                const getter = simulationRegistry.current.get(el.atomicNumber);
-                const currentState = getter ? getter() : null;
-                return {
-                    nome: el.name,
-                    simbolo: el.symbol,
-                    estado_da_materia: currentState ? currentState.state : "Desconhecido",
-                    temperatura_atual_K: currentState ? currentState.temperature.toFixed(2) : temperature.toFixed(2)
-                };
-            });
+        const elementsData = selectedElements.map((el) => {
+            const getter = simulationRegistry.current.get(el.atomicNumber);
+            const currentState = getter ? getter() : null;
+            const shouldFallbackToPredicted =
+                !currentState ||
+                (currentState.simTime === 0 && currentState.temperature === 0 && temperature > 0);
 
-            // Envia para a memória invisível do ChatGPT
-            window.openai.setWidgetState({
-                ambiente: {
-                    temperatura_alvo_K: temperature.toFixed(2),
-                    pressao_Pa: pressure.toExponential(2)
+            const predicted = predictMatterState(el, temperature, pressure);
+            const effectiveState = shouldFallbackToPredicted ? predicted.state : currentState.state;
+            const effectiveTempK = shouldFallbackToPredicted ? temperature : currentState.temperature;
+            const meltingPointCurrent = shouldFallbackToPredicted ? predicted.T_melt : currentState.meltingPointCurrent;
+            const boilingPointCurrent = shouldFallbackToPredicted ? predicted.T_boil : currentState.boilingPointCurrent;
+            const sublimationPointCurrent = shouldFallbackToPredicted ? predicted.T_sub : currentState.sublimationPointCurrent;
+
+            const meltProgress = shouldFallbackToPredicted
+                ? (effectiveState === MatterState.EQUILIBRIUM_MELT ? 0.5 : 0)
+                : currentState.meltProgress;
+            const boilProgress = shouldFallbackToPredicted
+                ? (effectiveState === MatterState.EQUILIBRIUM_BOIL ? 0.5 : 0)
+                : currentState.boilProgress;
+            const sublimationProgress = shouldFallbackToPredicted
+                ? (effectiveState === MatterState.EQUILIBRIUM_SUB ? 0.5 : 0)
+                : currentState.sublimationProgress;
+            const scfTransitionProgress = shouldFallbackToPredicted ? 0 : currentState.scfTransitionProgress;
+
+            const deltaToTargetK = temperature - effectiveTempK;
+            const absDelta = Math.abs(deltaToTargetK);
+            const powerInput = shouldFallbackToPredicted ? 0 : currentState.powerInput;
+
+            let tendenciaTermica = 'estavel';
+            if (absDelta > 0.2) {
+                tendenciaTermica = deltaToTargetK > 0 ? 'aquecendo em direcao ao alvo' : 'resfriando em direcao ao alvo';
+            } else if (Math.abs(powerInput) > 0.05) {
+                tendenciaTermica = powerInput > 0 ? 'aquecendo levemente' : 'resfriando levemente';
+            }
+
+            const hasTriplePoint = !!el.properties.triplePoint;
+            const hasCriticalPoint = !!el.properties.criticalPoint;
+            const isAtTriplePointNow =
+                effectiveState === MatterState.EQUILIBRIUM_TRIPLE ||
+                (!!el.properties.triplePoint &&
+                    Math.abs(effectiveTempK - el.properties.triplePoint.tempK) < 1 &&
+                    Math.max(pressure, el.properties.triplePoint.pressurePa) /
+                    Math.min(Math.max(1e-9, pressure), el.properties.triplePoint.pressurePa) < 1.1);
+            const isAtSupercriticalNow =
+                effectiveState === MatterState.SUPERCRITICAL || effectiveState === MatterState.TRANSITION_SCF;
+
+            return {
+                numero_atomico: el.atomicNumber,
+                nome: el.name,
+                simbolo: el.symbol,
+                estado_da_materia_codigo: effectiveState,
+                estado_da_materia: phaseToReadable(effectiveState),
+                fases_presentes: phaseToPresentPhases(effectiveState),
+                tendencia_termica: tendenciaTermica,
+                temperatura_efetiva_atual_K: roundTo(effectiveTempK, 2),
+                delta_para_temperatura_alvo_K: roundTo(deltaToTargetK, 2),
+                progresso: {
+                    fusao: roundTo(Math.min(1, Math.max(0, meltProgress)), 3),
+                    ebulicao: roundTo(Math.min(1, Math.max(0, boilProgress)), 3),
+                    sublimacao: roundTo(Math.min(1, Math.max(0, sublimationProgress)), 3),
+                    transicao_supercritica: roundTo(Math.min(1, Math.max(0, scfTransitionProgress)), 3)
                 },
-                elementos_visiveis: elementsData
-            });
-        }
+                limites_fase_K: {
+                    fusao: roundTo(meltingPointCurrent, 2),
+                    ebulicao: roundTo(boilingPointCurrent, 2),
+                    sublimacao: sublimationPointCurrent > 0 ? roundTo(sublimationPointCurrent, 2) : null
+                },
+                pontos_termodinamicos: {
+                    tem_ponto_triplo: hasTriplePoint,
+                    tem_ponto_critico: hasCriticalPoint,
+                    esta_no_ponto_triplo_agora: isAtTriplePointNow,
+                    esta_em_regime_supercritico_agora: isAtSupercriticalNow
+                },
+                estados_de_equilibrio_suportados_no_modelo: getSupportedEquilibria(el)
+            };
+        });
+
+        await window.openai.setWidgetState({
+            ambiente: {
+                temperatura_alvo_K: roundTo(temperature, 2),
+                pressao_Pa: roundTo(pressure, 6),
+                total_elementos_visiveis: selectedElements.length
+            },
+            elementos_selecionados_em_ordem: selectedElements.map((el) => el.symbol),
+            elementos_visiveis: elementsData
+        });
     };
 
-    // Sync when elements change
-    useEffect(() => {
-        syncStateToChatGPT();
-    }, [selectedElements]);
+    const handleInfoButtonClick = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        await syncStateToChatGPT();
+        await handleInfoClick();
+    };
 
-    // Note: Temperature/Pressure sync is now handled by onFinalChange in ControlPanel
+    useEffect(() => {
+        let cancelled = false;
+        let raf1 = 0;
+        let raf2 = 0;
+
+        raf1 = requestAnimationFrame(() => {
+            raf2 = requestAnimationFrame(async () => {
+                if (cancelled) return;
+                await syncStateToChatGPT();
+            });
+        });
+
+        return () => {
+            cancelled = true;
+            cancelAnimationFrame(raf1);
+            cancelAnimationFrame(raf2);
+        };
+    }, []);
 
     // --- SELECTION LOGIC ---
     const handleElementSelect = (el: ChemicalElement) => {
@@ -230,7 +400,7 @@ function App() {
             setSelectedElements([selectedElements[selectedElements.length - 1]]);
         }
     };
-    // 2. FUNÇÃO DE TOGGLE
+    // 2. FUNÃ‡ÃƒO DE TOGGLE
     const handleToggleSpeed = (e: React.MouseEvent) => {
         e.stopPropagation();
         setTimeScale(prev => {
@@ -416,7 +586,6 @@ function App() {
                         showParticles={showParticles}
                         setShowParticles={setShowParticles}
                         onInteractionChange={setIsInteracting}
-                        onFinalChange={syncStateToChatGPT}
                     />
                 </div>
             </aside>
@@ -505,11 +674,12 @@ function App() {
 
                 {/* Row 2, Col 2: Info / AI Context Button */}
                 <button
-                    onClick={handleInfoClick}
-                    className="p-3 bg-slate-800/80 backdrop-blur border border-cyan-500/50 rounded-full text-cyan-400 shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
+                    onClick={handleInfoButtonClick}
+                    className="group relative p-3 bg-slate-800/80 backdrop-blur border border-amber-400/70 rounded-full text-amber-300 shadow-[0_0_28px_rgba(251,191,36,0.35)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
                     title="Ask ChatGPT about this"
                 >
-                    <IconBookOpen size={24} />
+                    <span className="pointer-events-none absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-100 shadow-[0_0_12px_rgba(254,240,138,0.95)] animate-pulse" />
+                    <IconIdeaBulb size={24} className="drop-shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
                 </button>
             </div>
 
@@ -565,3 +735,4 @@ function App() {
 }
 
 export default App;
+

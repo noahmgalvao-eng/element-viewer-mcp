@@ -78,6 +78,20 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     };
   };
 
+  // Converts display strings from MPa to kPa while preserving estimate marker '*'
+  const convertMpaDisplayToKpa = (rawValue: string | undefined): string | undefined => {
+    if (!rawValue) return undefined;
+    if (rawValue === "N/A") return "N/A";
+
+    const isEstimated = rawValue.includes("*");
+    const numeric = parseFloat(rawValue.replace("*", ""));
+    if (isNaN(numeric)) return rawValue;
+
+    const kPaValue = numeric * 1000;
+    const normalized = parseFloat(kPaValue.toFixed(6)).toString();
+    return `${normalized}${isEstimated ? "*" : ""}`;
+  };
+
   // 2. Resolve Base Properties (Layer 1 Corrections)
   let resolvedDensity = source.density;
   if (source.phase === "Gas" && source.density) {
@@ -85,10 +99,10 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   }
 
   // Physics Density (with fallback)
-  const physicsDensity = resolvedDensity || baseLegacyProps.density || 1.0;
-  // Display Density (Raw)
-  const displayDensity = resolvedDensity ? `${resolvedDensity} g/cm³` : 'N/A';
-
+  const hasDensityValue = typeof resolvedDensity === "number" && !isNaN(resolvedDensity);
+  const physicsDensity = hasDensityValue ? resolvedDensity : (baseLegacyProps.density || 1.0);
+  // Display Density in kg/m³ (converted from g/cm3)
+  const displayDensity = hasDensityValue ? `${resolvedDensity * 1000} kg/m³` : "N/A";
   // Parse Specific Heats (Layer 2)
   const shSolid = parseSciValue(scientific?.specificHeat?.solid, baseLegacyProps.specificHeatSolid);
   const shLiquid = parseSciValue(scientific?.specificHeat?.liquid, baseLegacyProps.specificHeatLiquid);
@@ -148,6 +162,27 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   // Construct Triple Point Object
   // Always object if valid or estimated
   const triplePointObj = { tempK: tpTemp, pressurePa: tpPress };
+
+  // --- CRITICAL POINT PARSING (Official Source, no Sodium fallback) ---
+  const cpTempRes = parseSciValue(scientificTemps?.criticalTemperatureK, -999);
+  const cpPressRes = parseSciValue(scientificTemps?.criticalPressureMPa, -999); // source unit: MPa
+
+  const hasCriticalPointFromScientific =
+    cpTempRes.val > 0 &&
+    cpPressRes.val > 0 &&
+    cpTempRes.str !== "N/A" &&
+    cpPressRes.str !== "N/A";
+
+  const criticalPointObj = hasCriticalPointFromScientific
+    ? {
+      tempK: cpTempRes.val,
+      pressurePa: cpPressRes.val * 1_000_000 // MPa -> Pa for calculations
+    }
+    : undefined;
+
+  const criticalSource = hasCriticalPointFromScientific
+    ? (cpTempRes.source ?? cpPressRes.source)
+    : undefined;
 
   // Oxidation States Handling
   // Scientific data might have string "N/A" instead of array
@@ -226,7 +261,10 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
 
     // --- RETAINED LEGACY (Layer 3 - Custom/Sodium Fallback) ---
     bulkModulusGPa: specificLegacyProps.bulkModulusGPa ?? baseLegacyProps.bulkModulusGPa,
-    criticalPoint: specificLegacyProps.criticalPoint ?? baseLegacyProps.criticalPoint,
+    criticalPoint: criticalPointObj,
+    criticalPointSource: criticalSource,
+    criticalPointTempDisplay: cpTempRes.str || "N/A",
+    criticalPointPressDisplay: convertMpaDisplayToKpa(cpPressRes.str) || "N/A",
 
     // Triple Point: Use Calculated from Scientific Data
     triplePoint: triplePointObj,

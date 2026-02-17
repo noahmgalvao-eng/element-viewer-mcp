@@ -33,6 +33,8 @@ export interface ElementProperties {
   // New Display Strings for Triple Point
   triplePointTempDisplay?: string;
   triplePointPressDisplay?: string;
+  criticalPointTempDisplay?: string;
+  criticalPointPressDisplay?: string;
 
   // --- SOURCE CITATION IDS (1=Wiki, 2=Mendeleev, 3=PubChem, 4=Angstrom, 5=Wolfram) ---
   meltingPointSource?: number;
@@ -49,6 +51,7 @@ export interface ElementProperties {
   electronAffinitySource?: number;
   ionizationEnergySource?: number;
   triplePointSource?: number; // NEW
+  criticalPointSource?: number;
 
   // --- CRITICAL POINT DATA ---
   criticalPoint?: {

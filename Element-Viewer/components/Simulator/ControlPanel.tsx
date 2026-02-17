@@ -16,7 +16,6 @@ interface Props {
   showParticles: boolean;
   setShowParticles: (v: boolean) => void;
   onInteractionChange: (isActive: boolean) => void;
-  onFinalChange: () => void;
 }
 
 const ControlPanel: React.FC<Props> = ({
@@ -28,8 +27,7 @@ const ControlPanel: React.FC<Props> = ({
   boilPoint,
   showParticles,
   setShowParticles,
-  onInteractionChange,
-  onFinalChange
+  onInteractionChange
 }) => {
   const [activeControl, setActiveControl] = useState<'temperature' | 'pressure' | null>(null);
 
@@ -45,7 +43,6 @@ const ControlPanel: React.FC<Props> = ({
   const handleInteractionEnd = () => {
     setActiveControl(null);
     onInteractionChange(false);
-    onFinalChange();
   };
 
   // --- TEMPERATURE LOGIC ---

@@ -68,7 +68,8 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
         style.bottom = 'auto';
     }
 
-    const hasCriticalPoint = !!element.properties.criticalPoint;
+    const criticalPoint = element.properties.criticalPoint;
+    const hasCriticalPoint = !!criticalPoint;
 
     // Triple Point Logic
     const triplePoint = element.properties.triplePoint;
@@ -77,6 +78,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     // Determine if clickable: must have valid pressure (>0) and valid temp (>0)
     // If Pressure is 0, it came from "N/A"
     const isTriplePointValid = hasTriplePoint && triplePoint && triplePoint.pressurePa > 0 && triplePoint.tempK > 0;
+    const isCriticalPointValid = hasCriticalPoint && criticalPoint && criticalPoint.pressurePa > 0 && criticalPoint.tempK > 0;
 
     // Check which regime we are in
     const isSublimationRegime = physicsState.sublimationPointCurrent > 0;
@@ -85,10 +87,10 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     // Helper for Pressure Formatting
     const fmtP = (p: number) => {
         if (p <= 0) return 'N/A'; // Handle 0 as N/A display
-        if (p < 0.01) return p.toExponential(2) + ' Pa';
-        if (p < 1000) return p.toFixed(2) + ' Pa';
-        if (p < 1000000) return (p / 1000).toFixed(2) + ' kPa';
-        return (p / 1000000).toFixed(2) + ' MPa';
+        const kPa = p / 1000;
+        if (kPa < 0.01) return kPa.toExponential(2) + ' kPa';
+        if (kPa < 1) return kPa.toFixed(4) + ' kPa';
+        return kPa.toFixed(2) + ' kPa';
     };
 
     // Triple Point Display Helpers
@@ -96,9 +98,17 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
         ? element.properties.triplePointTempDisplay
         : (triplePoint ? `${triplePoint.tempK} K` : 'N/A');
 
-    const tpPressStr = element.properties.triplePointPressDisplay && element.properties.triplePointPressDisplay.includes('*')
-        ? element.properties.triplePointPressDisplay // Keep the *
+    const tpPressStr = element.properties.triplePointPressDisplay && element.properties.triplePointPressDisplay !== 'N/A'
+        ? `${element.properties.triplePointPressDisplay} kPa`
         : (triplePoint ? fmtP(triplePoint.pressurePa) : 'N/A');
+
+    const cpTempStr = element.properties.criticalPointTempDisplay && element.properties.criticalPointTempDisplay !== 'N/A'
+        ? `${element.properties.criticalPointTempDisplay} K`
+        : (criticalPoint ? `${criticalPoint.tempK} K` : 'N/A');
+
+    const cpPressStr = element.properties.criticalPointPressDisplay && element.properties.criticalPointPressDisplay !== 'N/A'
+        ? `${element.properties.criticalPointPressDisplay} kPa`
+        : (criticalPoint ? fmtP(criticalPoint.pressurePa) : 'N/A');
 
     // Find source URL for current element
     const elementSourceData = SOURCE_DATA.elements.find(e => e.symbol === element.symbol);
@@ -268,26 +278,32 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                                         </button>
                                     )}
 
-                                    {/* Critical Point (Only if exists) */}
-                                    {hasCriticalPoint && element.properties.criticalPoint && (
-                                        <button
-                                            onClick={() => {
-                                                if (element.properties.criticalPoint) {
-                                                    onSetTemperature(element.properties.criticalPoint.tempK + 50);
-                                                    onSetPressure(element.properties.criticalPoint.pressurePa + 1000);
-                                                }
-                                            }}
-                                            className="flex items-center justify-between px-3 py-2 rounded bg-purple-900/30 border border-purple-700/50 hover:bg-purple-600 hover:text-white text-purple-300 transition-all cursor-pointer group w-full"
-                                        >
-                                            <div className="flex flex-col items-start">
-                                                <span className="text-[10px] font-bold uppercase">Go Critical</span>
-                                                <span className="text-[10px] font-mono opacity-80 group-hover:text-white">
-                                                    {element.properties.criticalPoint.tempK} K / {fmtP(element.properties.criticalPoint.pressurePa)}
-                                                </span>
-                                            </div>
-                                            <Zap size={14} fill="currentColor" />
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={() => {
+                                            if (isCriticalPointValid && criticalPoint) {
+                                                onSetTemperature(criticalPoint.tempK + 50);
+                                                onSetPressure(criticalPoint.pressurePa + 1000);
+                                            }
+                                        }}
+                                        disabled={!isCriticalPointValid}
+                                        className={`flex items-center justify-between px-3 py-2 rounded border transition-all w-full
+                                    ${isCriticalPointValid
+                                                ? "bg-purple-900/30 border-purple-700/50 hover:bg-purple-600 hover:text-white text-purple-300 cursor-pointer group"
+                                                : "bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-60"
+                                            }
+                                `}
+                                    >
+                                        <div className="flex flex-col items-start">
+                                            <span className="text-[10px] font-bold uppercase flex items-center">
+                                                Go Critical
+                                                {element.properties.criticalPointSource && <sup className="text-[8px] ml-0.5 opacity-80">({element.properties.criticalPointSource})</sup>}
+                                            </span>
+                                            <span className="text-[10px] font-mono opacity-80 group-hover:text-white">
+                                                {cpTempStr} / {cpPressStr}
+                                            </span>
+                                        </div>
+                                        {isCriticalPointValid && <Zap size={14} fill="currentColor" />}
+                                    </button>
 
                                     {/* Sublimation Point (Jump or Current) */}
                                     {hasTriplePoint && triplePoint && isTriplePointValid && element.properties.enthalpyFusionJmol && (
@@ -528,6 +544,12 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                                 <span className="text-cyan-400 font-bold shrink-0">[11]</span>
                                 <div>
                                     Helmenstine, A. (2023). Triple Point Definition – Triple Point of Water. Science Notes and Projects. Retrieved from: <a href="https://sciencenotes.org/triple-point-of-water/" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:underline break-all">https://sciencenotes.org/triple-point-of-water/</a>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <span className="text-cyan-400 font-bold shrink-0">[12]</span>
+                                <div>
+                                    Thermodynamics of the Elements: A Comprehensive Analysis of Phase Transitions and Triple Point Coexistence. (2026). Critical temperature and critical pressure master table.
                                 </div>
                             </div>
                         </div>

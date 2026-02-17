@@ -5,9 +5,13 @@
   "description": "Servidor MCP para o meu app",
   "main": "api/index.js",
   "scripts": {
+    "sync:webapp": "node scripts/sync-webapp.js",
+    "prestart": "npm run sync:webapp",
     "start": "node api/index.js",
+    "predev": "npm run sync:webapp",
     "dev": "node api/index.js",
-    "embed": "node scripts/embed-html.js"
+    "embed": "node scripts/embed-html.js",
+    "vercel-build": "npm run sync:webapp"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.3",
