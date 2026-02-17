@@ -32,8 +32,8 @@ export function useElementViewerChat({
         const baseContext = `Temperatura alvo ${globalTemperature.toFixed(1)} K e pressao ${globalPressure.toExponential(2)} Pa.`;
 
         const prompt = isMulti
-            ? `${baseContext} Fale de modo curto sobre o que está acontecendo, compare rapidamente a diferença entre os elementos na temperatura e pressão em que eles estão e dê uma curiosidade cientifica educativa interessante.`
-            : `${baseContext} Fale de modo curto sobre o que está acontecendo com o elemento selecionado e dê uma curiosidade cientifica educativa interessante.`;
+            ? `${baseContext} Fale de modo curto sobre o que está acontecendo, compare rapidamente a diferença entre os elementos na temperatura e pressão em que eles estão e dê uma curiosidade cientifica educativa interessante. Não responda por tópicos e de maneira engessada, a conversa precisa ser simples e normal, fale o que for relevante, seja proativo e simplificado.`
+            : `${baseContext} Fale de modo curto sobre o que está acontecendo com o elemento selecionado e dê uma curiosidade cientifica educativa interessante. Não responda por tópicos e de maneira engessada, a conversa precisa ser simples e normal, fale o que for relevante, seja proativo e simplificado.`;
         await sendFollowUpMessage(prompt);
     };
 
