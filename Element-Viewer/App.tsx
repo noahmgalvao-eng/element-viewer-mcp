@@ -8,7 +8,7 @@ import { ELEMENTS } from './data/elements';
 import { ChemicalElement, MatterState, PhysicsState } from './types';
 import { predictMatterState } from './hooks/physics/phaseCalculations';
 // Import new hook
-import { Play, Pause, Settings2, X, Circle, Square } from "lucide-react";
+import { Play, Pause, Settings2, X, Circle, Square, FlaskConical } from "lucide-react";
 
 
 // --- Inline Icons to separate from external dependencies ---
@@ -197,10 +197,42 @@ interface IAConfiguracao {
 
 interface IAStructuredContent {
     configuracao_ia?: IAConfiguracao;
+    substancia_reacao?: IAReactionSubstance;
     timestamp_atualizacao?: number;
 }
 
+interface IAReactionSubstance {
+    substanceName: string;
+    formula: string;
+    suggestedColorHex: string;
+    mass: number;
+    meltingPointK: number;
+    boilingPointK: number;
+    specificHeatSolid: number;
+    specificHeatLiquid: number;
+    specificHeatGas: number;
+    latentHeatFusion: number;
+    latentHeatVaporization: number;
+    enthalpyVapJmol: number;
+    enthalpyFusionJmol: number;
+    triplePoint: { tempK: number; pressurePa: number };
+    criticalPoint: { tempK: number; pressurePa: number };
+}
+
 const normalizeElementLookup = (value: string): string => value.trim().toLowerCase();
+
+const clampPositive = (value: number, fallback: number): number => {
+    if (!Number.isFinite(value) || value <= 0) return fallback;
+    return value;
+};
+
+const safeHexColor = (value: string): string => {
+    if (typeof value !== 'string') return '#38bdf8';
+    const trimmed = value.trim();
+    return /^#(?:[0-9a-fA-F]{3}){1,2}$/.test(trimmed) ? trimmed : '#38bdf8';
+};
+
+const formatCompact = (value: number, unit: string) => `${roundTo(value, 2)} ${unit}`;
 
 const readOpenAiStructuredContent = (): unknown => {
     if (typeof window === 'undefined' || !window.openai) return null;
@@ -251,6 +283,7 @@ function App() {
     const simulationRegistry = useRef<Map<number, () => PhysicsState>>(new Map());
     const aiMessageTimeoutRef = useRef<number | null>(null);
     const lastProcessedAiTimestampRef = useRef(0);
+    const reactionAtomicNumberRef = useRef(900000);
     const syncStateToChatGPTRef = useRef<() => Promise<void>>(async () => { });
 
     // ChatGPT Integration Hook
@@ -379,6 +412,70 @@ function App() {
         await handleInfoClick();
     };
 
+    const handleReactionButtonClick = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!window.openai?.sendFollowUpMessage) return;
+
+        const selectedSymbols = selectedElements.map((el) => `${el.name} (${el.symbol})`).join(', ');
+        const prompt = `Nessas condicoes de temperatura (${roundTo(temperature, 2)}K) e pressao (${roundTo(pressure, 2)}Pa), os seguintes elementos reagindo resultariam no que: ${selectedSymbols}. Dê uma unica resposta, explique brevemente limites/hipoteses da reacao e depois use a ferramenta inject_reaction_substance com todos os campos obrigatorios.`;
+        await window.openai.sendFollowUpMessage({ prompt });
+    };
+
+    const buildReactionElement = (reaction: IAReactionSubstance): ChemicalElement => {
+        const atomicNumber = reactionAtomicNumberRef.current++;
+        const color = safeHexColor(reaction.suggestedColorHex);
+
+        return {
+            atomicNumber,
+            symbol: reaction.formula,
+            name: reaction.substanceName,
+            summary: 'Substância gerada por reação estimada pelo modelo.',
+            mass: clampPositive(reaction.mass, 18),
+            category: 'reaction_product',
+            classification: {
+                group: 'N/A',
+                groupBlock: 'N/A',
+                period: 0,
+                electronShells: 0,
+            },
+            visualDNA: {
+                solid: { color, opacidade: 1 },
+                liquid: { color, opacidade: 0.8 },
+                gas: { color, opacidade: 0.4 },
+            },
+            properties: {
+                meltingPointK: clampPositive(reaction.meltingPointK, 273.15),
+                boilingPointK: clampPositive(reaction.boilingPointK, 373.15),
+                specificHeatSolid: clampPositive(reaction.specificHeatSolid, 1000),
+                specificHeatLiquid: clampPositive(reaction.specificHeatLiquid, 1000),
+                specificHeatGas: clampPositive(reaction.specificHeatGas, 1000),
+                latentHeatFusion: clampPositive(reaction.latentHeatFusion, 100000),
+                latentHeatVaporization: clampPositive(reaction.latentHeatVaporization, 1000000),
+                enthalpyVapJmol: clampPositive(reaction.enthalpyVapJmol, 40000),
+                enthalpyFusionJmol: clampPositive(reaction.enthalpyFusionJmol, 6000),
+                triplePoint: {
+                    tempK: clampPositive(reaction.triplePoint.tempK, 200),
+                    pressurePa: clampPositive(reaction.triplePoint.pressurePa, 100),
+                },
+                criticalPoint: {
+                    tempK: clampPositive(reaction.criticalPoint.tempK, 500),
+                    pressurePa: clampPositive(reaction.criticalPoint.pressurePa, 100000),
+                },
+                meltingPointDisplay: formatCompact(clampPositive(reaction.meltingPointK, 273.15), 'K'),
+                boilingPointDisplay: formatCompact(clampPositive(reaction.boilingPointK, 373.15), 'K'),
+                specificHeatSolidDisplay: `${roundTo(clampPositive(reaction.specificHeatSolid, 1000), 2)}`,
+                specificHeatLiquidDisplay: `${roundTo(clampPositive(reaction.specificHeatLiquid, 1000), 2)}`,
+                specificHeatGasDisplay: `${roundTo(clampPositive(reaction.specificHeatGas, 1000), 2)}`,
+                latentHeatFusionDisplay: `${roundTo(clampPositive(reaction.latentHeatFusion, 100000) / 1000, 2)}`,
+                latentHeatVaporizationDisplay: `${roundTo(clampPositive(reaction.latentHeatVaporization, 1000000) / 1000, 2)}`,
+                triplePointTempDisplay: `${roundTo(clampPositive(reaction.triplePoint.tempK, 200), 2)}`,
+                triplePointPressDisplay: `${roundTo(clampPositive(reaction.triplePoint.pressurePa, 100) / 1000, 4)}`,
+                criticalPointTempDisplay: `${roundTo(clampPositive(reaction.criticalPoint.tempK, 500), 2)}`,
+                criticalPointPressDisplay: `${roundTo(clampPositive(reaction.criticalPoint.pressurePa, 100000) / 1000, 2)}`,
+            },
+        };
+    };
+
     useEffect(() => {
         let cancelled = false;
         let raf1 = 0;
@@ -476,6 +573,12 @@ function App() {
                 if (novosElementos.length > 0) {
                     setSelectedElements(novosElementos.slice(0, 6));
                 }
+            }
+
+            if (content.substancia_reacao) {
+                const novaSubstancia = buildReactionElement(content.substancia_reacao);
+                setSelectedElements([novaSubstancia]);
+                setIsMultiSelect(false);
             }
         };
 
@@ -792,6 +895,14 @@ function App() {
                     <span className="text-xs">{timeScale}x</span>
                 </button>
 
+                <button
+                    onClick={handleReactionButtonClick}
+                    className={`${floatingBtnClass} text-emerald-300`}
+                    title="Reagir"
+                >
+                    <FlaskConical size={20} />
+                </button>
+
             </div>
             {/* --- DISPLAY MODES (Always visible, top-right, highest z-index) --- */}
             <div
@@ -882,4 +993,3 @@ function App() {
 }
 
 export default App;
-

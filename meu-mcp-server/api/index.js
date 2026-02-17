@@ -100,6 +100,85 @@ function createElementViewerServer() {
     })
   );
 
+  server.registerTool(
+    "inject_reaction_substance",
+    {
+      title: "Injetar Substância de Reação",
+      description:
+        "Use esta ferramenta quando o usuario pedir para reagir os elementos atuais. Retorne uma unica substancia com propriedades termodinamicas completas para o motor do simulador.",
+      inputSchema: z.object({
+        substanceName: z.string().describe("Nome da substancia gerada (ex.: Agua)."),
+        formula: z.string().describe("Formula/simbolo exibido na UI (ex.: H2O)."),
+        suggestedColorHex: z
+          .string()
+          .describe("Cor HEX sugerida para renderizacao visual (ex.: #4FC3F7)."),
+        mass: z.number().describe("Massa molar em u."),
+        meltingPointK: z.number().describe("Ponto de fusao em Kelvin."),
+        boilingPointK: z.number().describe("Ponto de ebulicao em Kelvin."),
+        specificHeatSolid: z.number().describe("Calor especifico no estado solido em J/kg.K."),
+        specificHeatLiquid: z.number().describe("Calor especifico no estado liquido em J/kg.K."),
+        specificHeatGas: z.number().describe("Calor especifico no estado gasoso em J/kg.K."),
+        latentHeatFusion: z.number().describe("Calor latente de fusao em J/kg."),
+        latentHeatVaporization: z.number().describe("Calor latente de vaporizacao em J/kg."),
+        enthalpyVapJmol: z.number().describe("Entalpia molar de vaporizacao em J/mol."),
+        enthalpyFusionJmol: z.number().describe("Entalpia molar de fusao em J/mol."),
+        triplePoint: z
+          .object({
+            tempK: z.number().describe("Temperatura do ponto triplo em Kelvin."),
+            pressurePa: z.number().describe("Pressao do ponto triplo em Pascal."),
+          })
+          .describe("Ponto triplo da substancia."),
+        criticalPoint: z
+          .object({
+            tempK: z.number().describe("Temperatura critica em Kelvin."),
+            pressurePa: z.number().describe("Pressao critica em Pascal."),
+          })
+          .describe("Ponto critico da substancia."),
+        mensagem_interpretacao: z
+          .string()
+          .describe("Frase curta explicando o resultado e as limitacoes da reacao."),
+      }),
+      _meta: {
+        "readOnlyHint": true,
+        "openai/outputTemplate": "ui://widget/element-viewer.html",
+        "openai/widgetAccessible": true,
+      },
+    },
+    async (args) => ({
+      structuredContent: {
+        app: "Element Viewer",
+        status: "reaction_substance_injected",
+        timestamp_atualizacao: Date.now(),
+        substancia_reacao: {
+          substanceName: args.substanceName,
+          formula: args.formula,
+          suggestedColorHex: args.suggestedColorHex,
+          mass: args.mass,
+          meltingPointK: args.meltingPointK,
+          boilingPointK: args.boilingPointK,
+          specificHeatSolid: args.specificHeatSolid,
+          specificHeatLiquid: args.specificHeatLiquid,
+          specificHeatGas: args.specificHeatGas,
+          latentHeatFusion: args.latentHeatFusion,
+          latentHeatVaporization: args.latentHeatVaporization,
+          enthalpyVapJmol: args.enthalpyVapJmol,
+          enthalpyFusionJmol: args.enthalpyFusionJmol,
+          triplePoint: args.triplePoint,
+          criticalPoint: args.criticalPoint,
+        },
+        configuracao_ia: {
+          interpretacao_do_modelo: args.mensagem_interpretacao,
+        },
+      },
+      content: [
+        {
+          type: "text",
+          text: args.mensagem_interpretacao,
+        },
+      ],
+    })
+  );
+
   return server;
 }
 
