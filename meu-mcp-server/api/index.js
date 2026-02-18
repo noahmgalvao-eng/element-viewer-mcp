@@ -141,6 +141,16 @@ function createElementViewerServer() {
     },
     async (args) => ({
       structuredContent: {
+      _meta: {
+        "readOnlyHint": true,
+        "openai/outputTemplate": "ui://widget/element-viewer.html",
+        "openai/widgetAccessible": true,
+      },
+    },
+    async (args) => ({
+      structuredContent: {
+        app: "Element Viewer",
+        status: "reaction_substance_injected",
         timestamp_atualizacao: Date.now(),
         substancia_reacao: {
           substanceName: args.substanceName,
@@ -160,6 +170,16 @@ function createElementViewerServer() {
           criticalPoint: args.criticalPoint,
         },
       }
+        configuracao_ia: {
+          interpretacao_do_modelo: args.mensagem_interpretacao,
+        },
+      },
+      content: [
+        {
+          type: "text",
+          text: args.mensagem_interpretacao,
+        },
+      ],
     })
   );
 

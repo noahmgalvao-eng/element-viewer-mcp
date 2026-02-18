@@ -348,6 +348,12 @@ function App() {
                 setSelectedElements([novaSubstancia]);
                 setIsMultiSelect(false);
             }
+
+            if (content.substancia_reacao) {
+                const novaSubstancia = buildReactionElement(content.substancia_reacao);
+                setSelectedElements([novaSubstancia]);
+                setIsMultiSelect(false);
+            }
         };
 
         const intervalId = window.setInterval(verificarAtualizacoesIA, 500);
