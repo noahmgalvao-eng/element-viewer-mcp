@@ -302,47 +302,51 @@ function App() {
             if (!rawContent || typeof rawContent !== 'object') return;
 
             const content = rawContent as IAStructuredContent;
-            const { configuracao_ia, timestamp_atualizacao } = content;
+            const { configuracao_ia, timestamp_atualizacao, substancia_reacao } = content;
 
-            if (
-                !configuracao_ia ||
-                typeof timestamp_atualizacao !== 'number' ||
-                timestamp_atualizacao <= lastProcessedAiTimestampRef.current
-            ) {
+            if (typeof timestamp_atualizacao !== 'number' || timestamp_atualizacao <= lastProcessedAiTimestampRef.current) {
                 return;
             }
 
             lastProcessedAiTimestampRef.current = timestamp_atualizacao;
 
-            if (
-                typeof configuracao_ia.interpretacao_do_modelo === 'string' &&
-                configuracao_ia.interpretacao_do_modelo.trim().length > 0
-            ) {
-                showAiMessage(configuracao_ia.interpretacao_do_modelo);
-            }
-
-            if (typeof configuracao_ia.temperatura_K === 'number') {
-                setTemperature(Math.min(configuracao_ia.temperatura_K, 6000));
-            }
-
-            if (typeof configuracao_ia.pressao_Pa === 'number') {
-                setPressure(Math.min(configuracao_ia.pressao_Pa, 100000000000));
-            }
-
-            if (Array.isArray(configuracao_ia.elementos) && configuracao_ia.elementos.length > 0) {
-                const novosElementos = configuracao_ia.elementos
-                    .map((simboloIA) => {
-                        const lookup = normalizeElementLookup(simboloIA);
-                        return ELEMENTS.find((el) =>
-                            el.symbol.toLowerCase() === lookup ||
-                            el.name.toLowerCase() === lookup
-                        );
-                    })
-                    .filter((el): el is ChemicalElement => Boolean(el));
-
-                if (novosElementos.length > 0) {
-                    setSelectedElements(novosElementos.slice(0, 6));
+            if (configuracao_ia) {
+                if (
+                    typeof configuracao_ia.interpretacao_do_modelo === 'string' &&
+                    configuracao_ia.interpretacao_do_modelo.trim().length > 0
+                ) {
+                    showAiMessage(configuracao_ia.interpretacao_do_modelo);
                 }
+
+                if (typeof configuracao_ia.temperatura_K === 'number') {
+                    setTemperature(Math.min(configuracao_ia.temperatura_K, 6000));
+                }
+
+                if (typeof configuracao_ia.pressao_Pa === 'number') {
+                    setPressure(Math.min(configuracao_ia.pressao_Pa, 100000000000));
+                }
+
+                if (Array.isArray(configuracao_ia.elementos) && configuracao_ia.elementos.length > 0) {
+                    const novosElementos = configuracao_ia.elementos
+                        .map((simboloIA) => {
+                            const lookup = normalizeElementLookup(simboloIA);
+                            return ELEMENTS.find((el) =>
+                                el.symbol.toLowerCase() === lookup ||
+                                el.name.toLowerCase() === lookup
+                            );
+                        })
+                        .filter((el): el is ChemicalElement => Boolean(el));
+
+                    if (novosElementos.length > 0) {
+                        setSelectedElements(novosElementos.slice(0, 6));
+                    }
+                }
+            }
+
+            if (substancia_reacao) {
+                const novaSubstancia = buildReactionElement(substancia_reacao);
+                setSelectedElements([novaSubstancia]);
+                setIsMultiSelect(false);
             }
 
             if (content.substancia_reacao) {

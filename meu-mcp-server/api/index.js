@@ -138,6 +138,9 @@ function createElementViewerServer() {
           .string()
           .describe("Frase curta explicando o resultado e as limitacoes da reacao."),
       }),
+    },
+    async (args) => ({
+      structuredContent: {
       _meta: {
         "readOnlyHint": true,
         "openai/outputTemplate": "ui://widget/element-viewer.html",
@@ -166,6 +169,7 @@ function createElementViewerServer() {
           triplePoint: args.triplePoint,
           criticalPoint: args.criticalPoint,
         },
+      }
         configuracao_ia: {
           interpretacao_do_modelo: args.mensagem_interpretacao,
         },
