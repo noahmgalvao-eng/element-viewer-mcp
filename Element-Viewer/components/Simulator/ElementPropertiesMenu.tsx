@@ -83,6 +83,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     // Check which regime we are in
     const isSublimationRegime = physicsState.sublimationPointCurrent > 0;
     const stdPressure = 101325;
+    const isReactionProduct = element.category === 'reaction_product';
 
     // Helper for Pressure Formatting
     const fmtP = (p: number) => {
@@ -130,7 +131,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                         <div className="flex flex-col items-start">
                             <h3 className="font-bold text-slate-100 text-lg leading-tight">{element.name}</h3>
                             <p className="text-[10px] text-slate-400 font-mono uppercase tracking-wider">
-                                {elementSourceData?.category?.toUpperCase() || element.classification.groupName.toUpperCase()}
+                                {elementSourceData?.category?.toUpperCase() || element.classification.groupName?.toUpperCase() || 'SUBSTÂNCIA GERADA'}
                             </p>
                             <button
                                 onClick={() => setShowDescription(true)}
@@ -352,7 +353,8 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                             </div>
 
                             {/* Chemical Properties */}
-                            <div className="space-y-2">
+                            {!isReactionProduct && (
+                                <div className="space-y-2">
                                 <h5 className="text-[10px] font-bold text-green-400 uppercase flex items-center gap-2">
                                     <Beaker size={12} /> Atomic & Chemical
                                 </h5>
@@ -380,6 +382,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                                     </div>
                                 </div>
                             </div>
+                            )}
 
                             {/* Physics Properties */}
                             <div className="space-y-2">
@@ -387,19 +390,23 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                                     <Thermometer size={12} /> Physics
                                 </h5>
                                 <div className="grid grid-cols-2 gap-2">
-                                    <PropBox
-                                        label="Thermal Cond."
-                                        value={element.properties.thermalConductivityDisplay || 'N/A'}
-                                        source={element.properties.thermalConductivitySource}
-                                    />
-                                    <PropBox
-                                        label="Cond. Elétrica"
-                                        value={element.properties.electricalConductivityDisplay || 'N/A'}
-                                    />
-                                    <PropBox
-                                        label="Bulk Modulus"
-                                        value={element.properties.bulkModulusDisplay || 'N/A'}
-                                    />
+                                    {!isReactionProduct && (
+                                        <>
+                                            <PropBox
+                                                label="Thermal Cond."
+                                                value={element.properties.thermalConductivityDisplay || 'N/A'}
+                                                source={element.properties.thermalConductivitySource}
+                                            />
+                                            <PropBox
+                                                label="Cond. Elétrica"
+                                                value={element.properties.electricalConductivityDisplay || 'N/A'}
+                                            />
+                                            <PropBox
+                                                label="Bulk Modulus"
+                                                value={element.properties.bulkModulusDisplay || 'N/A'}
+                                            />
+                                        </>
+                                    )}
 
                                     <PropBox
                                         label="Specific Heat (Solid)"
@@ -440,8 +447,19 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                                         source={element.properties.latentHeatVaporizationSource}
                                     />
 
+                                    {element.properties.enthalpyVapJmol && (
+                                        <PropBox label="Enthalpy Vap. (Molar)" value={`${(element.properties.enthalpyVapJmol / 1000).toFixed(2)} kJ/mol`} />
+                                    )}
+
                                     {element.properties.enthalpyFusionJmol && (
                                         <PropBox label="Enthalpy Fusion (Molar)" value={`${(element.properties.enthalpyFusionJmol / 1000).toFixed(2)} kJ/mol`} />
+                                    )}
+                                
+                                    {isReactionProduct && (
+                                        <>
+                                            <PropBox label="Melting Point" value={element.properties.meltingPointDisplay || `${element.properties.meltingPointK} K`} />
+                                            <PropBox label="Boiling Point" value={element.properties.boilingPointDisplay || `${element.properties.boilingPointK} K`} />
+                                        </>
                                     )}
                                 </div>
                             </div>
