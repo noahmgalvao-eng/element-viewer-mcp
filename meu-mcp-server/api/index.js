@@ -18,28 +18,30 @@ function createElementViewerServer() {
     "element-viewer-widget",
     "ui://widget/element-viewer.html",
     {},
-    async () => ({
-      contents: [
-        {
-          uri: "ui://widget/element-viewer.html",
-          mimeType: "text/html+skybridge",
-          text: htmlContent,
-          _meta: {
-            "openai/widgetPrefersBorder": true,
-            "openai/widgetDomain": "https://chatgpt.com",
-            "openai/widgetDescription": "Element Viewer interativo para explorar estados da materia e transicoes de fase.",
-            "openai/widgetCSP": {
-              connect_domains: ["https://chatgpt.com"],
-              resource_domains: [
-                "https://*.oaistatic.com",
-                "https://cdn.tailwindcss.com",
-                "https://esm.sh",
-              ],
+    async function () {
+      return {
+        contents: [
+          {
+            uri: "ui://widget/element-viewer.html",
+            mimeType: "text/html+skybridge",
+            text: htmlContent,
+            _meta: {
+              "openai/widgetPrefersBorder": true,
+              "openai/widgetDomain": "https://chatgpt.com",
+              "openai/widgetDescription": "Element Viewer interativo para explorar estados da materia e transicoes de fase.",
+              "openai/widgetCSP": {
+                connect_domains: ["https://chatgpt.com"],
+                resource_domains: [
+                  "https://*.oaistatic.com",
+                  "https://cdn.tailwindcss.com",
+                  "https://esm.sh",
+                ],
+              },
             },
           },
-        },
-      ],
-    })
+        ],
+      };
+    }
   );
 
   // --- 2. REGISTER TOOL: ABRIR E ATUALIZAR SIMULADOR ---
@@ -79,25 +81,92 @@ function createElementViewerServer() {
         "openai/widgetAccessible": true,
       },
     },
-    async (args) => ({
-      structuredContent: {
-        app: "Element Viewer",
-        status: "open",
-        timestamp_atualizacao: Date.now(),
-        configuracao_ia: {
-          elementos: args.elementos || null,
-          temperatura_K: args.temperatura_K || null,
-          pressao_Pa: args.pressao_Pa || null,
-          interpretacao_do_modelo: args.mensagem_interpretacao,
+    async function (args) {
+      return {
+        structuredContent: {
+          app: "Element Viewer",
+          status: "open",
+          timestamp_atualizacao: Date.now(),
+          configuracao_ia: {
+            elementos: args.elementos || null,
+            temperatura_K: args.temperatura_K || null,
+            pressao_Pa: args.pressao_Pa || null,
+            interpretacao_do_modelo: args.mensagem_interpretacao,
+          },
         },
-      },
-      content: [
-        {
-          type: "text",
-          text: args.mensagem_interpretacao,
+        content: [
+          {
+            type: "text",
+            text: args.mensagem_interpretacao,
+          },
+        ],
+      };
+    }
+  );
+
+  server.registerTool(
+    "inject_reaction_substance",
+    {
+      title: "Injetar Substância de Reação",
+      description:
+        "Use esta ferramenta quando o usuario pedir para reagir os elementos atuais. Retorne uma unica substancia com propriedades termodinamicas completas para o motor do simulador.",
+      inputSchema: z.object({
+        substanceName: z.string().describe("Nome da substancia gerada (ex.: Agua)."),
+        formula: z.string().describe("Formula/simbolo exibido na UI (ex.: H2O)."),
+        suggestedColorHex: z
+          .string()
+          .describe("Cor HEX sugerida para renderizacao visual (ex.: #4FC3F7)."),
+        mass: z.number().describe("Massa molar em u."),
+        meltingPointK: z.number().describe("Ponto de fusao em Kelvin."),
+        boilingPointK: z.number().describe("Ponto de ebulicao em Kelvin."),
+        specificHeatSolid: z.number().describe("Calor especifico no estado solido em J/kg.K."),
+        specificHeatLiquid: z.number().describe("Calor especifico no estado liquido em J/kg.K."),
+        specificHeatGas: z.number().describe("Calor especifico no estado gasoso em J/kg.K."),
+        latentHeatFusion: z.number().describe("Calor latente de fusao em J/kg."),
+        latentHeatVaporization: z.number().describe("Calor latente de vaporizacao em J/kg."),
+        enthalpyVapJmol: z.number().describe("Entalpia molar de vaporizacao em J/mol."),
+        enthalpyFusionJmol: z.number().describe("Entalpia molar de fusao em J/mol."),
+        triplePoint: z
+          .object({
+            tempK: z.number().describe("Temperatura do ponto triplo em Kelvin."),
+            pressurePa: z.number().describe("Pressao do ponto triplo em Pascal."),
+          })
+          .describe("Ponto triplo da substancia."),
+        criticalPoint: z
+          .object({
+            tempK: z.number().describe("Temperatura critica em Kelvin."),
+            pressurePa: z.number().describe("Pressao critica em Pascal."),
+          })
+          .describe("Ponto critico da substancia."),
+        mensagem_interpretacao: z
+          .string()
+          .describe("Frase curta explicando o resultado e as limitacoes da reacao."),
+      }),
+    },
+    async function (args) {
+      return {
+        structuredContent: {
+          timestamp_atualizacao: Date.now(),
+          substancia_reacao: {
+            substanceName: args.substanceName,
+            formula: args.formula,
+            suggestedColorHex: args.suggestedColorHex,
+            mass: args.mass,
+            meltingPointK: args.meltingPointK,
+            boilingPointK: args.boilingPointK,
+            specificHeatSolid: args.specificHeatSolid,
+            specificHeatLiquid: args.specificHeatLiquid,
+            specificHeatGas: args.specificHeatGas,
+            latentHeatFusion: args.latentHeatFusion,
+            latentHeatVaporization: args.latentHeatVaporization,
+            enthalpyVapJmol: args.enthalpyVapJmol,
+            enthalpyFusionJmol: args.enthalpyFusionJmol,
+            triplePoint: args.triplePoint,
+            criticalPoint: args.criticalPoint,
+          },
         },
-      ],
-    })
+      };
+    }
   );
 
   return server;
@@ -106,7 +175,7 @@ function createElementViewerServer() {
 // --- EXPRESS APP (for Vercel serverless) ---
 const app = express();
 
-app.options("/mcp", (req, res) => {
+app.options("/mcp", function (req, res) {
   res.writeHead(204, {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, GET, DELETE, OPTIONS",
@@ -116,11 +185,11 @@ app.options("/mcp", (req, res) => {
   res.end();
 });
 
-app.get("/", (req, res) => {
+app.get("/", function (req, res) {
   res.status(200).send("Element Viewer MCP Server Running");
 });
 
-app.all("/mcp", async (req, res) => {
+app.all("/mcp", async function (req, res) {
   console.log(`[MCP] ${req.method} /mcp`);
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Expose-Headers", "Mcp-Session-Id");
@@ -131,7 +200,7 @@ app.all("/mcp", async (req, res) => {
     enableJsonResponse: true,
   });
 
-  res.on("close", () => {
+  res.on("close", function () {
     transport.close();
     server.close();
   });

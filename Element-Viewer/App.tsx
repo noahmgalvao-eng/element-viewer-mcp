@@ -7,226 +7,27 @@ import RecordingStatsModal from './components/Simulator/RecordingStatsModal';
 import { ELEMENTS } from './data/elements';
 import { ChemicalElement, MatterState, PhysicsState } from './types';
 import { predictMatterState } from './hooks/physics/phaseCalculations';
-// Import new hook
-import { Play, Pause, Settings2, X, Circle, Square } from "lucide-react";
-
-
-// --- Inline Icons to separate from external dependencies ---
-
-const IconIdeaBulb = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-    >
-        <circle cx="12" cy="10.5" r="5.5" fill="currentColor" opacity="0.18" stroke="none" />
-        <path d="M12 3.5a5 5 0 0 0-3.2 8.84c.62.53 1.2 1.47 1.2 2.45V16h4v-1.2c0-.98.58-1.92 1.2-2.45A5 5 0 0 0 12 3.5z" />
-        <path d="M10.5 18.2h3" />
-        <path d="M10 20.4h4" />
-        <path d="M12 2v1" />
-    </svg>
-);
-
-const roundTo = (value: number, digits = 2): number =>
-    Number(value.toFixed(digits));
-
-const phaseToReadable = (state: MatterState): string => {
-    switch (state) {
-        case MatterState.SOLID:
-            return 'solido';
-        case MatterState.MELTING:
-            return 'fusao (solido -> liquido)';
-        case MatterState.EQUILIBRIUM_MELT:
-            return 'equilibrio solido-liquido';
-        case MatterState.LIQUID:
-            return 'liquido';
-        case MatterState.BOILING:
-            return 'ebulicao/vaporizacao (liquido -> gas)';
-        case MatterState.EQUILIBRIUM_BOIL:
-            return 'equilibrio liquido-gas';
-        case MatterState.EQUILIBRIUM_TRIPLE:
-            return 'ponto triplo (solido + liquido + gas)';
-        case MatterState.SUBLIMATION:
-            return 'sublimacao (solido -> gas)';
-        case MatterState.EQUILIBRIUM_SUB:
-            return 'equilibrio solido-gas';
-        case MatterState.GAS:
-            return 'gas';
-        case MatterState.TRANSITION_SCF:
-            return 'transicao de fluido supercritico';
-        case MatterState.SUPERCRITICAL:
-            return 'fluido supercritico';
-        default:
-            return 'estado desconhecido';
-    }
-};
-
-const phaseToPresentPhases = (state: MatterState): string[] => {
-    switch (state) {
-        case MatterState.EQUILIBRIUM_TRIPLE:
-            return ['solido', 'liquido', 'gas'];
-        case MatterState.MELTING:
-        case MatterState.EQUILIBRIUM_MELT:
-            return ['solido', 'liquido'];
-        case MatterState.BOILING:
-        case MatterState.EQUILIBRIUM_BOIL:
-            return ['liquido', 'gas'];
-        case MatterState.SUBLIMATION:
-        case MatterState.EQUILIBRIUM_SUB:
-            return ['solido', 'gas'];
-        case MatterState.TRANSITION_SCF:
-        case MatterState.SUPERCRITICAL:
-            return ['fluido supercritico'];
-        case MatterState.LIQUID:
-            return ['liquido'];
-        case MatterState.GAS:
-            return ['gas'];
-        case MatterState.SOLID:
-        default:
-            return ['solido'];
-    }
-};
-
-const getSupportedEquilibria = (element: ChemicalElement): string[] => {
-    const hasTriplePoint = !!element.properties.triplePoint;
-    const canSublimationEq = hasTriplePoint && !!element.properties.enthalpyFusionJmol;
-
-    const equilibria = [
-        'EQUILIBRIUM_MELT (solido + liquido)',
-        'EQUILIBRIUM_BOIL (liquido + gas)'
-    ];
-
-    if (canSublimationEq) {
-        equilibria.push('EQUILIBRIUM_SUB (solido + gas)');
-    }
-
-    if (hasTriplePoint) {
-        equilibria.push('EQUILIBRIUM_TRIPLE (solido + liquido + gas)');
-    }
-
-    return equilibria;
-};
-
-const IconPiP = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-    >
-        <path d="M2 10h6V4" />
-        <path d="m2 4 6 6" />
-        <path d="M21 10V7a2 2 0 0 0-2-2h-7" />
-        <path d="M3 14v2a2 2 0 0 0 2 2h3" />
-        <rect x="12" y="14" width="10" height="7" rx="1" />
-    </svg>
-);
-
-const IconMaximize = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-    >
-        <path d="M15 3h6v6" />
-        <path d="m21 3-7 7" />
-        <path d="m3 21 7-7" />
-        <path d="M9 21H3v-6" />
-    </svg>
-);
-
-const IconMinimize = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-    >
-        <path d="m14 10 7-7" />
-        <path d="M20 10h-6V4" />
-        <path d="m3 21 7-7" />
-        <path d="M4 14h6v6" />
-    </svg>
-);
-
-interface ContextMenuData {
-    x: number;
-    y: number;
-    element: ChemicalElement;
-    physicsState: PhysicsState;
-}
-
-
-interface RecordingSnapshot {
-    element: ChemicalElement;
-    state: PhysicsState;
-}
-
-interface IAConfiguracao {
-    elementos?: string[] | null;
-    temperatura_K?: number | null;
-    pressao_Pa?: number | null;
-    interpretacao_do_modelo?: string | null;
-}
-
-interface IAStructuredContent {
-    configuracao_ia?: IAConfiguracao;
-    timestamp_atualizacao?: number;
-}
-
-const normalizeElementLookup = (value: string): string => value.trim().toLowerCase();
-
-const readOpenAiStructuredContent = (): unknown => {
-    if (typeof window === 'undefined' || !window.openai) return null;
-
-    const openaiWithStructured = window.openai as typeof window.openai & {
-        structuredContent?: unknown;
-    };
-
-    if (openaiWithStructured.structuredContent && typeof openaiWithStructured.structuredContent === 'object') {
-        return openaiWithStructured.structuredContent;
-    }
-
-    if (openaiWithStructured.toolOutput && typeof openaiWithStructured.toolOutput === 'object') {
-        const toolOutput = openaiWithStructured.toolOutput as Record<string, unknown>;
-        if (toolOutput.structuredContent && typeof toolOutput.structuredContent === 'object') {
-            return toolOutput.structuredContent;
-        }
-        return toolOutput;
-    }
-
-    return null;
-};
-
+import { Play, Pause, Settings2, X, Circle, Square, FlaskConical } from 'lucide-react';
 import { useElementViewerChat } from './hooks/useElementViewerChat';
-
-// ... (existing interfaces)
+import { useAppChatControls } from './hooks/useAppChatControls';
+import {
+    ContextMenuData,
+    IAReactionSubstance,
+    IAStructuredContent,
+    clampPositive,
+    formatCompact,
+    getSupportedEquilibria,
+    IconIdeaBulb,
+    IconMaximize,
+    IconMinimize,
+    IconPiP,
+    normalizeElementLookup,
+    phaseToPresentPhases,
+    phaseToReadable,
+    readOpenAiStructuredContent,
+    roundTo,
+    safeHexColor,
+} from './app/appDefinitions';
 
 function App() {
     // State for Selection (Array for Multi-Element)
@@ -251,6 +52,7 @@ function App() {
     const simulationRegistry = useRef<Map<number, () => PhysicsState>>(new Map());
     const aiMessageTimeoutRef = useRef<number | null>(null);
     const lastProcessedAiTimestampRef = useRef(0);
+    const reactionAtomicNumberRef = useRef(900000);
     const syncStateToChatGPTRef = useRef<() => Promise<void>>(async () => { });
 
     // ChatGPT Integration Hook
@@ -373,10 +175,75 @@ function App() {
     };
     syncStateToChatGPTRef.current = syncStateToChatGPT;
 
-    const handleInfoButtonClick = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        await syncStateToChatGPT();
-        await handleInfoClick();
+
+    const {
+        handleTogglePiP,
+        handleToggleFullscreen,
+        handleInfoButtonClick,
+        handleReactionButtonClick,
+    } = useAppChatControls({
+        requestDisplayMode,
+        isFullscreen,
+        syncStateToChatGPT,
+        handleInfoClick,
+        selectedElements,
+        temperature,
+        pressure,
+    });
+
+    const buildReactionElement = (reaction: IAReactionSubstance): ChemicalElement => {
+        const atomicNumber = reactionAtomicNumberRef.current++;
+        const color = safeHexColor(reaction.suggestedColorHex);
+
+        return {
+            atomicNumber,
+            symbol: reaction.formula,
+            name: reaction.substanceName,
+            summary: 'Substância gerada por reação estimada pelo modelo.',
+            mass: clampPositive(reaction.mass, 18),
+            category: 'reaction_product',
+            classification: {
+                group: 'N/A',
+                groupBlock: 'N/A',
+                period: 0,
+                electronShells: 0,
+            },
+            visualDNA: {
+                solid: { color, opacidade: 1 },
+                liquid: { color, opacidade: 0.8 },
+                gas: { color, opacidade: 0.4 },
+            },
+            properties: {
+                meltingPointK: clampPositive(reaction.meltingPointK, 273.15),
+                boilingPointK: clampPositive(reaction.boilingPointK, 373.15),
+                specificHeatSolid: clampPositive(reaction.specificHeatSolid, 1000),
+                specificHeatLiquid: clampPositive(reaction.specificHeatLiquid, 1000),
+                specificHeatGas: clampPositive(reaction.specificHeatGas, 1000),
+                latentHeatFusion: clampPositive(reaction.latentHeatFusion, 100000),
+                latentHeatVaporization: clampPositive(reaction.latentHeatVaporization, 1000000),
+                enthalpyVapJmol: clampPositive(reaction.enthalpyVapJmol, 40000),
+                enthalpyFusionJmol: clampPositive(reaction.enthalpyFusionJmol, 6000),
+                triplePoint: {
+                    tempK: clampPositive(reaction.triplePoint.tempK, 200),
+                    pressurePa: clampPositive(reaction.triplePoint.pressurePa, 100),
+                },
+                criticalPoint: {
+                    tempK: clampPositive(reaction.criticalPoint.tempK, 500),
+                    pressurePa: clampPositive(reaction.criticalPoint.pressurePa, 100000),
+                },
+                meltingPointDisplay: formatCompact(clampPositive(reaction.meltingPointK, 273.15), 'K'),
+                boilingPointDisplay: formatCompact(clampPositive(reaction.boilingPointK, 373.15), 'K'),
+                specificHeatSolidDisplay: `${roundTo(clampPositive(reaction.specificHeatSolid, 1000), 2)}`,
+                specificHeatLiquidDisplay: `${roundTo(clampPositive(reaction.specificHeatLiquid, 1000), 2)}`,
+                specificHeatGasDisplay: `${roundTo(clampPositive(reaction.specificHeatGas, 1000), 2)}`,
+                latentHeatFusionDisplay: `${roundTo(clampPositive(reaction.latentHeatFusion, 100000) / 1000, 2)}`,
+                latentHeatVaporizationDisplay: `${roundTo(clampPositive(reaction.latentHeatVaporization, 1000000) / 1000, 2)}`,
+                triplePointTempDisplay: `${roundTo(clampPositive(reaction.triplePoint.tempK, 200), 2)}`,
+                triplePointPressDisplay: `${roundTo(clampPositive(reaction.triplePoint.pressurePa, 100) / 1000, 4)}`,
+                criticalPointTempDisplay: `${roundTo(clampPositive(reaction.criticalPoint.tempK, 500), 2)}`,
+                criticalPointPressDisplay: `${roundTo(clampPositive(reaction.criticalPoint.pressurePa, 100000) / 1000, 2)}`,
+            },
+        };
     };
 
     useEffect(() => {
@@ -435,47 +302,51 @@ function App() {
             if (!rawContent || typeof rawContent !== 'object') return;
 
             const content = rawContent as IAStructuredContent;
-            const { configuracao_ia, timestamp_atualizacao } = content;
+            const { configuracao_ia, timestamp_atualizacao, substancia_reacao } = content;
 
-            if (
-                !configuracao_ia ||
-                typeof timestamp_atualizacao !== 'number' ||
-                timestamp_atualizacao <= lastProcessedAiTimestampRef.current
-            ) {
+            if (typeof timestamp_atualizacao !== 'number' || timestamp_atualizacao <= lastProcessedAiTimestampRef.current) {
                 return;
             }
 
             lastProcessedAiTimestampRef.current = timestamp_atualizacao;
 
-            if (
-                typeof configuracao_ia.interpretacao_do_modelo === 'string' &&
-                configuracao_ia.interpretacao_do_modelo.trim().length > 0
-            ) {
-                showAiMessage(configuracao_ia.interpretacao_do_modelo);
-            }
-
-            if (typeof configuracao_ia.temperatura_K === 'number') {
-                setTemperature(Math.min(configuracao_ia.temperatura_K, 6000));
-            }
-
-            if (typeof configuracao_ia.pressao_Pa === 'number') {
-                setPressure(Math.min(configuracao_ia.pressao_Pa, 100000000000));
-            }
-
-            if (Array.isArray(configuracao_ia.elementos) && configuracao_ia.elementos.length > 0) {
-                const novosElementos = configuracao_ia.elementos
-                    .map((simboloIA) => {
-                        const lookup = normalizeElementLookup(simboloIA);
-                        return ELEMENTS.find((el) =>
-                            el.symbol.toLowerCase() === lookup ||
-                            el.name.toLowerCase() === lookup
-                        );
-                    })
-                    .filter((el): el is ChemicalElement => Boolean(el));
-
-                if (novosElementos.length > 0) {
-                    setSelectedElements(novosElementos.slice(0, 6));
+            if (configuracao_ia) {
+                if (
+                    typeof configuracao_ia.interpretacao_do_modelo === 'string' &&
+                    configuracao_ia.interpretacao_do_modelo.trim().length > 0
+                ) {
+                    showAiMessage(configuracao_ia.interpretacao_do_modelo);
                 }
+
+                if (typeof configuracao_ia.temperatura_K === 'number') {
+                    setTemperature(Math.min(configuracao_ia.temperatura_K, 6000));
+                }
+
+                if (typeof configuracao_ia.pressao_Pa === 'number') {
+                    setPressure(Math.min(configuracao_ia.pressao_Pa, 100000000000));
+                }
+
+                if (Array.isArray(configuracao_ia.elementos) && configuracao_ia.elementos.length > 0) {
+                    const novosElementos = configuracao_ia.elementos
+                        .map((simboloIA) => {
+                            const lookup = normalizeElementLookup(simboloIA);
+                            return ELEMENTS.find((el) =>
+                                el.symbol.toLowerCase() === lookup ||
+                                el.name.toLowerCase() === lookup
+                            );
+                        })
+                        .filter((el): el is ChemicalElement => Boolean(el));
+
+                    if (novosElementos.length > 0) {
+                        setSelectedElements(novosElementos.slice(0, 6));
+                    }
+                }
+            }
+
+            if (substancia_reacao) {
+                const novaSubstancia = buildReactionElement(substancia_reacao);
+                setSelectedElements([novaSubstancia]);
+                setIsMultiSelect(false);
             }
         };
 
@@ -653,27 +524,7 @@ function App() {
   `;
 
     // --- PIP HANDLER ---
-    const handleTogglePiP = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        try {
-            await requestDisplayMode('pip');
-        } catch (error) {
-            console.error("Failed to enter PiP mode:", error);
-        }
-    };
-
     // --- FULLSCREEN HANDLER ---
-    const handleToggleFullscreen = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        const targetMode = isFullscreen ? 'inline' : 'fullscreen';
-
-        try {
-            await requestDisplayMode(targetMode);
-        } catch (error) {
-            console.error("Failed to toggle fullscreen:", error);
-        }
-    };
-
     return (
         <div
             className={`relative w-screen ${isFullscreen ? 'h-screen' : 'h-[600px]'} bg-slate-900 overflow-hidden flex`}
@@ -792,6 +643,7 @@ function App() {
                     <span className="text-xs">{timeScale}x</span>
                 </button>
 
+
             </div>
             {/* --- DISPLAY MODES (Always visible, top-right, highest z-index) --- */}
             <div
@@ -827,6 +679,18 @@ function App() {
                 >
                     <span className="pointer-events-none absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-100 shadow-[0_0_12px_rgba(254,240,138,0.95)] animate-pulse" />
                     <IconIdeaBulb size={24} className="drop-shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
+                </button>
+
+                {/* Row 3, Col 1: Empty (Spacer) */}
+                <div />
+
+                {/* Row 3, Col 2: Reagir */}
+                <button
+                    onClick={handleReactionButtonClick}
+                    className="group relative p-3 bg-slate-800/80 backdrop-blur border border-emerald-400/70 rounded-full text-emerald-300 shadow-[0_0_28px_rgba(16,185,129,0.35)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
+                    title="Reagir"
+                >
+                    <FlaskConical size={20} className="drop-shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
                 </button>
             </div>
 
@@ -882,4 +746,3 @@ function App() {
 }
 
 export default App;
-
