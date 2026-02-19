@@ -1,23 +1,22 @@
-import { BookOpen, PictureInPicture, Maximize2, Minimize2, Info, PictureInPicture2 } from 'lucide-react';
+﻿import { Sparkle, PictureInPicture, Expand, Collapse, InfoCircle, Flask } from '@openai/apps-sdk-ui/components/Icon';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-const icons = { BookOpen, PictureInPicture, Maximize2, Minimize2, Info, PictureInPicture2 };
+const icons = { Sparkle, PictureInPicture, Expand, Collapse, InfoCircle, Flask };
 
-console.log("Starting extraction...");
+console.log('Starting Apps SDK icon extraction...');
 
 for (const [name, Icon] of Object.entries(icons)) {
-    try {
-        if (!Icon) {
-            console.log(`\n--- ${name} ---`);
-            console.log('NOT FOUND');
-            continue;
-        }
-        console.log(`\n--- ${name} ---`);
-        // Render the icon to static markup to get the SVG string
-        // We wrap it in a simple element because renderToStaticMarkup expects a React element
-        console.log(renderToStaticMarkup(React.createElement(Icon, { size: 24, strokeWidth: 2 })));
-    } catch (e) {
-        console.error(`Error processing ${name}:`, e.message);
+  try {
+    if (!Icon) {
+      console.log(`\n--- ${name} ---`);
+      console.log('NOT FOUND');
+      continue;
     }
+
+    console.log(`\n--- ${name} ---`);
+    console.log(renderToStaticMarkup(React.createElement(Icon, { size: 24 })));
+  } catch (error) {
+    console.error(`Error processing ${name}:`, error instanceof Error ? error.message : error);
+  }
 }

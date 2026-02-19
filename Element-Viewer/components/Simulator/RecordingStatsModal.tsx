@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Alert } from '@openai/apps-sdk-ui/components/Alert';
+import { Badge } from '@openai/apps-sdk-ui/components/Badge';
+import { Button } from '@openai/apps-sdk-ui/components/Button';
+import { EmptyMessage } from '@openai/apps-sdk-ui/components/EmptyMessage';
+import { CircularProgress, LoadingIndicator } from '@openai/apps-sdk-ui/components/Indicator';
+import { ArrowLeft, ArrowRight, Record, X } from '@openai/apps-sdk-ui/components/Icon';
+import { SegmentedControl } from '@openai/apps-sdk-ui/components/SegmentedControl';
 import { ChemicalElement, PhysicsState, Bounds } from '../../types';
-import { X, ChevronLeft, ChevronRight, Activity, Thermometer, Gauge, Zap, ArrowRight, BoxSelect } from 'lucide-react';
 
 interface RecordingData {
   element: ChemicalElement;
@@ -13,209 +19,171 @@ interface Props {
   onClose: () => void;
 }
 
+const getVolume = (bounds: Bounds) => (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY);
+
+const formatValue = (value: number, unit = '') =>
+  `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}${unit}`;
+
 const RecordingStatsModal: React.FC<Props> = ({ recordings, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  if (recordings.length === 0) {
+    return (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm"
+        style={{ backgroundColor: 'var(--modal-backdrop-background)' }}
+      >
+        <div className="w-full max-w-lg rounded-3xl border border-default bg-surface-elevated p-6 shadow-xl">
+          <EmptyMessage>
+            <EmptyMessage.Icon color="warning">
+              <Record className="size-6" />
+            </EmptyMessage.Icon>
+            <EmptyMessage.Title>No recordings available</EmptyMessage.Title>
+            <EmptyMessage.Description>Start and stop a recording to inspect simulation metrics.</EmptyMessage.Description>
+            <EmptyMessage.ActionRow>
+              <Button color="secondary" variant="soft" onClick={onClose}>
+                Close
+              </Button>
+            </EmptyMessage.ActionRow>
+          </EmptyMessage>
+        </div>
+      </div>
+    );
+  }
+
   const currentData = recordings[currentIndex];
   const { element, start, end } = currentData;
+
+  const deltaH = end.enthalpy - start.enthalpy;
+  const duration = end.simTime - start.simTime;
+  const isHeating = deltaH > 0;
+
+  const volumeStart = getVolume(start.gasBounds);
+  const volumeEnd = getVolume(end.gasBounds);
+  const volumeChange = volumeEnd - volumeStart;
+  const volumePercent = volumeStart !== 0 ? (volumeChange / volumeStart) * 100 : 0;
+
+  const progress = useMemo(() => ((currentIndex + 1) / recordings.length) * 100, [currentIndex, recordings.length]);
 
   const handleNext = () => setCurrentIndex((prev) => (prev + 1) % recordings.length);
   const handlePrev = () => setCurrentIndex((prev) => (prev - 1 + recordings.length) % recordings.length);
 
-  // --- Statistics Calculations ---
-  const deltaH = end.enthalpy - start.enthalpy;
-  const duration = (end.simTime - start.simTime).toFixed(2);
-  const isHeating = deltaH > 0;
-  
-  // Volume Calculations
-  const getVolume = (bounds: Bounds) => (bounds.maxX - bounds.minX) * (bounds.maxY - bounds.minY);
-  const volStart = getVolume(start.gasBounds);
-  const volEnd = getVolume(end.gasBounds);
-  const volChange = volEnd - volStart;
-  const volPercent = volStart !== 0 ? (volChange / volStart) * 100 : 0;
-  
-  // Helper to format numbers
-  const fmt = (n: number, unit: string = '') => `${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}${unit}`;
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl bg-slate-900/95 border border-slate-600 rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
-        
-        {/* HEADER */}
-        <div className="flex items-center justify-between p-4 bg-slate-800/50 border-b border-slate-700">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ backgroundColor: 'var(--modal-backdrop-background)' }}
+    >
+      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-default bg-surface-elevated shadow-xl">
+        <header className="flex items-center justify-between border-b border-subtle p-4">
           <div className="flex items-center gap-3">
-             <div className="p-2 rounded-lg bg-red-500/20 text-red-400">
-                <Activity size={20} />
-             </div>
-             <div>
-                <h2 className="text-lg font-bold text-white">Recording Statistics</h2>
-                <p className="text-xs text-slate-400 font-mono">Duration: {duration}s (Simulated Time)</p>
-             </div>
+            <LoadingIndicator />
+            <div>
+              <h2 className="heading-sm text-default">Recording Statistics</h2>
+              <p className="text-xs text-secondary">
+                Duration {formatValue(duration, ' s')} (simulated) - Element {currentIndex + 1} of {recordings.length}
+              </p>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
-            <X size={20} />
-          </button>
-        </div>
+          <Button color="secondary" variant="ghost" pill uniform onClick={onClose} aria-label="Close recording stats">
+            <X className="size-4" />
+          </Button>
+        </header>
 
-        {/* CONTENT */}
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-700">
-            
-            {/* ELEMENT NAVIGATOR */}
-            <div className="flex items-center justify-between mb-6 bg-slate-800 rounded-xl p-2">
-                <button 
-                    onClick={handlePrev} 
-                    disabled={recordings.length <= 1}
-                    className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                    <ChevronLeft size={20} />
-                </button>
-                
-                <div className="flex items-center gap-3">
-                    <div 
-                        className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-slate-900 text-sm shadow-lg" 
-                        style={{ backgroundColor: element.visualDNA.solid.color }}
-                    >
-                        {element.symbol}
-                    </div>
-                    <div className="text-center">
-                        <h3 className="font-bold text-slate-100">{element.name}</h3>
-                        {recordings.length > 1 && <span className="text-[10px] text-slate-500 uppercase tracking-widest">Element {currentIndex + 1} of {recordings.length}</span>}
-                    </div>
-                </div>
-
-                <button 
-                    onClick={handleNext}
-                    disabled={recordings.length <= 1} 
-                    className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                    <ChevronRight size={20} />
-                </button>
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Button color="secondary" variant="soft" pill uniform onClick={handlePrev} disabled={recordings.length <= 1}>
+                <ArrowLeft className="size-4" />
+              </Button>
+              <Badge color="info" variant="soft">
+                {element.name} ({element.symbol})
+              </Badge>
+              <Button color="secondary" variant="soft" pill uniform onClick={handleNext} disabled={recordings.length <= 1}>
+                <ArrowRight className="size-4" />
+              </Button>
             </div>
+            <CircularProgress progress={progress} size={36} />
+          </div>
 
-            {/* STATS GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                {/* 1. THERMODYNAMICS CARD */}
-                <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4 space-y-4">
-                    <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-2">
-                        <Thermometer size={14} /> State Variables
-                    </h4>
-                    
-                    {/* Temperature */}
-                    <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-slate-400">
-                            <span>Temperature</span>
-                            <span className={end.temperature > start.temperature ? 'text-red-400' : 'text-blue-400'}>
-                                Δ {fmt(end.temperature - start.temperature, ' K')}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between bg-slate-900/50 p-2 rounded text-sm font-mono text-slate-200">
-                            <span>{fmt(start.temperature, ' K')}</span>
-                            <ArrowRight size={14} className="text-slate-600" />
-                            <span className="font-bold">{fmt(end.temperature, ' K')}</span>
-                        </div>
-                    </div>
+          <SegmentedControl
+            aria-label="Recorded element selection"
+            value={String(currentIndex)}
+            onChange={(next) => setCurrentIndex(Number(next))}
+            size="sm"
+            block
+          >
+            {recordings.map((recording, index) => (
+              <SegmentedControl.Option key={recording.element.atomicNumber} value={String(index)}>
+                {recording.element.symbol}
+              </SegmentedControl.Option>
+            ))}
+          </SegmentedControl>
 
-                    {/* Pressure */}
-                    <div className="space-y-1">
-                         <div className="flex justify-between text-xs text-slate-400">
-                            <span>Pressure</span>
-                            <span className={end.pressure !== start.pressure ? 'text-purple-400' : 'text-slate-500'}>
-                                {end.pressure === start.pressure ? 'Constant' : 'Changed'}
-                            </span>
-                        </div>
-                        <div className="flex items-center justify-between bg-slate-900/50 p-2 rounded text-sm font-mono text-slate-200">
-                            <span className="flex items-center gap-1"><Gauge size={12} className="text-purple-500" /> {fmt(start.pressure / 1000, ' kPa')}</span>
-                            <ArrowRight size={14} className="text-slate-600" />
-                            <span className="flex items-center gap-1"><Gauge size={12} className="text-purple-500" /> {fmt(end.pressure / 1000, ' kPa')}</span>
-                        </div>
-                    </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Alert
+              color={isHeating ? 'danger' : 'info'}
+              variant="soft"
+              title="System Enthalpy"
+              description={`${isHeating ? '+' : ''}${formatValue(deltaH, ' J')}`}
+            />
+            <Alert
+              color={volumeChange >= 0 ? 'success' : 'warning'}
+              variant="soft"
+              title="Gas Expansion"
+              description={`${volumeChange >= 0 ? '+' : ''}${formatValue(volumePercent, '%')}`}
+            />
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+            <section className="rounded-2xl border border-default bg-surface p-4">
+              <h3 className="text-sm font-semibold text-default">Thermodynamic variables</h3>
+              <div className="mt-3 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-secondary">Temperature</span>
+                  <span className="text-default">
+                    {formatValue(start.temperature, ' K')} - {formatValue(end.temperature, ' K')}
+                  </span>
                 </div>
-
-                {/* 2. ENERGETICS CARD */}
-                <div className="bg-slate-800/40 rounded-xl border border-slate-700/50 p-4 space-y-4">
-                    <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-wider flex items-center gap-2">
-                        <Zap size={14} /> Energetics
-                    </h4>
-
-                    {/* Enthalpy */}
-                    <div className="space-y-1">
-                         <div className="flex justify-between text-xs text-slate-400">
-                            <span>Total Enthalpy Change</span>
-                            <span className="text-[10px] text-slate-500">(System Energy)</span>
-                        </div>
-                        <div className={`flex items-center justify-center p-3 rounded text-lg font-bold font-mono border ${isHeating ? 'bg-red-900/20 border-red-500/30 text-red-300' : 'bg-blue-900/20 border-blue-500/30 text-blue-300'}`}>
-                            {isHeating ? '+' : ''}{fmt(deltaH, ' J')}
-                        </div>
-                        <div className="text-[10px] text-center text-slate-500">
-                            {isHeating ? 'Energy Absorbed from Environment' : 'Energy Released to Environment'}
-                        </div>
-                    </div>
-
-                    {/* Phase */}
-                    <div className="space-y-1 pt-2">
-                        <div className="text-xs text-slate-400">Phase Transition</div>
-                        <div className="flex items-center justify-between bg-slate-900/50 p-2 rounded text-xs font-bold font-mono text-slate-200">
-                            <span className="text-slate-400">{start.state.replace('_', ' ')}</span>
-                            <ArrowRight size={14} className="text-slate-500" />
-                            <span className={start.state !== end.state ? 'text-white' : 'text-slate-400'}>{end.state.replace('_', ' ')}</span>
-                        </div>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-secondary">Pressure</span>
+                  <span className="text-default">
+                    {formatValue(start.pressure / 1000, ' kPa')} - {formatValue(end.pressure / 1000, ' kPa')}
+                  </span>
                 </div>
-
-                {/* 3. VOLUME CARD (NEW) */}
-                <div className="col-span-1 md:col-span-2 bg-slate-800/40 rounded-xl border border-slate-700/50 p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-                     <div className="flex flex-col gap-1 w-full">
-                         <h4 className="text-xs font-bold text-green-400 uppercase tracking-wider flex items-center gap-2 mb-2">
-                            <BoxSelect size={14} /> Gas Expansion (Volume)
-                         </h4>
-                         <div className="flex items-center justify-between w-full gap-4">
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] text-slate-500 uppercase">Initial Area</span>
-                                <span className="text-xs font-mono text-slate-300">{fmt(volStart, ' px²')}</span>
-                            </div>
-                            <ArrowRight size={14} className="text-slate-600" />
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] text-slate-500 uppercase">Final Area</span>
-                                <span className="text-xs font-mono text-white">{fmt(volEnd, ' px²')}</span>
-                            </div>
-                            <div className="flex flex-col gap-1 items-end ml-auto">
-                                <span className="text-[10px] text-slate-500 uppercase">Variation</span>
-                                <span className={`text-sm font-bold font-mono ${volChange > 0 ? 'text-green-400' : volChange < 0 ? 'text-red-400' : 'text-slate-400'}`}>
-                                    {volChange > 0 ? '+' : ''}{fmt(volPercent, '%')}
-                                </span>
-                            </div>
-                         </div>
-                     </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-secondary">Phase transition</span>
+                  <span className="text-default">
+                    {start.state} - {end.state}
+                  </span>
                 </div>
+              </div>
+            </section>
 
-                {/* 4. BOUNDARIES CARD (Full Width) */}
-                <div className="col-span-1 md:col-span-2 bg-slate-800/40 rounded-xl border border-slate-700/50 p-4">
-                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Phase Boundaries (Pressure Dependent)</h4>
-                     <div className="grid grid-cols-2 gap-4">
-                         {/* Melting Point */}
-                         <div className="bg-slate-900/50 p-2 rounded flex justify-between items-center">
-                             <span className="text-xs text-slate-400">T<sub>melt</sub></span>
-                             <div className="flex items-center gap-2 text-xs font-mono">
-                                 <span className="text-slate-500">{fmt(start.meltingPointCurrent)}</span>
-                                 <ArrowRight size={10} className="text-slate-700" />
-                                 <span className="text-cyan-200">{fmt(end.meltingPointCurrent)}</span>
-                             </div>
-                         </div>
-                         {/* Boiling Point */}
-                         <div className="bg-slate-900/50 p-2 rounded flex justify-between items-center">
-                             <span className="text-xs text-slate-400">T<sub>boil</sub></span>
-                             <div className="flex items-center gap-2 text-xs font-mono">
-                                 <span className="text-slate-500">{fmt(start.boilingPointCurrent)}</span>
-                                 <ArrowRight size={10} className="text-slate-700" />
-                                 <span className="text-red-200">{fmt(end.boilingPointCurrent)}</span>
-                             </div>
-                         </div>
-                     </div>
+            <section className="rounded-2xl border border-default bg-surface p-4">
+              <h3 className="text-sm font-semibold text-default">Pressure-dependent boundaries</h3>
+              <div className="mt-3 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-secondary">T_melt</span>
+                  <span className="text-default">
+                    {formatValue(start.meltingPointCurrent, ' K')} - {formatValue(end.meltingPointCurrent, ' K')}
+                  </span>
                 </div>
-
-            </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-secondary">T_boil</span>
+                  <span className="text-default">
+                    {formatValue(start.boilingPointCurrent, ' K')} - {formatValue(end.boilingPointCurrent, ' K')}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-secondary">Gas area</span>
+                  <span className="text-default">
+                    {formatValue(volumeStart, ' px²')} - {formatValue(volumeEnd, ' px²')}
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
-
       </div>
     </div>
   );

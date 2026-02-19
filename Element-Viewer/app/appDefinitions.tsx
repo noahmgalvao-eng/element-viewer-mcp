@@ -1,43 +1,5 @@
 import { ChemicalElement, MatterState, PhysicsState } from '../types';
 
-export const IconIdeaBulb = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="12" cy="10.5" r="5.5" fill="currentColor" opacity="0.18" stroke="none" />
-    <path d="M12 3.5a5 5 0 0 0-3.2 8.84c.62.53 1.2 1.47 1.2 2.45V16h4v-1.2c0-.98.58-1.92 1.2-2.45A5 5 0 0 0 12 3.5z" />
-    <path d="M10.5 18.2h3" />
-    <path d="M10 20.4h4" />
-    <path d="M12 2v1" />
-  </svg>
-);
-
-export const IconPiP = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M2 10h6V4" />
-    <path d="m2 4 6 6" />
-    <path d="M21 10V7a2 2 0 0 0-2-2h-7" />
-    <path d="M3 14v2a2 2 0 0 0 2 2h3" />
-    <rect x="12" y="14" width="10" height="7" rx="1" />
-  </svg>
-);
-
-export const IconMaximize = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M15 3h6v6" />
-    <path d="m21 3-7 7" />
-    <path d="m3 21 7-7" />
-    <path d="M9 21H3v-6" />
-  </svg>
-);
-
-export const IconMinimize = ({ size = 24, className = "" }: { size?: number, className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="m14 10 7-7" />
-    <path d="M20 10h-6V4" />
-    <path d="m3 21 7-7" />
-    <path d="M4 14h6v6" />
-  </svg>
-);
-
 export interface ContextMenuData {
   x: number;
   y: number;

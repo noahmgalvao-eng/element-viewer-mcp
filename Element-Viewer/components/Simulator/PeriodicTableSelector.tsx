@@ -1,5 +1,11 @@
-
-import React from 'react';
+import React, { useMemo, useState } from 'react';
+import { Avatar, AvatarGroup } from '@openai/apps-sdk-ui/components/Avatar';
+import { Badge } from '@openai/apps-sdk-ui/components/Badge';
+import { Button } from '@openai/apps-sdk-ui/components/Button';
+import { Search } from '@openai/apps-sdk-ui/components/Icon';
+import { Input } from '@openai/apps-sdk-ui/components/Input';
+import { SegmentedControl } from '@openai/apps-sdk-ui/components/SegmentedControl';
+import { TagInput } from '@openai/apps-sdk-ui/components/TagInput';
 import { ELEMENTS } from '../../data/elements';
 import { ChemicalElement } from '../../types';
 
@@ -10,72 +16,115 @@ interface Props {
   onToggleMultiSelect: () => void;
 }
 
-const PeriodicTableSelector: React.FC<Props> = ({ selectedElements, onSelect, isMultiSelect, onToggleMultiSelect }) => {
-  return (
-    <div className="p-4 bg-slate-800 rounded-xl border border-slate-700 shadow-xl">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Select Element</h3>
+const PeriodicTableSelector: React.FC<Props> = ({
+  selectedElements,
+  onSelect,
+  isMultiSelect,
+  onToggleMultiSelect,
+}) => {
+  const [searchValue, setSearchValue] = useState('');
 
-        {/* Multi-Select Toggle */}
-        <button
-          onClick={onToggleMultiSelect}
-          className={`
-                flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all duration-300 border
-                ${isMultiSelect
-              ? 'bg-blue-600/30 border-blue-500 text-blue-300 shadow-[0_0_10px_rgba(37,99,235,0.3)]'
-              : 'bg-slate-700 border-slate-600 text-slate-500 hover:bg-slate-600'}
-             `}
-        >
-          <div className={`w-2 h-2 rounded-full ${isMultiSelect ? 'bg-blue-400 animate-pulse' : 'bg-slate-500'}`} />
-          {isMultiSelect ? 'Compare (Max 6)' : 'Single View'}
-        </button>
+  const filteredElements = useMemo(() => {
+    const query = searchValue.trim().toLowerCase();
+    if (!query) return ELEMENTS;
+    return ELEMENTS.filter(
+      (el) => el.symbol.toLowerCase().includes(query) || el.name.toLowerCase().includes(query),
+    );
+  }, [searchValue]);
+
+  const tags = useMemo(
+    () => selectedElements.map((el) => ({ value: el.symbol, valid: true })),
+    [selectedElements],
+  );
+
+  return (
+    <section className="space-y-4 rounded-3xl border border-default bg-surface p-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="heading-xs text-default">Element Selector</h3>
+          <p className="text-xs text-secondary">Choose one element or compare up to six.</p>
+        </div>
+        <Badge color={isMultiSelect ? 'info' : 'secondary'} variant="soft">
+          {isMultiSelect ? 'Compare mode' : 'Single mode'}
+        </Badge>
       </div>
 
-      <div className="max-h-[350px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800/50">
-        <div className="grid grid-cols-4 gap-2">
-          {ELEMENTS.map((el) => {
-            // Allow any element present in the database to be selectable
-            const isImplemented = true;
+      <SegmentedControl
+        aria-label="Selection mode"
+        value={isMultiSelect ? 'compare' : 'single'}
+        onChange={(next) => {
+          if ((next === 'compare') !== isMultiSelect) {
+            onToggleMultiSelect();
+          }
+        }}
+        block
+      >
+        <SegmentedControl.Option value="single">Single</SegmentedControl.Option>
+        <SegmentedControl.Option value="compare">Compare (max 6)</SegmentedControl.Option>
+      </SegmentedControl>
 
-            // Check if this specific element is in the selected array
-            const isSelected = selectedElements.some(s => s.atomicNumber === el.atomicNumber);
-            // Find its index to show selection order if multi-select
-            const selectionIndex = selectedElements.findIndex(s => s.atomicNumber === el.atomicNumber);
+      <Input
+        value={searchValue}
+        onChange={(event) => setSearchValue(event.target.value)}
+        placeholder="Search by name or symbol"
+        startAdornment={<Search className="size-4 text-secondary" />}
+      />
+
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-secondary">Selected elements ({selectedElements.length}/6)</p>
+          <AvatarGroup size={28}>
+            {selectedElements.map((el) => (
+              <Avatar
+                key={el.atomicNumber}
+                name={el.symbol}
+                size={28}
+                color="info"
+                variant="soft"
+              />
+            ))}
+          </AvatarGroup>
+        </div>
+        <TagInput value={tags} onChange={() => {}} disabled rows={1} size="md" />
+      </div>
+
+      <div className="max-h-[22rem] overflow-y-auto pr-1">
+        <div className="grid grid-cols-4 gap-2 xs:grid-cols-5 sm:grid-cols-6">
+          {filteredElements.map((el) => {
+            const isSelected = selectedElements.some((selected) => selected.atomicNumber === el.atomicNumber);
+            const selectionIndex = selectedElements.findIndex(
+              (selected) => selected.atomicNumber === el.atomicNumber,
+            );
 
             return (
-              <button
-                key={el.symbol}
+              <Button
+                key={el.atomicNumber}
+                color={isSelected ? 'primary' : 'secondary'}
+                variant={isSelected ? 'solid' : 'soft'}
+                size="md"
+                block
                 onClick={() => onSelect(el)}
-                disabled={!isImplemented}
-                className={`
-                    relative h-16 w-full rounded-lg flex flex-col items-center justify-center transition-all duration-200
-                    ${isSelected ? 'bg-cyan-600 ring-2 ring-cyan-300 z-10' : 'bg-slate-700 hover:bg-slate-600'}
-                    ${!isImplemented ? 'opacity-40 cursor-not-allowed grayscale' : 'cursor-pointer'}
-                `}
+                className="!h-16 !rounded-xl !px-1 !py-1 !gap-0.5 !items-center !justify-center !text-center"
               >
-                <span className="text-[10px] absolute top-1 left-2 text-slate-300 font-mono">{el.atomicNumber}</span>
-                <span className={`text-xl font-bold ${isSelected ? 'text-white' : 'text-slate-200'}`}>{el.symbol}</span>
-
-                {/* Order Badge for Multi-Select */}
-                {isMultiSelect && isSelected && (
-                  <span className="absolute top-1 right-2 w-4 h-4 rounded-full bg-slate-900 text-[9px] flex items-center justify-center text-cyan-400 font-mono border border-cyan-500/50">
+                <span className="text-3xs leading-none text-tertiary">{el.atomicNumber}</span>
+                <span className="text-sm font-semibold leading-none">{el.symbol}</span>
+                {isMultiSelect && isSelected ? (
+                  <Badge color="info" variant="outline" size="sm" className="!px-1.5">
                     {selectionIndex + 1}
-                  </span>
+                  </Badge>
+                ) : (
+                  <span className="text-3xs leading-none text-secondary">{el.name}</span>
                 )}
-
-                {!isImplemented && <span className="text-[8px] text-red-300 absolute bottom-1">N/A</span>}
-              </button>
+              </Button>
             );
           })}
-          {/* Fillers for grid aesthetic */}
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-16 rounded-lg border-2 border-dashed border-slate-800/50 flex items-center justify-center">
-              <span className="text-slate-800 text-xs">?</span>
-            </div>
-          ))}
         </div>
       </div>
-    </div>
+
+      {filteredElements.length === 0 && (
+        <p className="text-sm text-tertiary">No elements match this search.</p>
+      )}
+    </section>
   );
 };
 

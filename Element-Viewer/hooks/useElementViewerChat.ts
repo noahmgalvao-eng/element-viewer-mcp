@@ -1,4 +1,4 @@
-import { useChatGPT } from './useChatGPT';
+﻿import { useChatGPT } from './useChatGPT';
 import { ChemicalElement } from '../types';
 
 interface UseElementViewerChatProps {
@@ -15,6 +15,7 @@ export function useElementViewerChat({
 
     const {
         displayMode,
+        theme,
         maxHeight,
         safeArea,
         isFullscreen,
@@ -29,16 +30,17 @@ export function useElementViewerChat({
         }
 
         const isMulti = selectedElements.length > 1;
-        const baseContext = `Temperatura alvo ${globalTemperature.toFixed(1)} K e pressao ${globalPressure.toExponential(2)} Pa.`;
+        const baseContext = `Target temperature ${globalTemperature.toFixed(1)} K and pressure ${globalPressure.toExponential(2)} Pa.`;
 
         const prompt = isMulti
-            ? `${baseContext} Fale de modo curto sobre o que está acontecendo, compare rapidamente a diferença entre os elementos na temperatura e pressão em que eles estão e dê uma curiosidade cientifica educativa interessante. Não responda por tópicos e de maneira engessada, a conversa precisa ser simples e normal, fale o que for relevante, seja proativo e simplificado.`
-            : `${baseContext} Fale de modo curto sobre o que está acontecendo com o elemento selecionado e dê uma curiosidade cientifica educativa interessante. Não responda por tópicos e de maneira engessada, a conversa precisa ser simples e normal, fale o que for relevante, seja proativo e simplificado.`;
+            ? `${baseContext} Briefly explain what is happening, quickly compare the differences between the selected elements under these conditions, and include one educational science fact. Keep the response natural and conversational, not rigid bullet points.`
+            : `${baseContext} Briefly explain what is happening with the selected element and include one educational science fact. Keep the response natural and conversational, not rigid bullet points.`;
         await sendFollowUpMessage(prompt);
     };
 
     return {
         displayMode,
+        theme,
         maxHeight,
         safeArea,
         isFullscreen,
@@ -47,4 +49,3 @@ export function useElementViewerChat({
         handleInfoClick
     };
 }
-

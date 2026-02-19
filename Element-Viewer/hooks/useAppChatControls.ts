@@ -1,4 +1,4 @@
-import type React from 'react';
+﻿import type React from 'react';
 import { useCallback } from 'react';
 import { ChemicalElement, DisplayMode } from '../types';
 import { roundTo } from '../app/appDefinitions';
@@ -53,7 +53,7 @@ export function useAppChatControls({
     if (!window.openai?.sendFollowUpMessage) return;
 
     const selectedSymbols = selectedElements.map((el) => `${el.name} (${el.symbol})`).join(', ');
-    const prompt = `Nessas condicoes de temperatura (${roundTo(temperature, 2)}K) e pressao (${roundTo(pressure, 2)}Pa), os seguintes elementos reagindo resultariam no que: ${selectedSymbols}. Dê uma unica resposta, explique brevemente limites/hipoteses da reacao e depois use a ferramenta inject_reaction_substance com todos os campos obrigatorios.`;
+    const prompt = `At temperature ${roundTo(temperature, 2)} K and pressure ${roundTo(pressure, 2)} Pa, what product would likely result from these reacting elements: ${selectedSymbols}? Provide a single concise answer, briefly explain assumptions and limits, then call inject_reaction_substance with all required fields.`;
     await window.openai.sendFollowUpMessage({ prompt });
   }, [selectedElements, temperature, pressure]);
 

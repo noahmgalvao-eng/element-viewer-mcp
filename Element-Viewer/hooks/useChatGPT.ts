@@ -46,7 +46,7 @@ export function useChatGPTGlobal<K extends keyof OpenAiGlobals>(
 export function useChatGPT() {
     // Reactive State
     const displayMode = useChatGPTGlobal('displayMode') ?? 'inline';
-    const theme = useChatGPTGlobal('theme') ?? 'light';
+    const theme = useChatGPTGlobal('theme');
     const toolInput = useChatGPTGlobal('toolInput');
     const toolOutput = useChatGPTGlobal('toolOutput');
     const userAgent = useChatGPTGlobal('userAgent');

@@ -1,4 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { Alert } from '@openai/apps-sdk-ui/components/Alert';
+import { Avatar, AvatarGroup } from '@openai/apps-sdk-ui/components/Avatar';
+import { Badge } from '@openai/apps-sdk-ui/components/Badge';
+import { Button } from '@openai/apps-sdk-ui/components/Button';
+import {
+    Bolt,
+    Collapse,
+    Expand,
+    Flask,
+    InfoCircle,
+    Pause,
+    PictureInPicture,
+    Play,
+    Record,
+    Settings,
+    Sparkle,
+    Stop,
+    X,
+} from '@openai/apps-sdk-ui/components/Icon';
+import { Tooltip } from '@openai/apps-sdk-ui/components/Tooltip';
+import { applyDocumentTheme } from '@openai/apps-sdk-ui/theme';
 import PeriodicTableSelector from './components/Simulator/PeriodicTableSelector';
 import ControlPanel from './components/Simulator/ControlPanel';
 import SimulationUnit from './components/Simulator/SimulationUnit';
@@ -7,7 +28,6 @@ import RecordingStatsModal from './components/Simulator/RecordingStatsModal';
 import { ELEMENTS } from './data/elements';
 import { ChemicalElement, MatterState, PhysicsState } from './types';
 import { predictMatterState } from './hooks/physics/phaseCalculations';
-import { Play, Pause, Settings2, X, Circle, Square, FlaskConical } from 'lucide-react';
 import { useElementViewerChat } from './hooks/useElementViewerChat';
 import { useAppChatControls } from './hooks/useAppChatControls';
 import {
@@ -17,10 +37,6 @@ import {
     clampPositive,
     formatCompact,
     getSupportedEquilibria,
-    IconIdeaBulb,
-    IconMaximize,
-    IconMinimize,
-    IconPiP,
     normalizeElementLookup,
     phaseToPresentPhases,
     phaseToReadable,
@@ -57,6 +73,7 @@ function App() {
 
     // ChatGPT Integration Hook
     const {
+        theme,
         maxHeight,
         safeArea,
         isFullscreen,
@@ -75,6 +92,22 @@ function App() {
         left: safeArea?.insets?.left ?? 0,
         right: safeArea?.insets?.right ?? 0
     };
+
+    useEffect(() => {
+        const resolveSystemTheme = () =>
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+        const resolvedTheme = theme === 'light' || theme === 'dark' ? theme : resolveSystemTheme();
+        applyDocumentTheme(resolvedTheme);
+
+        if (theme === 'light' || theme === 'dark') return;
+
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const listener = () => applyDocumentTheme(resolveSystemTheme());
+
+        mediaQuery.addEventListener('change', listener);
+        return () => mediaQuery.removeEventListener('change', listener);
+    }, [theme]);
 
     // Recording State
     const [isRecording, setIsRecording] = useState(false);
@@ -199,7 +232,7 @@ function App() {
             atomicNumber,
             symbol: reaction.formula,
             name: reaction.substanceName,
-            summary: 'Substância gerada por reação estimada pelo modelo.',
+            summary: 'Model-estimated reaction product.',
             mass: clampPositive(reaction.mass, 18),
             category: 'reaction_product',
             classification: {
@@ -411,7 +444,7 @@ function App() {
             scheduleSyncStateToChatGPT();
         }
     };
-    // 2. FUNÃ‡ÃƒO DE TOGGLE
+    // 2. FUNÃƒâ€¡ÃƒÆ’O DE TOGGLE
     const handleToggleSpeed = (e: React.MouseEvent) => {
         e.stopPropagation();
         setTimeScale(prev => {
@@ -511,69 +544,66 @@ function App() {
     // Fixed quality scale as requested (Always 50 particles)
     const qualityScale = 1.0;
 
-    // Visual Class for Sidebar Background
-    const sidebarBgClass = isInteracting
-        ? 'bg-transparent border-transparent shadow-none'
-        : 'bg-slate-900/90 backdrop-blur-xl border border-slate-700 shadow-2xl';
-
-    const contentOpacityClass = isInteracting ? 'opacity-0 pointer-events-none' : 'opacity-100';
-
-    // Floating button base styles
-    const floatingBtnClass = `
-      p-3 bg-slate-800/60 backdrop-blur border border-slate-600 rounded-full 
-      text-cyan-400 shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300
-      flex items-center justify-center w-12 h-12
-  `;
-
     // --- PIP HANDLER ---
     // --- FULLSCREEN HANDLER ---
     return (
         <div
-            className={`relative w-screen ${isFullscreen ? 'h-screen' : 'h-[600px]'} bg-slate-900 overflow-hidden flex`}
+            className={`relative w-screen overflow-hidden bg-surface text-default ${isFullscreen ? 'h-screen' : 'h-[600px]'}`}
             style={{
                 maxHeight: isFullscreen && maxHeight ? maxHeight : undefined,
                 height: isFullscreen && maxHeight ? maxHeight : undefined,
             }}
         >
-            {/* Banner inteligente flutuante */}
             {aiMessage && (
-                <div className="absolute top-4 left-1/2 z-50 flex max-w-[90%] -translate-x-1/2 transform items-center gap-3 rounded-2xl border border-gray-200 bg-white/90 px-5 py-3 text-center text-sm text-gray-800 shadow-xl backdrop-blur-sm animate-in fade-in duration-300 md:max-w-md">
-                    <span className="text-xl">✨</span>
-                    <p className="font-medium leading-tight">{aiMessage}</p>
+                <div className="pointer-events-none absolute left-1/2 top-4 z-50 w-[min(92vw,34rem)] -translate-x-1/2">
+                    <Alert color="info" variant="soft" title="Model update" description={aiMessage} />
                 </div>
             )}
 
-
-            {/* --- SIDEBAR (Floating Glass Panel) --- */}
             <aside
                 ref={sidebarRef}
-                className={`
-           fixed top-4 left-4 bottom-4 w-96 z-50 transition-all duration-500 ease-in-out transform
-           ${isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-[120%] opacity-0 pointer-events-none'}
-           flex flex-col gap-4
-        `}
+                className={`fixed bottom-2 left-2 right-2 top-2 z-40 transition-all duration-300 md:bottom-4 md:right-auto md:w-[24rem] ${isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-[120%] opacity-0 pointer-events-none'}`}
             >
-                <div className={`${sidebarBgClass} rounded-2xl p-4 overflow-y-auto max-h-full scrollbar-none flex flex-col gap-4 transition-all duration-500 ease-in-out`}>
-                    <div className={`flex justify-between items-center pb-2 border-b border-slate-800 transition-opacity duration-500 ${contentOpacityClass}`}>
-                        <span className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 tracking-widest">
-                            MATTER SIMULATOR
-                        </span>
-                        <button
-                            onClick={() => setSidebarOpen(false)}
-                            className="p-1 hover:bg-slate-800 rounded-full transition-colors text-slate-400 hover:text-white"
-                        >
-                            <X size={16} />
-                        </button>
+                <div className={`flex h-full flex-col gap-4 overflow-y-auto rounded-3xl border border-default bg-surface-elevated p-4 shadow-xl ${isInteracting ? 'opacity-95' : 'opacity-100'}`}>
+                    <div className="flex items-center justify-between border-b border-subtle pb-3">
+                        <div className="space-y-1">
+                            <p className="heading-xs text-default">Matter Simulator</p>
+                            <div className="flex items-center gap-2">
+                                <Badge color={isPaused ? 'warning' : 'success'} variant="soft">
+                                    {isPaused ? 'Paused' : 'Running'}
+                                </Badge>
+                                <Badge color="secondary" variant="outline">
+                                    {count} visible
+                                </Badge>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <AvatarGroup size={28}>
+                                {selectedElements.slice(0, 4).map((element) => (
+                                    <Avatar key={element.atomicNumber} name={element.symbol} size={28} color="discovery" />
+                                ))}
+                            </AvatarGroup>
+                            <Button
+                                color="secondary"
+                                variant="ghost"
+                                pill
+                                uniform
+                                size="sm"
+                                onClick={() => setSidebarOpen(false)}
+                                aria-label="Close panel"
+                            >
+                                <X className="size-4" />
+                            </Button>
+                        </div>
                     </div>
 
-                    <div className={`transition-opacity duration-500 ${contentOpacityClass}`}>
-                        <PeriodicTableSelector
-                            selectedElements={selectedElements}
-                            onSelect={handleElementSelect}
-                            isMultiSelect={isMultiSelect}
-                            onToggleMultiSelect={handleToggleMultiSelect}
-                        />
-                    </div>
+                    <PeriodicTableSelector
+                        selectedElements={selectedElements}
+                        onSelect={handleElementSelect}
+                        isMultiSelect={isMultiSelect}
+                        onToggleMultiSelect={handleToggleMultiSelect}
+                    />
 
                     <ControlPanel
                         temperature={temperature}
@@ -590,118 +620,105 @@ function App() {
                 </div>
             </aside>
 
-            {/* --- FLOATING CONTROLS (Settings, Pause, Speed, Record) --- */}
             <div
-                className={`
-            fixed z-40 flex flex-col gap-4 transition-all duration-300
-            ${isSidebarOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
-                style={{ top: `${24 + insets.top}px`, left: `${24 + insets.left}px` }}
-
+                className={`fixed z-30 flex flex-col gap-3 transition-all duration-300 ${isSidebarOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
+                style={{ top: `${16 + insets.top}px`, left: `${16 + insets.left}px` }}
             >
+                <Tooltip content="Open settings">
+                    <span>
+                        <Button
+                            color="secondary"
+                            variant="soft"
+                            pill
+                            uniform
+                            size="lg"
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                setSidebarOpen(true);
+                            }}
+                        >
+                            <Settings className="size-5" />
+                        </Button>
+                    </span>
+                </Tooltip>
 
-                {/* Settings Button */}
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setSidebarOpen(true);
-                    }}
-                    className={floatingBtnClass}
-                    title="Settings"
-                >
-                    <Settings2 size={24} />
-                </button>
+                <Tooltip content={isPaused ? 'Resume simulation' : 'Pause simulation'}>
+                    <span>
+                        <Button color="secondary" variant="soft" pill uniform size="lg" onClick={handleTogglePause}>
+                            {isPaused ? <Play className="size-5" /> : <Pause className="size-5" />}
+                        </Button>
+                    </span>
+                </Tooltip>
 
-                {/* Pause/Play Button */}
-                <button
-                    onClick={handleTogglePause}
-                    className={floatingBtnClass}
-                    title={isPaused ? "Resume Simulation" : "Pause Simulation"}
-                >
-                    {isPaused ? <Play size={24} className="ml-1" /> : <Pause size={24} />}
-                </button>
+                <Tooltip content={isRecording ? 'Stop recording' : 'Start recording'}>
+                    <span>
+                        <Button
+                            color={isRecording ? 'danger' : 'secondary'}
+                            variant={isRecording ? 'solid' : 'outline'}
+                            pill
+                            uniform
+                            size="lg"
+                            onClick={handleToggleRecord}
+                        >
+                            {isRecording ? <Stop className="size-5" /> : <Record className="size-5" />}
+                        </Button>
+                    </span>
+                </Tooltip>
 
-                {/* Record Button */}
-                <button
-                    onClick={handleToggleRecord}
-                    className={`
-                p-3 backdrop-blur border rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] 
-                hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12
-                ${isRecording
-                            ? 'bg-red-900/80 border-red-500 text-white animate-pulse'
-                            : 'bg-slate-800/60 border-slate-600 text-red-500 hover:bg-slate-700'
-                        }
-            `}
-                    title={isRecording ? "Stop Recording" : "Start Recording"}
-                >
-                    {isRecording ? <Square size={20} fill="currentColor" /> : <Circle size={20} fill="currentColor" />}
-                </button>
-
-                {/* Speed Button */}
-                <button
-                    onClick={handleToggleSpeed}
-                    className={`${floatingBtnClass} text-white font-bold`}
-                    title="Toggle Simulation Speed"
-                >
-                    <span className="text-xs">{timeScale}x</span>
-                </button>
-
-
+                <Tooltip content="Toggle simulation speed">
+                    <span>
+                        <Button color="secondary" variant="soft" pill size="lg" onClick={handleToggleSpeed}>
+                            <Bolt className="size-4" />
+                            <span className="text-xs font-semibold">{timeScale}x</span>
+                        </Button>
+                    </span>
+                </Tooltip>
             </div>
-            {/* --- DISPLAY MODES (Always visible, top-right, highest z-index) --- */}
+
             <div
-                className="fixed z-[100] grid grid-cols-2 gap-2 pointer-events-auto"
+                className="fixed z-30 grid grid-cols-2 gap-2"
                 style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
             >
-                {/* Row 1, Col 1: PiP Toggle */}
-                <button
-                    onClick={handleTogglePiP}
-                    className="p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
-                    title="Picture-in-Picture"
-                >
-                    <IconPiP size={20} />
-                </button>
+                <Tooltip content="Picture-in-picture">
+                    <span>
+                        <Button color="secondary" variant="soft" pill uniform onClick={handleTogglePiP}>
+                            <PictureInPicture className="size-4" />
+                        </Button>
+                    </span>
+                </Tooltip>
 
-                {/* Row 1, Col 2: Fullscreen Toggle */}
-                <button
-                    onClick={handleToggleFullscreen}
-                    className="p-3 bg-slate-800/80 backdrop-blur border border-slate-600 rounded-full text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
-                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-                >
-                    {isFullscreen ? <IconMinimize size={20} /> : <IconMaximize size={20} />}
-                </button>
+                <Tooltip content={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
+                    <span>
+                        <Button color="secondary" variant="soft" pill uniform onClick={handleToggleFullscreen}>
+                            {isFullscreen ? <Collapse className="size-4" /> : <Expand className="size-4" />}
+                        </Button>
+                    </span>
+                </Tooltip>
 
-                {/* Row 2, Col 1: Empty (Spacer) */}
-                <div />
+                <span />
 
-                {/* Row 2, Col 2: Info / AI Context Button */}
-                <button
-                    onClick={handleInfoButtonClick}
-                    className="group relative p-3 bg-slate-800/80 backdrop-blur border border-amber-400/70 rounded-full text-amber-300 shadow-[0_0_28px_rgba(251,191,36,0.35)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
-                    title="Ask ChatGPT about this"
-                >
-                    <span className="pointer-events-none absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-100 shadow-[0_0_12px_rgba(254,240,138,0.95)] animate-pulse" />
-                    <IconIdeaBulb size={24} className="drop-shadow-[0_0_8px_rgba(251,191,36,0.7)]" />
-                </button>
+                <Tooltip content="Ask ChatGPT about the current simulation">
+                    <span>
+                        <Button color="info" variant="soft" pill uniform onClick={handleInfoButtonClick}>
+                            <InfoCircle className="size-4" />
+                        </Button>
+                    </span>
+                </Tooltip>
 
-                {/* Row 3, Col 1: Empty (Spacer) */}
-                <div />
+                <span />
 
-                {/* Row 3, Col 2: Reagir */}
-                <button
-                    onClick={handleReactionButtonClick}
-                    className="group relative p-3 bg-slate-800/80 backdrop-blur border border-emerald-400/70 rounded-full text-emerald-300 shadow-[0_0_28px_rgba(16,185,129,0.35)] hover:bg-slate-700 hover:scale-110 transition-all duration-300 flex items-center justify-center w-12 h-12"
-                    title="Reagir"
-                >
-                    <FlaskConical size={20} className="drop-shadow-[0_0_8px_rgba(16,185,129,0.7)]" />
-                </button>
+                <Tooltip content="Run reaction inference">
+                    <span>
+                        <Button color="success" variant="soft" pill uniform onClick={handleReactionButtonClick}>
+                            <Flask className="size-4" />
+                        </Button>
+                    </span>
+                </Tooltip>
             </div>
 
-            <main className={`w-full h-full grid gap-0 ${gridClass} bg-slate-950`}>
+            <main className={`h-full w-full grid gap-px bg-border-subtle ${gridClass}`}>
                 {selectedElements.map((el) => (
-                    <div
-                        key={el.atomicNumber}
-                        className="relative w-full h-full border-r border-b border-white/5 last:border-0"
-                    >
+                    <div key={el.atomicNumber} className="relative h-full w-full bg-surface-secondary">
                         <SimulationUnit
                             element={el}
                             globalTemp={temperature}
@@ -718,33 +735,36 @@ function App() {
                 ))}
             </main>
 
-            {/* --- CONTEXT MENU OVERLAY (Properties) --- */}
-            {
-                contextMenu && (
-                    <ElementPropertiesMenu
-                        data={contextMenu}
-                        onClose={() => setContextMenu(null)}
-                        onSetTemperature={(t) => {
-                            setTemperature(t);
-                            setContextMenu(null);
-                        }}
-                        onSetPressure={setPressure}
-                    />
-                )
-            }
+            {contextMenu && (
+                <ElementPropertiesMenu
+                    data={contextMenu}
+                    onClose={() => setContextMenu(null)}
+                    onSetTemperature={(nextTemperature) => {
+                        setTemperature(nextTemperature);
+                        setContextMenu(null);
+                    }}
+                    onSetPressure={setPressure}
+                />
+            )}
 
-            {/* --- RECORDING STATS OVERLAY --- */}
-            {
-                recordingResults && (
-                    <RecordingStatsModal
-                        recordings={recordingResults}
-                        onClose={() => setRecordingResults(null)}
-                    />
-                )
-            }
+            {recordingResults && (
+                <RecordingStatsModal recordings={recordingResults} onClose={() => setRecordingResults(null)} />
+            )}
 
-        </div >
+            {!isSidebarOpen && (
+                <div
+                    className="pointer-events-none fixed bottom-3 left-1/2 z-20 -translate-x-1/2"
+                    style={{ bottom: `${12 + insets.bottom}px` }}
+                >
+                    <Badge color="discovery" variant="soft">
+                        <Sparkle className="mr-1 inline size-3.5" />
+                        Tap a particle to inspect details
+                    </Badge>
+                </div>
+            )}
+        </div>
     );
 }
 
 export default App;
+

@@ -1,30 +1,20 @@
-const { BookOpen, PictureInPicture, Maximize2, Minimize2, Info, PictureInPicture2 } = require('lucide-react');
-const React = require('react');
-const ReactDOMServer = require('react-dom/server');
+﻿import { Sparkle, PictureInPicture, Expand, Collapse, InfoCircle, Flask } from '@openai/apps-sdk-ui/components/Icon';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
-const icons = { BookOpen, PictureInPicture, Maximize2, Minimize2, Info, PictureInPicture2 };
+const icons = { Sparkle, PictureInPicture, Expand, Collapse, InfoCircle, Flask };
 
 for (const [name, Icon] of Object.entries(icons)) {
-    try {
-        if (!Icon) {
-            console.log(`\n--- ${name} ---`);
-            console.log('NOT FOUND');
-            continue;
-        }
-        // renderToString might not work perfectly with how Lucide is structured if it's strictly client-side, 
-        // but typically these are simple components. 
-        // Newer lucide-react might return an object with [tag, attrs, children] structure if inspected directly, 
-        // or we can try to render it.
-
-        // Inspecting the 'Icon' object itself often reveals the structure for Lucide icons
-        console.log(`\n--- ${name} ---`);
-        if (Array.isArray(Icon)) {
-            console.log(JSON.stringify(Icon));
-        } else {
-            // Try rendering
-            console.log(ReactDOMServer.renderToStaticMarkup(React.createElement(Icon)));
-        }
-    } catch (e) {
-        console.error(`Error processing ${name}:`, e.message);
+  try {
+    if (!Icon) {
+      console.log(`\n--- ${name} ---`);
+      console.log('NOT FOUND');
+      continue;
     }
+
+    console.log(`\n--- ${name} ---`);
+    console.log(renderToStaticMarkup(React.createElement(Icon, { size: 24 })));
+  } catch (error) {
+    console.error(`Error processing ${name}:`, error instanceof Error ? error.message : error);
+  }
 }

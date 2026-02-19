@@ -32,8 +32,6 @@ function createElementViewerServer() {
               connect_domains: ["https://chatgpt.com"],
               resource_domains: [
                 "https://*.oaistatic.com",
-                "https://cdn.tailwindcss.com",
-                "https://esm.sh",
               ],
             },
           },
