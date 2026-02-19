@@ -31,7 +31,6 @@ const PeriodicTableSelector: React.FC<Props> = ({
       (el) => el.symbol.toLowerCase().includes(query) || el.name.toLowerCase().includes(query),
     );
   }, [searchValue]);
-  const visibleElements = useMemo(() => filteredElements.slice(0, 18), [filteredElements]);
 
   const tags = useMemo(
     () => selectedElements.map((el) => ({ value: el.symbol, valid: true })),
@@ -89,9 +88,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
         <TagInput value={tags} onChange={() => {}} disabled rows={1} size="md" />
       </div>
 
-      <div>
+      <div className="max-h-[10.5rem] overflow-y-auto overflow-x-hidden pr-1">
         <div className="grid grid-cols-6 gap-1.5">
-          {visibleElements.map((el) => {
+          {filteredElements.map((el) => {
             const isSelected = selectedElements.some((selected) => selected.atomicNumber === el.atomicNumber);
             const selectionIndex = selectedElements.findIndex(
               (selected) => selected.atomicNumber === el.atomicNumber,
@@ -130,9 +129,6 @@ const PeriodicTableSelector: React.FC<Props> = ({
 
       {filteredElements.length === 0 && (
         <p className="text-sm text-tertiary">No elements match this search.</p>
-      )}
-      {filteredElements.length > 18 && (
-        <p className="text-xs text-tertiary">Showing first 18 elements. Use search to narrow results.</p>
       )}
     </section>
   );
