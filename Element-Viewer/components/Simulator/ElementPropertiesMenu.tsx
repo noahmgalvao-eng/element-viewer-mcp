@@ -2,22 +2,18 @@
 import { Alert } from '@openai/apps-sdk-ui/components/Alert';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button, ButtonLink } from '@openai/apps-sdk-ui/components/Button';
-import { Checkbox } from '@openai/apps-sdk-ui/components/Checkbox';
-import { CodeBlock } from '@openai/apps-sdk-ui/components/CodeBlock';
 import { CopyTooltip } from '@openai/apps-sdk-ui/components/Tooltip';
 import {
   ArrowUp,
   Bolt,
   CloseBold,
   ExternalLink,
-  InfoCircle,
   MoreCircleMenuDots,
 } from '@openai/apps-sdk-ui/components/Icon';
 import { Markdown } from '@openai/apps-sdk-ui/components/Markdown';
 import { Menu } from '@openai/apps-sdk-ui/components/Menu';
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import { TextLink } from '@openai/apps-sdk-ui/components/TextLink';
-import { Textarea } from '@openai/apps-sdk-ui/components/Textarea';
 import { Tooltip } from '@openai/apps-sdk-ui/components/Tooltip';
 import { ChemicalElement, PhysicsState } from '../../types';
 import { SOURCE_DATA } from '../../data/periodic_table_source';
@@ -52,9 +48,8 @@ const clamp = (value: number, min: number, max: number) => Math.max(min, Math.mi
 
 const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperature, onSetPressure }) => {
   const { element, physicsState, x, y } = data;
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [useScientific, setUseScientific] = useState(false);
-  const [notes, setNotes] = useState('');
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   const sourceInfo = SOURCE_DATA.elements.find((entry) => entry.symbol === element.symbol) as
     | Record<string, any>
@@ -120,34 +115,37 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
       });
     }
 
-    sourceIds.forEach((id) => {
+    Array.from({ length: 12 }, (_, index) => index + 1).forEach((id) => {
+      const presentForElement = sourceIds.includes(id);
+      const sourceLabel = SOURCE_ID_LABELS[id] || `Fonte científica #${id}`;
       items.push({
         label: `Fonte de dado #${id}`,
-        note: SOURCE_ID_LABELS[id] || 'Fonte científica interna do app',
+        note: `${sourceLabel} — referência detectada pelo sufixo _${id} no scientific_data${presentForElement ? '' : ' (sem uso neste elemento)'}`,
       });
     });
 
     return items;
   }, [sourceInfo, sourceIds]);
 
-  const quickFactsCode = useMemo(
-    () =>
-      JSON.stringify(
-        {
-          symbol: element.symbol,
-          name: element.name,
-          phase: physicsState.state,
-          temperatureK: physicsState.temperature,
-          pressurePa: physicsState.pressure,
-          meltingPointCurrentK: physicsState.meltingPointCurrent,
-          boilingPointCurrentK: physicsState.boilingPointCurrent,
-          sublimationPointCurrentK: physicsState.sublimationPointCurrent,
-        },
-        null,
-        2,
-      ),
-    [element.name, element.symbol, physicsState],
-  );
+  const propertyRows = [
+    { label: 'Ponto de fusão', value: element.properties.meltingPointDisplay ?? fmt(element.properties.meltingPointK, ' K'), sourceId: element.properties.meltingPointSource },
+    { label: 'Ponto de ebulição', value: element.properties.boilingPointDisplay ?? fmt(element.properties.boilingPointK, ' K'), sourceId: element.properties.boilingPointSource },
+    { label: 'Densidade', value: element.properties.densityDisplay ?? (element.properties.density ? `${fmt(element.properties.density * 1000, '')} kg/m³` : 'N/A'), sourceId: element.properties.densitySource },
+    { label: 'Raio atômico', value: element.properties.atomicRadiusDisplay ?? (element.properties.atomicRadiusPm ? `${fmt(element.properties.atomicRadiusPm, ' pm')}` : 'N/A'), sourceId: element.properties.atomicRadiusSource },
+    { label: 'Eletronegatividade', value: element.properties.electronegativityDisplay ?? (element.properties.electronegativity ? `${element.properties.electronegativity}` : 'N/A'), sourceId: element.properties.electronegativitySource },
+    { label: 'Afinidade eletrônica', value: element.properties.electronAffinityDisplay ?? (element.properties.electronAffinity ? `${element.properties.electronAffinity} kJ/mol` : 'N/A'), sourceId: element.properties.electronAffinitySource },
+    { label: 'Energia de ionização', value: element.properties.ionizationEnergyDisplay ?? (element.properties.ionizationEnergy ? `${element.properties.ionizationEnergy} kJ/mol` : 'N/A'), sourceId: element.properties.ionizationEnergySource },
+    { label: 'Estados de oxidação', value: element.properties.oxidationStatesDisplay ?? (element.properties.oxidationStates?.join(', ') || 'N/A') },
+    { label: 'Condutividade térmica', value: element.properties.thermalConductivityDisplay ?? (element.properties.thermalConductivity ? `${element.properties.thermalConductivity} W/mK` : 'N/A'), sourceId: element.properties.thermalConductivitySource },
+    { label: 'Condutividade elétrica', value: element.properties.electricalConductivityDisplay ?? (element.properties.electricalConductivity ? `${element.properties.electricalConductivity} S/m` : 'N/A') },
+    { label: 'Ponto triplo (T)', value: element.properties.triplePointTempDisplay ?? (triplePoint ? `${triplePoint.tempK} K` : 'N/A'), sourceId: element.properties.triplePointSource },
+    { label: 'Ponto triplo (P)', value: element.properties.triplePointPressDisplay ? `${element.properties.triplePointPressDisplay} kPa` : (triplePoint ? `${fmt(triplePoint.pressurePa / 1000, '')} kPa` : 'N/A'), sourceId: element.properties.triplePointSource },
+    { label: 'Ponto crítico (T)', value: element.properties.criticalPointTempDisplay ? `${element.properties.criticalPointTempDisplay} K` : (criticalPoint ? `${criticalPoint.tempK} K` : 'N/A'), sourceId: element.properties.criticalPointSource },
+    { label: 'Ponto crítico (P)', value: element.properties.criticalPointPressDisplay ? `${element.properties.criticalPointPressDisplay} kPa` : (criticalPoint ? `${fmt(criticalPoint.pressurePa / 1000, '')} kPa` : 'N/A'), sourceId: element.properties.criticalPointSource },
+  ];
+
+  const descriptionPreview = (element.summary || 'No summary available.').slice(0, 220);
+  const hasLongDescription = (element.summary || '').length > 220;
 
   const side = x > window.innerWidth * 0.6 ? 'left' : 'right';
   const panelLeft = side === 'right'
@@ -237,135 +235,78 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
               </Button>
             </Menu.Trigger>
             <Menu.Content minWidth={300} align="start">
-              {hasTriplePoint && triplePoint && (
-                <Menu.Item
-                  onClick={() => {
-                    onSetTemperature(triplePoint.tempK);
-                    onSetPressure(triplePoint.pressurePa);
-                  }}
-                >
-                  Go to triple point ({fmt(triplePoint.tempK, ' K')} / {fmt(triplePoint.pressurePa, ' Pa')})
-                </Menu.Item>
-              )}
-              {hasCriticalPoint && criticalPoint && (
-                <Menu.Item
-                  onClick={() => {
-                    onSetTemperature(criticalPoint.tempK + 25);
-                    onSetPressure(criticalPoint.pressurePa + 1000);
-                  }}
-                >
-                  Enter supercritical region ({fmt(criticalPoint.tempK, ' K')}+)
-                </Menu.Item>
-              )}
-              {hasTriplePoint && triplePoint && (
-                <Menu.Item
-                  onClick={() => {
-                    onSetPressure(Math.max(1, triplePoint.pressurePa / 10));
-                    onSetTemperature(Math.max(1, physicsState.sublimationPointCurrent));
-                  }}
-                >
-                  Force sublimation regime
-                </Menu.Item>
-              )}
+              <Menu.Item
+                disabled={!hasTriplePoint || !triplePoint}
+                onClick={() => {
+                  if (!triplePoint) return;
+                  onSetTemperature(triplePoint.tempK);
+                  onSetPressure(triplePoint.pressurePa);
+                }}
+              >
+                Ir para ponto triplo {hasTriplePoint && triplePoint ? `(${fmt(triplePoint.tempK, ' K')} / ${fmt(triplePoint.pressurePa, ' Pa')})` : '(indisponível)'}
+              </Menu.Item>
+              <Menu.Item
+                disabled={!hasCriticalPoint || !criticalPoint}
+                onClick={() => {
+                  if (!criticalPoint) return;
+                  onSetTemperature(criticalPoint.tempK + 25);
+                  onSetPressure(criticalPoint.pressurePa + 1000);
+                }}
+              >
+                Entrar na região supercrítica {hasCriticalPoint && criticalPoint ? `(${fmt(criticalPoint.tempK, ' K')}+)` : '(indisponível)'}
+              </Menu.Item>
+              <Menu.Item
+                disabled={!hasTriplePoint || !triplePoint}
+                onClick={() => {
+                  if (!triplePoint) return;
+                  onSetPressure(Math.max(1, triplePoint.pressurePa / 10));
+                  onSetTemperature(Math.max(1, physicsState.sublimationPointCurrent));
+                }}
+              >
+                Forçar regime de sublimação {hasTriplePoint ? '' : '(indisponível)'}
+              </Menu.Item>
             </Menu.Content>
           </Menu>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Popover>
-              <Popover.Trigger>
-                <Button color="secondary" variant="soft" block>
-                  <InfoCircle className="size-4" />
-                  Ver descrição
-                </Button>
-              </Popover.Trigger>
-              <Popover.Content
-                side="top"
-                align="start"
-                sideOffset={8}
-                minWidth={300}
-                maxWidth={360}
-                className="rounded-2xl border border-default bg-surface shadow-lg"
-              >
-                <div className="max-h-56 space-y-2 overflow-y-auto p-3">
-                  <p className="text-xs font-medium text-secondary">Descrição do elemento</p>
-                  <Markdown>{element.summary || 'No summary available.'}</Markdown>
-                </div>
-              </Popover.Content>
-            </Popover>
-
-            <Popover>
-              <Popover.Trigger>
-                <Button color="secondary" variant="soft" block>
-                  <ExternalLink className="size-4" />
-                  Ver referências
-                </Button>
-              </Popover.Trigger>
-              <Popover.Content
-                side="top"
-                align="end"
-                sideOffset={8}
-                minWidth={300}
-                maxWidth={360}
-                className="rounded-2xl border border-default bg-surface shadow-lg"
-              >
-                <div className="max-h-56 space-y-2 overflow-y-auto p-3">
-                  <p className="text-xs font-medium text-secondary">Referências definidas no app</p>
-
-                  {references.length === 0 ? (
-                    <p className="text-sm text-tertiary">Nenhuma referência disponível para este elemento.</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {references.map((reference, index) => (
-                        <li key={`${reference.label}-${index}`} className="rounded-xl border border-subtle bg-surface-secondary p-2">
-                          {reference.href ? (
-                            <TextLink as="a" href={reference.href} forceExternal>
-                              {reference.label}
-                            </TextLink>
-                          ) : (
-                            <p className="text-sm text-default">{reference.label}</p>
-                          )}
-                          {reference.note && (
-                            <p className="mt-1 break-words text-3xs text-secondary">{reference.note}</p>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </Popover.Content>
-            </Popover>
-          </div>
-
           <div className="space-y-2 rounded-2xl border border-subtle bg-surface p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-default">Session notes</p>
-              <Badge color="secondary" variant="outline">
-                Optional
-              </Badge>
+            <p className="text-xs font-medium text-secondary">Descrição do elemento</p>
+            <div className="text-xs text-default">
+              <Markdown>{showFullDescription ? (element.summary || 'No summary available.') : `${descriptionPreview}${hasLongDescription ? '…' : ''}`}</Markdown>
             </div>
-            <Textarea
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              placeholder="Write temporary notes for this element..."
-              rows={3}
-              autoResize
-              variant="soft"
-            />
+            {hasLongDescription && (
+              <Button color="secondary" variant="ghost" size="sm" onClick={() => setShowFullDescription((prev) => !prev)}>
+                {showFullDescription ? 'Ver menos' : 'Ver mais'}
+              </Button>
+            )}
           </div>
 
-          <div className="space-y-2 rounded-2xl border border-subtle bg-surface p-3">
-            <Checkbox
-              checked={showAdvanced}
-              onCheckedChange={(next) => setShowAdvanced(next)}
-              label="Show advanced data block"
-            />
-            <Checkbox
-              checked={useScientific}
-              onCheckedChange={(next) => setUseScientific(next)}
-              label="Use scientific notation for values"
-            />
-
-            {showAdvanced && <CodeBlock language="json">{quickFactsCode}</CodeBlock>}
+          <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-default">Propriedades</p>
+              <Button color="secondary" variant="ghost" size="sm" onClick={() => setUseScientific((prev) => !prev)}>
+                {useScientific ? 'Notação normal' : 'Notação científica'}
+              </Button>
+            </div>
+            <ul className="space-y-2">
+              {propertyRows.map((item) => {
+                const value = item.value || 'N/A';
+                const isEstimated = value.includes('*');
+                return (
+                  <li key={item.label} className="rounded-xl border border-subtle bg-surface-secondary px-2 py-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs text-secondary">{item.label}</p>
+                      <div className="flex items-center gap-1">
+                        {typeof item.sourceId === 'number' && (
+                          <Badge color="secondary" variant="outline">[{item.sourceId}]</Badge>
+                        )}
+                        {isEstimated && <Badge color="warning" variant="soft">estimado*</Badge>}
+                      </div>
+                    </div>
+                    <p className="text-sm text-default">{value}</p>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -373,15 +314,53 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
               <ExternalLink className="size-4" />
               Open source page
             </ButtonLink>
-            <TextLink as="a" href="https://developers.openai.com/apps-sdk" forceExternal>
-              <InfoCircle className="mr-1 inline size-4" />
-              Apps SDK docs
-            </TextLink>
             <Button color="secondary" variant="ghost" size="sm" onClick={onClose}>
               <Bolt className="size-4" />
               Close
             </Button>
           </div>
+
+          <Popover>
+            <Popover.Trigger>
+              <Button color="secondary" variant="soft" block>
+                <ExternalLink className="size-4" />
+                Ver referências
+              </Button>
+            </Popover.Trigger>
+            <Popover.Content
+              side="top"
+              align="end"
+              sideOffset={8}
+              minWidth={300}
+              maxWidth={360}
+              className="rounded-2xl border border-default bg-surface shadow-lg"
+            >
+              <div className="max-h-56 space-y-2 overflow-y-auto p-3">
+                <p className="text-xs font-medium text-secondary">Referências definidas no app</p>
+
+                {references.length === 0 ? (
+                  <p className="text-sm text-tertiary">Nenhuma referência disponível para este elemento.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {references.map((reference, index) => (
+                      <li key={`${reference.label}-${index}`} className="rounded-xl border border-subtle bg-surface-secondary p-2">
+                        {reference.href ? (
+                          <TextLink as="a" href={reference.href} forceExternal>
+                            {reference.label}
+                          </TextLink>
+                        ) : (
+                          <p className="text-sm text-default">{reference.label}</p>
+                        )}
+                        {reference.note && (
+                          <p className="mt-1 break-words text-3xs text-secondary">{reference.note}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </Popover.Content>
+          </Popover>
         </div>
       </div>
     </div>
