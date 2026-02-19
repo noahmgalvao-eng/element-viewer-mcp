@@ -31,6 +31,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
       (el) => el.symbol.toLowerCase().includes(query) || el.name.toLowerCase().includes(query),
     );
   }, [searchValue]);
+  const visibleElements = useMemo(() => filteredElements.slice(0, 18), [filteredElements]);
 
   const tags = useMemo(
     () => selectedElements.map((el) => ({ value: el.symbol, valid: true })),
@@ -88,9 +89,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
         <TagInput value={tags} onChange={() => {}} disabled rows={1} size="md" />
       </div>
 
-      <div className="max-h-[22rem] overflow-y-auto pr-1">
-        <div className="grid grid-cols-4 gap-2 xs:grid-cols-5 sm:grid-cols-6">
-          {filteredElements.map((el) => {
+      <div>
+        <div className="grid grid-cols-6 gap-1.5">
+          {visibleElements.map((el) => {
             const isSelected = selectedElements.some((selected) => selected.atomicNumber === el.atomicNumber);
             const selectionIndex = selectedElements.findIndex(
               (selected) => selected.atomicNumber === el.atomicNumber,
@@ -104,16 +105,22 @@ const PeriodicTableSelector: React.FC<Props> = ({
                 size="md"
                 block
                 onClick={() => onSelect(el)}
-                className="!h-16 !rounded-xl !px-1 !py-1 !gap-0.5 !items-center !justify-center !text-center"
+                className="!relative !h-12 !rounded-lg !px-1 !py-1 !gap-0.5 !items-center !justify-center !text-center"
               >
-                <span className="text-3xs leading-none text-tertiary">{el.atomicNumber}</span>
-                <span className="text-sm font-semibold leading-none">{el.symbol}</span>
-                {isMultiSelect && isSelected ? (
-                  <Badge color="info" variant="outline" size="sm" className="!px-1.5">
+                <span className="pointer-events-none absolute right-1 top-1 text-3xs leading-none text-tertiary">
+                  {el.atomicNumber}
+                </span>
+                <span className="text-xs font-semibold leading-none">{el.symbol}</span>
+                <span className="max-w-full truncate text-3xs leading-none text-secondary">{el.name}</span>
+                {isMultiSelect && isSelected && (
+                  <Badge
+                    color="info"
+                    variant="outline"
+                    size="sm"
+                    className="!pointer-events-none !absolute left-1 top-1 !min-w-0 !px-1 !text-3xs"
+                  >
                     {selectionIndex + 1}
                   </Badge>
-                ) : (
-                  <span className="text-3xs leading-none text-secondary">{el.name}</span>
                 )}
               </Button>
             );
@@ -123,6 +130,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
 
       {filteredElements.length === 0 && (
         <p className="text-sm text-tertiary">No elements match this search.</p>
+      )}
+      {filteredElements.length > 18 && (
+        <p className="text-xs text-tertiary">Showing first 18 elements. Use search to narrow results.</p>
       )}
     </section>
   );
