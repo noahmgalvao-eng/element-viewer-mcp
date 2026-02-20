@@ -1,17 +1,18 @@
 import React, { useMemo, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
-import { Button, ButtonLink } from '@openai/apps-sdk-ui/components/Button';
-import { CopyTooltip } from '@openai/apps-sdk-ui/components/Tooltip';
+import { Button } from '@openai/apps-sdk-ui/components/Button';
+import { Checkbox } from '@openai/apps-sdk-ui/components/Checkbox';
+import { CodeBlock } from '@openai/apps-sdk-ui/components/CodeBlock';
 import {
   ArrowUp,
   CloseBold,
   ExternalLink,
-  MoreCircleMenuDots,
+  InfoCircle,
 } from '@openai/apps-sdk-ui/components/Icon';
-import { Markdown } from '@openai/apps-sdk-ui/components/Markdown';
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import { TextLink } from '@openai/apps-sdk-ui/components/TextLink';
-import { Tooltip } from '@openai/apps-sdk-ui/components/Tooltip';
+import { Textarea } from '@openai/apps-sdk-ui/components/Textarea';
+import { CopyTooltip, Tooltip } from '@openai/apps-sdk-ui/components/Tooltip';
 import { ChemicalElement, PhysicsState } from '../../types';
 import { SOURCE_DATA } from '../../data/periodic_table_source';
 
@@ -42,59 +43,20 @@ interface ReferenceItem {
   href?: string;
 }
 
+const TOOLTIP_CLASS = 'tooltip-solid';
+
 const FIXED_REFERENCES: ReferenceItem[] = [
-  {
-    id: 2,
-    text: 'L. M. Mentel, mendeleev - A Python resource for properties of chemical elements, ions and isotopes.',
-    href: 'https://github.com/lmmentel/mendeleev',
-  },
-  {
-    id: 3,
-    text: 'Servicos de dados fornecidos pelo PubChem PUG-REST API.',
-  },
-  {
-    id: 4,
-    text: 'Angstrom Sciences, Inc. (2026). Magnetron Sputtering Reference.',
-    href: 'https://www.angstromsciences.com/magnetron-sputtering-reference',
-  },
-  {
-    id: 5,
-    text: 'Wolfram Research, Inc. (2026). ElementData curated properties.',
-    href: 'https://periodictable.com',
-  },
-  {
-    id: 6,
-    text: 'Wikipedia contributors. (2025). Template:Periodic table (melting point).',
-    href: 'https://en.wikipedia.org/wiki/Template:Periodic_table_(melting_point)',
-  },
-  {
-    id: 7,
-    text: 'Wikipedia contributors. (2026). Boiling points of the elements (data page).',
-    href: 'https://en.wikipedia.org/wiki/Boiling_points_of_the_elements_(data_page)',
-  },
-  {
-    id: 8,
-    text: 'Wikipedia contributors. (2026). Melting points of the elements (data page).',
-    href: 'https://en.wikipedia.org/wiki/Melting_points_of_the_elements_(data_page)',
-  },
-  {
-    id: 9,
-    text: 'Wikipedia contributors. (2024). Template:Infobox oganesson.',
-    href: 'https://en.wikipedia.org/wiki/Template:Infobox_oganesson',
-  },
-  {
-    id: 10,
-    text: 'Thermodynamics of the Elements: Consolidated Master Table of All 118 Chemical Elements. (2026).',
-  },
-  {
-    id: 11,
-    text: 'Helmenstine, A. (2023). Triple Point Definition - Triple Point of Water.',
-    href: 'https://sciencenotes.org/triple-point-of-water/',
-  },
-  {
-    id: 12,
-    text: 'Thermodynamics of the Elements: Critical temperature and critical pressure master table. (2026).',
-  },
+  { id: 2, text: 'L. M. Mentel, mendeleev - A Python resource for properties of chemical elements, ions and isotopes.', href: 'https://github.com/lmmentel/mendeleev' },
+  { id: 3, text: 'Servicos de dados fornecidos pelo PubChem PUG-REST API.' },
+  { id: 4, text: 'Angstrom Sciences, Inc. (2026). Magnetron Sputtering Reference.', href: 'https://www.angstromsciences.com/magnetron-sputtering-reference' },
+  { id: 5, text: 'Wolfram Research, Inc. (2026). ElementData curated properties.', href: 'https://periodictable.com' },
+  { id: 6, text: 'Wikipedia contributors. (2025). Template:Periodic table (melting point).', href: 'https://en.wikipedia.org/wiki/Template:Periodic_table_(melting_point)' },
+  { id: 7, text: 'Wikipedia contributors. (2026). Boiling points of the elements (data page).', href: 'https://en.wikipedia.org/wiki/Boiling_points_of_the_elements_(data_page)' },
+  { id: 8, text: 'Wikipedia contributors. (2026). Melting points of the elements (data page).', href: 'https://en.wikipedia.org/wiki/Melting_points_of_the_elements_(data_page)' },
+  { id: 9, text: 'Wikipedia contributors. (2024). Template:Infobox oganesson.', href: 'https://en.wikipedia.org/wiki/Template:Infobox_oganesson' },
+  { id: 10, text: 'Thermodynamics of the Elements: Consolidated Master Table of All 118 Chemical Elements. (2026).' },
+  { id: 11, text: 'Helmenstine, A. (2023). Triple Point Definition - Triple Point of Water.', href: 'https://sciencenotes.org/triple-point-of-water/' },
+  { id: 12, text: 'Thermodynamics of the Elements: Critical temperature and critical pressure master table. (2026).' },
 ];
 
 const SUPERSCRIPT_MAP: Record<string, string> = {
@@ -110,19 +72,15 @@ const SUPERSCRIPT_MAP: Record<string, string> = {
   '9': '\u2079',
 };
 
-const TOOLTIP_CLASS = 'tooltip-solid';
-
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 const formatNumber = (value: number, maxFractionDigits = 4) =>
   value.toLocaleString(undefined, { maximumFractionDigits: maxFractionDigits });
 
-const cleanStringValue = (value: string) => value.replace(/\u00c2/g, '').trim();
-
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const parseDisplayValue = (
-  rawValue: string | number | undefined,
+  rawValue: unknown,
   unit?: string,
   fallbackNumber?: number,
 ) => {
@@ -132,7 +90,7 @@ const parseDisplayValue = (
     }
 
     if (typeof rawValue === 'string') {
-      const normalized = cleanStringValue(rawValue);
+      const normalized = rawValue.replace(/\u00c2/g, '').trim();
       if (!normalized || normalized.toUpperCase() === 'N/A') {
         return { value: 'N/A', estimated: false, na: true };
       }
@@ -164,21 +122,19 @@ const parseDisplayValue = (
 const formatElectronConfiguration = (config?: string) => {
   try {
     if (!config || config.trim() === '' || config.trim().toUpperCase() === 'N/A') return 'N/A';
-
-    const tokens = config.trim().split(/\s+/);
-    return tokens.map((token, index) => {
-      const match = token.match(/^(\d+[spdfghijklm])(\d+)$/i);
-      const spacer = index < tokens.length - 1 ? ' ' : '';
-
-      if (!match) return `${token}${spacer}`;
-
-      const exponent = match[2]
-        .split('')
-        .map((digit) => SUPERSCRIPT_MAP[digit] || digit)
-        .join('');
-
-      return `${match[1]}${exponent}${spacer}`;
-    });
+    return config
+      .trim()
+      .split(/\s+/)
+      .map((token, index, arr) => {
+        const match = token.match(/^(\d+[spdfghijklm])(\d+)$/i);
+        const spacer = index < arr.length - 1 ? ' ' : '';
+        if (!match) return `${token}${spacer}`;
+        const exponent = match[2]
+          .split('')
+          .map((digit) => SUPERSCRIPT_MAP[digit] || digit)
+          .join('');
+        return `${match[1]}${exponent}${spacer}`;
+      });
   } catch {
     return config || 'N/A';
   }
@@ -204,7 +160,9 @@ const PropertyCard: React.FC<{ item: PropertyItem }> = ({ item }) => {
 
 const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperature, onSetPressure }) => {
   const { element, physicsState, x, y } = data;
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [useScientific, setUseScientific] = useState(false);
+  const [notes, setNotes] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   const sourceInfo = SOURCE_DATA.elements.find((entry) => entry.symbol === element.symbol) as
@@ -225,91 +183,140 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const hasTriplePoint = Boolean(triplePoint && triplePoint.tempK > 0 && triplePoint.pressurePa > 0);
   const hasCriticalPoint = Boolean(criticalPoint && criticalPoint.tempK > 0 && criticalPoint.pressurePa > 0);
 
-  const sourceIds = useMemo(() => {
-    const values = [
-      element.properties.meltingPointSource,
-      element.properties.boilingPointSource,
-      element.properties.densitySource,
-      element.properties.atomicRadiusSource,
-      element.properties.thermalConductivitySource,
-      element.properties.specificHeatSolidSource,
-      element.properties.specificHeatLiquidSource,
-      element.properties.specificHeatGasSource,
-      element.properties.latentHeatFusionSource,
-      element.properties.latentHeatVaporizationSource,
-      element.properties.electronegativitySource,
-      element.properties.electronAffinitySource,
-      element.properties.ionizationEnergySource,
-      element.properties.triplePointSource,
-      element.properties.criticalPointSource,
-    ].filter((id): id is number => typeof id === 'number' && Number.isFinite(id));
+  const atomicMass = parseDisplayValue(
+    typeof sourceInfo?.atomic_mass === 'number' ? sourceInfo.atomic_mass : element.mass,
+    'u',
+  );
+  const density = parseDisplayValue(element.properties.densityDisplay);
+  const atomicRadius = parseDisplayValue(element.properties.atomicRadiusDisplay, 'pm', element.properties.atomicRadiusPm);
+  const electronAffinity = parseDisplayValue(
+    typeof sourceInfo?.electron_affinity === 'number' ? sourceInfo.electron_affinity : undefined,
+    'kJ/mol',
+  );
+  const ionizationEnergy = parseDisplayValue(
+    Array.isArray(sourceInfo?.ionization_energies) ? sourceInfo.ionization_energies[0] : undefined,
+    'kJ/mol',
+  );
+  const oxidationStates = parseDisplayValue(element.properties.oxidationStatesDisplay);
+  const electronConfigurationRaw =
+    typeof sourceInfo?.electron_configuration_semantic === 'string'
+      ? sourceInfo.electron_configuration_semantic
+      : typeof element.properties.electronConfiguration === 'string'
+        ? element.properties.electronConfiguration
+        : 'N/A';
+  const electronConfiguration = parseDisplayValue(electronConfigurationRaw);
 
-    return Array.from(new Set(values)).sort((a, b) => a - b);
-  }, [element.properties]);
+  const meltingPoint = parseDisplayValue(element.properties.meltingPointDisplay, 'K', element.properties.meltingPointK);
+  const boilingPoint = parseDisplayValue(element.properties.boilingPointDisplay, 'K', element.properties.boilingPointK);
+  const triplePointTemp = parseDisplayValue(element.properties.triplePointTempDisplay, 'K', triplePoint?.tempK);
+  const triplePointPress = parseDisplayValue(
+    element.properties.triplePointPressDisplay,
+    'kPa',
+    typeof triplePoint?.pressurePa === 'number' ? triplePoint.pressurePa / 1000 : undefined,
+  );
+  const criticalPointTemp = parseDisplayValue(element.properties.criticalPointTempDisplay, 'K', criticalPoint?.tempK);
+  const criticalPointPress = parseDisplayValue(
+    element.properties.criticalPointPressDisplay,
+    'kPa',
+    typeof criticalPoint?.pressurePa === 'number' ? criticalPoint.pressurePa / 1000 : undefined,
+  );
+  const thermalConductivity = parseDisplayValue(
+    element.properties.thermalConductivityDisplay,
+    'W/mK',
+    element.properties.thermalConductivity,
+  );
+  const specificHeatSolid = parseDisplayValue(
+    element.properties.specificHeatSolidDisplay,
+    'J/kgK',
+    element.properties.specificHeatSolid,
+  );
+  const specificHeatLiquid = parseDisplayValue(
+    element.properties.specificHeatLiquidDisplay,
+    'J/kgK',
+    element.properties.specificHeatLiquid,
+  );
+  const specificHeatGas = parseDisplayValue(
+    element.properties.specificHeatGasDisplay,
+    'J/kgK',
+    element.properties.specificHeatGas,
+  );
+  const latentHeatFusion = parseDisplayValue(
+    element.properties.latentHeatFusionDisplay,
+    'J/kg',
+    element.properties.latentHeatFusion,
+  );
+  const latentHeatVaporization = parseDisplayValue(
+    element.properties.latentHeatVaporizationDisplay,
+    'J/kg',
+    element.properties.latentHeatVaporization,
+  );
+  const electricalConductivity = parseDisplayValue(element.properties.electricalConductivityDisplay);
+  const bulkModulus = parseDisplayValue(element.properties.bulkModulusDisplay, 'GPa');
 
-  const references = useMemo<ReferenceItem[]>(() => {
-    const items: ReferenceItem[] = [];
-
-    if (typeof sourceInfo?.source === 'string') {
-      items.push({ label: 'Página principal do elemento', href: sourceInfo.source });
-    }
-    if (typeof sourceInfo?.spectral_img === 'string') {
-      items.push({ label: 'Imagem espectral', href: sourceInfo.spectral_img });
-    }
-    if (typeof sourceInfo?.bohr_model_image === 'string') {
-      items.push({ label: 'Imagem do modelo de Bohr', href: sourceInfo.bohr_model_image });
-    }
-    if (typeof sourceInfo?.bohr_model_3d === 'string') {
-      items.push({ label: 'Modelo 3D de Bohr', href: sourceInfo.bohr_model_3d });
-    }
-    if (typeof sourceInfo?.image?.url === 'string') {
-      items.push({ label: 'Imagem do elemento', href: sourceInfo.image.url });
-    }
-    if (typeof sourceInfo?.image?.attribution === 'string') {
-      items.push({
-        label: 'Créditos da imagem',
-        note: sourceInfo.image.attribution,
-      });
-    }
-
-    Array.from({ length: 12 }, (_, index) => index + 1).forEach((id) => {
-      const presentForElement = sourceIds.includes(id);
-      const sourceLabel = SOURCE_ID_LABELS[id] || `Fonte científica #${id}`;
-      items.push({
-        label: `Fonte de dado #${id}`,
-        note: `${sourceLabel} — referência detectada pelo sufixo _${id} no scientific_data${presentForElement ? '' : ' (sem uso neste elemento)'}`,
-      });
-    });
-
-    return items;
-  }, [sourceInfo, sourceIds]);
-
-  const propertyRows = [
-    { label: 'Ponto de fusão', value: element.properties.meltingPointDisplay ?? fmt(element.properties.meltingPointK, ' K'), sourceId: element.properties.meltingPointSource },
-    { label: 'Ponto de ebulição', value: element.properties.boilingPointDisplay ?? fmt(element.properties.boilingPointK, ' K'), sourceId: element.properties.boilingPointSource },
-    { label: 'Densidade', value: element.properties.densityDisplay ?? (element.properties.density ? `${fmt(element.properties.density * 1000, '')} kg/m³` : 'N/A'), sourceId: element.properties.densitySource },
-    { label: 'Raio atômico', value: element.properties.atomicRadiusDisplay ?? (element.properties.atomicRadiusPm ? `${fmt(element.properties.atomicRadiusPm, ' pm')}` : 'N/A'), sourceId: element.properties.atomicRadiusSource },
-    { label: 'Eletronegatividade', value: element.properties.electronegativityDisplay ?? (element.properties.electronegativity ? `${element.properties.electronegativity}` : 'N/A'), sourceId: element.properties.electronegativitySource },
-    { label: 'Afinidade eletrônica', value: element.properties.electronAffinityDisplay ?? (element.properties.electronAffinity ? `${element.properties.electronAffinity} kJ/mol` : 'N/A'), sourceId: element.properties.electronAffinitySource },
-    { label: 'Energia de ionização', value: element.properties.ionizationEnergyDisplay ?? (element.properties.ionizationEnergy ? `${element.properties.ionizationEnergy} kJ/mol` : 'N/A'), sourceId: element.properties.ionizationEnergySource },
-    { label: 'Estados de oxidação', value: element.properties.oxidationStatesDisplay ?? (element.properties.oxidationStates?.join(', ') || 'N/A') },
-    { label: 'Condutividade térmica', value: element.properties.thermalConductivityDisplay ?? (element.properties.thermalConductivity ? `${element.properties.thermalConductivity} W/mK` : 'N/A'), sourceId: element.properties.thermalConductivitySource },
-    { label: 'Condutividade elétrica', value: element.properties.electricalConductivityDisplay ?? (element.properties.electricalConductivity ? `${element.properties.electricalConductivity} S/m` : 'N/A') },
-    { label: 'Ponto triplo (T)', value: element.properties.triplePointTempDisplay ?? (triplePoint ? `${triplePoint.tempK} K` : 'N/A'), sourceId: element.properties.triplePointSource },
-    { label: 'Ponto triplo (P)', value: element.properties.triplePointPressDisplay ? `${element.properties.triplePointPressDisplay} kPa` : (triplePoint ? `${fmt(triplePoint.pressurePa / 1000, '')} kPa` : 'N/A'), sourceId: element.properties.triplePointSource },
-    { label: 'Ponto crítico (T)', value: element.properties.criticalPointTempDisplay ? `${element.properties.criticalPointTempDisplay} K` : (criticalPoint ? `${criticalPoint.tempK} K` : 'N/A'), sourceId: element.properties.criticalPointSource },
-    { label: 'Ponto crítico (P)', value: element.properties.criticalPointPressDisplay ? `${element.properties.criticalPointPressDisplay} kPa` : (criticalPoint ? `${fmt(criticalPoint.pressurePa / 1000, '')} kPa` : 'N/A'), sourceId: element.properties.criticalPointSource },
+  const atomicChemicalProperties: PropertyItem[] = [
+    { label: 'Atomic mass', value: atomicMass.value, unit: atomicMass.na ? undefined : 'u', sourceId: periodicSourceRef },
+    { label: 'Density', value: density.value, sourceId: periodicSourceRef, estimated: density.estimated },
+    { label: 'Raio atômico', value: atomicRadius.value, unit: atomicRadius.na ? undefined : 'pm', sourceId: element.properties.atomicRadiusSource, estimated: atomicRadius.estimated },
+    { label: 'Afinidade eletrônica', value: electronAffinity.value, unit: electronAffinity.na ? undefined : 'kJ/mol', sourceId: periodicSourceRef, estimated: electronAffinity.estimated },
+    { label: '1ª Energia de ionização', value: ionizationEnergy.value, unit: ionizationEnergy.na ? undefined : 'kJ/mol', sourceId: periodicSourceRef, estimated: ionizationEnergy.estimated },
+    { label: 'Estados de oxidação', value: oxidationStates.value, estimated: oxidationStates.estimated },
+    { label: 'Electron configuration', value: electronConfiguration.value, sourceId: periodicSourceRef, renderedValue: electronConfiguration.na ? undefined : formatElectronConfiguration(electronConfigurationRaw) },
   ];
 
-  const descriptionPreview = (element.summary || 'No summary available.').slice(0, 220);
-  const hasLongDescription = (element.summary || '').length > 220;
+  const physicsProperties: PropertyItem[] = [
+    { label: 'Melting point', value: meltingPoint.value, unit: meltingPoint.na ? undefined : 'K', sourceId: element.properties.meltingPointSource, estimated: meltingPoint.estimated },
+    { label: 'Boiling point', value: boilingPoint.value, unit: boilingPoint.na ? undefined : 'K', sourceId: element.properties.boilingPointSource, estimated: boilingPoint.estimated },
+    { label: 'Triple point (temp)', value: triplePointTemp.value, unit: triplePointTemp.na ? undefined : 'K', sourceId: element.properties.triplePointSource, estimated: triplePointTemp.estimated },
+    { label: 'Triple point (press)', value: triplePointPress.value, unit: triplePointPress.na ? undefined : 'kPa', sourceId: element.properties.triplePointSource, estimated: triplePointPress.estimated },
+    { label: 'Critical point (temp)', value: criticalPointTemp.value, unit: criticalPointTemp.na ? undefined : 'K', sourceId: element.properties.criticalPointSource, estimated: criticalPointTemp.estimated },
+    { label: 'Critical point (press)', value: criticalPointPress.value, unit: criticalPointPress.na ? undefined : 'kPa', sourceId: element.properties.criticalPointSource, estimated: criticalPointPress.estimated },
+    { label: 'Thermal conductivity', value: thermalConductivity.value, unit: thermalConductivity.na ? undefined : 'W/mK', sourceId: element.properties.thermalConductivitySource, estimated: thermalConductivity.estimated },
+    { label: 'Specific heat (solid)', value: specificHeatSolid.value, unit: specificHeatSolid.na ? undefined : 'J/kgK', sourceId: element.properties.specificHeatSolidSource, estimated: specificHeatSolid.estimated },
+    { label: 'Specific heat (liquid)', value: specificHeatLiquid.value, unit: specificHeatLiquid.na ? undefined : 'J/kgK', sourceId: element.properties.specificHeatLiquidSource, estimated: specificHeatLiquid.estimated },
+    { label: 'Specific heat (gas)', value: specificHeatGas.value, unit: specificHeatGas.na ? undefined : 'J/kgK', sourceId: element.properties.specificHeatGasSource, estimated: specificHeatGas.estimated },
+    { label: 'Latent heat (fusion)', value: latentHeatFusion.value, unit: latentHeatFusion.na ? undefined : 'J/kg', sourceId: element.properties.latentHeatFusionSource, estimated: latentHeatFusion.estimated },
+    { label: 'Latent heat (vaporization)', value: latentHeatVaporization.value, unit: latentHeatVaporization.na ? undefined : 'J/kg', sourceId: element.properties.latentHeatVaporizationSource, estimated: latentHeatVaporization.estimated },
+    { label: 'Bulk modulus', value: bulkModulus.value, unit: bulkModulus.na ? undefined : 'GPa', estimated: bulkModulus.estimated },
+    { label: 'Electrical conductivity', value: electricalConductivity.value, estimated: electricalConductivity.estimated },
+  ];
 
-  const side = x > window.innerWidth * 0.6 ? 'left' : 'right';
+  const references = useMemo<ReferenceItem[]>(
+    () => [
+      { id: 1, text: `${element.name}. (2026). In Wikipedia.`, href: wikiUrl },
+      ...FIXED_REFERENCES,
+    ],
+    [element.name, wikiUrl],
+  );
+
+  const quickFactsCode = useMemo(
+    () =>
+      JSON.stringify(
+        {
+          symbol: element.symbol,
+          name: element.name,
+          phase: physicsState.state,
+          temperatureK: physicsState.temperature,
+          pressurePa: physicsState.pressure,
+          meltingPointCurrentK: physicsState.meltingPointCurrent,
+          boilingPointCurrentK: physicsState.boilingPointCurrent,
+          sublimationPointCurrentK: physicsState.sublimationPointCurrent,
+        },
+        null,
+        2,
+      ),
+    [element.name, element.symbol, physicsState],
+  );
+
+  const summaryText = element.summary || 'No summary available.';
+  const summaryPreview = summaryText.length > 220 ? `${summaryText.slice(0, 220)}...` : summaryText;
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1366;
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 768;
+  const side = x > viewportWidth * 0.6 ? 'left' : 'right';
   const panelWidth = 432;
   const panelLeft = side === 'right'
-    ? clamp(x + 12, 8, window.innerWidth - panelWidth)
-    : clamp(x - panelWidth, 8, window.innerWidth - panelWidth);
-  const panelTop = clamp(y - 24, 8, window.innerHeight - 640);
+    ? clamp(x + 12, 8, viewportWidth - panelWidth)
+    : clamp(x - panelWidth, 8, viewportWidth - panelWidth);
+  const panelTop = clamp(y - 24, 8, viewportHeight - 640);
 
   return (
     <div className="fixed inset-0 z-[100]" onMouseDown={onClose}>
@@ -324,14 +331,10 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
               <div className="flex items-center gap-2">
                 <CopyTooltip copyValue={element.symbol}>
                   <span>
-                    <Badge color="info" variant="soft">
-                      {element.symbol}
-                    </Badge>
+                    <Badge color="info" variant="soft">{element.symbol}</Badge>
                   </span>
                 </CopyTooltip>
-                <Badge color="secondary" variant="outline">
-                  Atomic #{element.atomicNumber}
-                </Badge>
+                <Badge color="secondary" variant="outline">Atomic #{element.atomicNumber}</Badge>
               </div>
               <h3 className="heading-xs text-default">{element.name}</h3>
               <p className="text-xs text-secondary">
@@ -345,27 +348,16 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
           </div>
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Tooltip
-              content="Set global temperature to this pressure-adjusted melting point"
-              contentClassName={TOOLTIP_CLASS}
-            >
+            <Tooltip content="Set global temperature to this pressure-adjusted melting point" contentClassName={TOOLTIP_CLASS}>
               <span>
-                <Button
-                  color="warning"
-                  variant="soft"
-                  block
-                  onClick={() => onSetTemperature(physicsState.meltingPointCurrent)}
-                >
+                <Button color="warning" variant="soft" block onClick={() => onSetTemperature(physicsState.meltingPointCurrent)}>
                   <ArrowUp className="size-4" />
                   Melt {fmt(physicsState.meltingPointCurrent, ' K')}
                 </Button>
               </span>
             </Tooltip>
 
-            <Tooltip
-              content="Set global temperature to this pressure-adjusted boiling point"
-              contentClassName={TOOLTIP_CLASS}
-            >
+            <Tooltip content="Set global temperature to this pressure-adjusted boiling point" contentClassName={TOOLTIP_CLASS}>
               <span>
                 <Button
                   color="danger"
@@ -375,149 +367,187 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   onClick={() => onSetTemperature(physicsState.boilingPointCurrent)}
                 >
                   <ArrowUp className="size-4" />
-                  Boil{' '}
-                  {physicsState.boilingPointCurrent >= 49000
-                    ? 'undefined'
-                    : fmt(physicsState.boilingPointCurrent, ' K')}
+                  Boil {physicsState.boilingPointCurrent >= 49000 ? 'undefined' : fmt(physicsState.boilingPointCurrent, ' K')}
+                </Button>
+              </span>
+            </Tooltip>
+
+            <Tooltip content="Set pressure and temperature for sublimation regime" contentClassName={TOOLTIP_CLASS}>
+              <span>
+                <Button
+                  color="secondary"
+                  variant="soft"
+                  block
+                  disabled={!hasTriplePoint}
+                  onClick={() => {
+                    if (!triplePoint) return;
+                    onSetPressure(Math.max(1, triplePoint.pressurePa / 10));
+                    onSetTemperature(Math.max(1, physicsState.sublimationPointCurrent || triplePoint.tempK));
+                  }}
+                >
+                  <ArrowUp className="size-4" />
+                  Sublimação
+                </Button>
+              </span>
+            </Tooltip>
+
+            <Tooltip content="Set environment to triple point" contentClassName={TOOLTIP_CLASS}>
+              <span>
+                <Button
+                  color="success"
+                  variant="soft"
+                  block
+                  disabled={!hasTriplePoint}
+                  onClick={() => {
+                    if (!triplePoint) return;
+                    onSetTemperature(triplePoint.tempK);
+                    onSetPressure(triplePoint.pressurePa);
+                  }}
+                >
+                  <ArrowUp className="size-4" />
+                  Ponto triplo
+                </Button>
+              </span>
+            </Tooltip>
+
+            <Tooltip content="Move toward critical regime" contentClassName={TOOLTIP_CLASS}>
+              <span className="sm:col-span-2">
+                <Button
+                  color="info"
+                  variant="soft"
+                  block
+                  disabled={!hasCriticalPoint}
+                  onClick={() => {
+                    if (!criticalPoint) return;
+                    onSetTemperature(criticalPoint.tempK + 25);
+                    onSetPressure(criticalPoint.pressurePa + 1000);
+                  }}
+                >
+                  <ArrowUp className="size-4" />
+                  Ponto crítico
                 </Button>
               </span>
             </Tooltip>
           </div>
 
-          <Menu>
-            <Menu.Trigger>
-              <Button color="secondary" variant="outline" block>
-                <MoreCircleMenuDots className="size-4" />
-                More phase actions
-              </Button>
-            </Menu.Trigger>
-            <Menu.Content minWidth={300} align="start">
-              <Menu.Item
-                disabled={!hasTriplePoint || !triplePoint}
-                onClick={() => {
-                  if (!triplePoint) return;
-                  onSetTemperature(triplePoint.tempK);
-                  onSetPressure(triplePoint.pressurePa);
-                }}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <Popover>
+              <Popover.Trigger>
+                <Button color="secondary" variant="soft" block>
+                  <InfoCircle className="size-4" />
+                  Ver descrição
+                </Button>
+              </Popover.Trigger>
+              <Popover.Content
+                side="top"
+                align="start"
+                sideOffset={8}
+                minWidth={300}
+                maxWidth={380}
+                className="z-[130] rounded-2xl border border-default bg-surface shadow-lg"
               >
-                Ir para ponto triplo {hasTriplePoint && triplePoint ? `(${fmt(triplePoint.tempK, ' K')} / ${fmt(triplePoint.pressurePa, ' Pa')})` : '(indisponível)'}
-              </Menu.Item>
-              <Menu.Item
-                disabled={!hasCriticalPoint || !criticalPoint}
-                onClick={() => {
-                  if (!criticalPoint) return;
-                  onSetTemperature(criticalPoint.tempK + 25);
-                  onSetPressure(criticalPoint.pressurePa + 1000);
-                }}
-              >
-                Entrar na região supercrítica {hasCriticalPoint && criticalPoint ? `(${fmt(criticalPoint.tempK, ' K')}+)` : '(indisponível)'}
-              </Menu.Item>
-              <Menu.Item
-                disabled={!hasTriplePoint || !triplePoint}
-                onClick={() => {
-                  if (!triplePoint) return;
-                  onSetPressure(Math.max(1, triplePoint.pressurePa / 10));
-                  onSetTemperature(Math.max(1, physicsState.sublimationPointCurrent));
-                }}
-              >
-                Forçar regime de sublimação {hasTriplePoint ? '' : '(indisponível)'}
-              </Menu.Item>
-            </Menu.Content>
-          </Menu>
+                <div className="max-h-56 space-y-2 overflow-y-auto p-3" onMouseDown={(event) => event.stopPropagation()}>
+                  <p className="text-xs font-medium text-secondary">Descrição do elemento</p>
+                  <p className={`text-sm leading-5 text-default ${showFullDescription ? 'whitespace-pre-wrap' : 'line-clamp-2-soft'}`}>
+                    {showFullDescription ? summaryText : summaryPreview}
+                  </p>
+                  {summaryText.length > 220 && (
+                    <Button color="secondary" variant="ghost" size="sm" onClick={() => setShowFullDescription((prev) => !prev)}>
+                      {showFullDescription ? 'Ver menos' : 'Ver mais'}
+                    </Button>
+                  )}
+                </div>
+              </Popover.Content>
+            </Popover>
 
-          <div className="space-y-2 rounded-2xl border border-subtle bg-surface p-3">
-            <p className="text-xs font-medium text-secondary">Descrição do elemento</p>
-            <div className="text-xs text-default">
-              <Markdown>{showFullDescription ? (element.summary || 'No summary available.') : `${descriptionPreview}${hasLongDescription ? '…' : ''}`}</Markdown>
-            </div>
-            {hasLongDescription && (
-              <Button color="secondary" variant="ghost" size="sm" onClick={() => setShowFullDescription((prev) => !prev)}>
-                {showFullDescription ? 'Ver menos' : 'Ver mais'}
-              </Button>
-            )}
+            <Popover>
+              <Popover.Trigger>
+                <Button color="secondary" variant="soft" block>
+                  <ExternalLink className="size-4" />
+                  Ver referências
+                </Button>
+              </Popover.Trigger>
+              <Popover.Content
+                side="top"
+                align="end"
+                sideOffset={8}
+                minWidth={320}
+                maxWidth={390}
+                className="z-[130] rounded-2xl border border-default bg-surface shadow-lg"
+              >
+                <div className="max-h-64 space-y-2 overflow-y-auto p-3" onMouseDown={(event) => event.stopPropagation()}>
+                  <p className="text-xs font-medium text-secondary">Referências definidas no app</p>
+                  <ul className="space-y-2">
+                    {references.map((reference) => (
+                      <li key={reference.id} className="rounded-xl border border-subtle bg-surface-secondary p-2">
+                        <div className="flex gap-2">
+                          <span className="text-xs font-semibold text-secondary">[{reference.id}]</span>
+                          <div className="min-w-0 space-y-1">
+                            <p className="break-words text-sm text-default">{reference.text}</p>
+                            {reference.href && (
+                              <TextLink as="a" href={reference.href} forceExternal>
+                                {reference.href}
+                              </TextLink>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Popover.Content>
+            </Popover>
           </div>
 
           <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-default">Propriedades</p>
-              <Button color="secondary" variant="ghost" size="sm" onClick={() => setUseScientific((prev) => !prev)}>
-                {useScientific ? 'Notação normal' : 'Notação científica'}
-              </Button>
+              <p className="text-sm font-semibold text-default">Atomic & Chemical</p>
+              <Badge color="secondary" variant="outline">2 colunas</Badge>
             </div>
-            <ul className="space-y-2">
-              {propertyRows.map((item) => {
-                const value = item.value || 'N/A';
-                const isEstimated = value.includes('*');
-                return (
-                  <li key={item.label} className="rounded-xl border border-subtle bg-surface-secondary px-2 py-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-xs text-secondary">{item.label}</p>
-                      <div className="flex items-center gap-1">
-                        {typeof item.sourceId === 'number' && (
-                          <Badge color="secondary" variant="outline">[{item.sourceId}]</Badge>
-                        )}
-                        {isEstimated && <Badge color="warning" variant="soft">estimado*</Badge>}
-                      </div>
-                    </div>
-                    <p className="text-sm text-default">{value}</p>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="grid grid-cols-2 gap-2">
+              {atomicChemicalProperties.map((item) => (
+                <PropertyCard key={item.label} item={item} />
+              ))}
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <ButtonLink as="a" href={wikiUrl} external color="secondary" variant="soft" size="sm">
-              <ExternalLink className="size-4" />
-              Open source page
-            </ButtonLink>
-            <Button color="secondary" variant="ghost" size="sm" onClick={onClose}>
-              <Bolt className="size-4" />
-              Close
-            </Button>
+          <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">
+            <p className="text-sm font-semibold text-default">Physics</p>
+            <div className="grid grid-cols-2 gap-2">
+              {physicsProperties.map((item) => (
+                <PropertyCard key={item.label} item={item} />
+              ))}
+            </div>
           </div>
 
-          <Popover>
-            <Popover.Trigger>
-              <Button color="secondary" variant="soft" block>
-                <ExternalLink className="size-4" />
-                Ver referências
-              </Button>
-            </Popover.Trigger>
-            <Popover.Content
-              side="top"
-              align="end"
-              sideOffset={8}
-              minWidth={300}
-              maxWidth={360}
-              className="rounded-2xl border border-default bg-surface shadow-lg"
-            >
-              <div className="max-h-56 space-y-2 overflow-y-auto p-3">
-                <p className="text-xs font-medium text-secondary">Referências definidas no app</p>
+          <div className="space-y-2 rounded-2xl border border-subtle bg-surface p-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-default">Session notes</p>
+              <Badge color="secondary" variant="outline">Optional</Badge>
+            </div>
+            <Textarea
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Write temporary notes for this element..."
+              rows={3}
+              autoResize
+              variant="soft"
+            />
+          </div>
 
-                {references.length === 0 ? (
-                  <p className="text-sm text-tertiary">Nenhuma referência disponível para este elemento.</p>
-                ) : (
-                  <ul className="space-y-2">
-                    {references.map((reference, index) => (
-                      <li key={`${reference.label}-${index}`} className="rounded-xl border border-subtle bg-surface-secondary p-2">
-                        {reference.href ? (
-                          <TextLink as="a" href={reference.href} forceExternal>
-                            {reference.label}
-                          </TextLink>
-                        ) : (
-                          <p className="text-sm text-default">{reference.label}</p>
-                        )}
-                        {reference.note && (
-                          <p className="mt-1 break-words text-3xs text-secondary">{reference.note}</p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </Popover.Content>
-          </Popover>
+          <div className="space-y-2 rounded-2xl border border-subtle bg-surface p-3">
+            <Checkbox
+              checked={showAdvanced}
+              onCheckedChange={(next) => setShowAdvanced(next)}
+              label="Show advanced data block"
+            />
+            <Checkbox
+              checked={useScientific}
+              onCheckedChange={(next) => setUseScientific(next)}
+              label="Use scientific notation for values"
+            />
+            {showAdvanced && <CodeBlock language="json">{quickFactsCode}</CodeBlock>}
+          </div>
         </div>
       </div>
     </div>

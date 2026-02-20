@@ -99,8 +99,8 @@ const ControlPanel: React.FC<Props> = ({
   };
 
   const isDragging = activeControl !== null;
-  const showTemperatureBlock = !isDragging || activeControl === 'temperature';
-  const showPressureBlock = !isDragging || activeControl === 'pressure';
+  const isDraggingTemperature = activeControl === 'temperature';
+  const isDraggingPressure = activeControl === 'pressure';
 
   return (
     <section
@@ -112,16 +112,22 @@ const ControlPanel: React.FC<Props> = ({
       onPointerUp={endInteraction}
       onPointerCancel={endInteraction}
     >
-      {!isDragging && (
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h3 className="heading-xs text-default">Environmental controls</h3>
-            <p className="text-xs text-secondary">Adjust global temperature and pressure.</p>
-          </div>
+      <div
+        className={`flex flex-wrap items-center justify-between gap-2 ${
+          isDragging ? 'opacity-0 pointer-events-none' : ''
+        }`}
+      >
+        <div>
+          <h3 className="heading-xs text-default">Environmental controls</h3>
+          <p className="text-xs text-secondary">Adjust global temperature and pressure.</p>
         </div>
-      )}
+      </div>
 
-      <div className={`space-y-2 ${showTemperatureBlock ? '' : 'hidden'}`}>
+      <div
+        className={`space-y-2 ${
+          isDraggingPressure ? 'opacity-0 pointer-events-none' : ''
+        }`}
+      >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-default">Temperature</p>
           {isDragging ? (
@@ -147,7 +153,13 @@ const ControlPanel: React.FC<Props> = ({
           )}
         </div>
 
-        <div onPointerDownCapture={() => startInteraction('temperature')}>
+        <div
+          className="touch-none"
+          onPointerDownCapture={(event) => {
+            event.preventDefault();
+            startInteraction('temperature');
+          }}
+        >
           <Slider
             value={currentTempDisplay}
             min={minSliderTemp}
@@ -160,7 +172,7 @@ const ControlPanel: React.FC<Props> = ({
           />
         </div>
 
-        {!isDragging && (
+        <div className={`${isDragging ? 'opacity-0 pointer-events-none' : ''}`}>
           <div className="flex flex-wrap items-center gap-2">
             <Badge
               color={Math.abs(temperature - meltPoint) < 50 ? 'warning' : 'secondary'}
@@ -175,12 +187,16 @@ const ControlPanel: React.FC<Props> = ({
               Tboil {boilPoint.toFixed(2)} K
             </Badge>
           </div>
-        )}
+        </div>
       </div>
 
-      {!isDragging && <div className="border-t border-subtle pt-4" />}
+      <div className={`border-t border-subtle pt-4 ${isDragging ? 'opacity-0 pointer-events-none' : ''}`} />
 
-      <div className={`space-y-2 ${showPressureBlock ? '' : 'hidden'}`}>
+      <div
+        className={`space-y-2 ${
+          isDraggingTemperature ? 'opacity-0 pointer-events-none' : ''
+        }`}
+      >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-default">Pressure</p>
           {isDragging ? (
@@ -207,7 +223,13 @@ const ControlPanel: React.FC<Props> = ({
           )}
         </div>
 
-        <div onPointerDownCapture={() => startInteraction('pressure')}>
+        <div
+          className="touch-none"
+          onPointerDownCapture={(event) => {
+            event.preventDefault();
+            startInteraction('pressure');
+          }}
+        >
           <Slider
             value={logPressureValue}
             min={-4}
@@ -220,23 +242,23 @@ const ControlPanel: React.FC<Props> = ({
           />
         </div>
 
-        {!isDragging && (
+        <div className={`${isDragging ? 'opacity-0 pointer-events-none' : ''}`}>
           <Badge color="secondary" variant="outline">
             {compactPressure}
           </Badge>
-        )}
+        </div>
       </div>
 
-      {!isDragging && <div className="border-t border-subtle pt-4" />}
+      <div className={`border-t border-subtle pt-4 ${isDragging ? 'opacity-0 pointer-events-none' : ''}`} />
 
-      {!isDragging && (
+      <div className={`${isDragging ? 'opacity-0 pointer-events-none' : ''}`}>
         <Switch
           checked={showParticles}
           onCheckedChange={setShowParticles}
           label="X-Ray Vision"
           labelPosition="start"
         />
-      )}
+      </div>
     </section>
   );
 };
