@@ -1,1105 +1,488 @@
+import json
 import re
 import os
 
 # ==============================================================================
-# PLACEHOLDERS PARA AS STRINGS
+# PLACEHOLDER PARA O JSON DE PONTO CRÍTICO
 # ==============================================================================
 
-STRING_1_FUSION = """
-Actinium
-14.2 kJ/mol  
-
-
-Aluminum
-10.67 kJ/mol 
-
-
-Americium
-14.4 kJ/mol  
-
-
-Antimony
-20.9 kJ/mol  
-
-
-Argon
- 1.21 kJ/mol 
-
-
-Astatine
-23.8 kJ/mol  
-
-
-Barium
- 7.66 kJ/mol 
-
-
-Beryllium
- 9.8 kJ/mol  
-
-
-Bismuth
-10.48 kJ/mol 
-
-
-Boron
-22.2 kJ/mol  
-
-
-Bromine
-10.8 kJ/mol  
-
-
-Cadmium
- 6.11 kJ/mol 
-
-
-Calcium
- 9.33 kJ/mol 
-
-
-Cerium
- 8.87 kJ/mol 
-
-
-Cesium
- 2.09 kJ/mol 
-
-
-Chlorine
- 6.41 kJ/mol 
-
-
-Chromium
-15.3 kJ/mol  
-
-
-Cobalt
-15.2 kJ/mol  
-
-
-Copper
-13 kJ/mol    
-
-
-Dysprosium
-17.2 kJ/mol  
-
-
-Erbium
-17.2 kJ/mol  
-
-
-Europium
-10.5 kJ/mol  
-
-
-Fluorine
- 5.1 kJ/mol  
-
-
-Gadolinium
-15.5 kJ/mol  
-
-
-Gallium
- 5.59 kJ/mol 
-
-
-Germanium
-34.7 kJ/mol  
-
-
-Gold
-12.7 kJ/mol  
-
-
-Hafnium
-25.5 kJ/mol  
-
-
-Holmium
-17.2 kJ/mol  
-
-
-Hydrogen
- 0.12 kJ/mol 
-
-
-Indium
- 3.27 kJ/mol 
-
-
-Iodine
-15.27 kJ/mol 
-
-
-Iridium
-26.4 kJ/mol  
-
-
-Iron
-14.9 kJ/mol  
-
-
-Krypton
- 1.64 kJ/mol 
-
-
-Lanthanum
-10.04 kJ/mol 
-
-
-Lead
- 5.121 kJ/mol
-
-
-Lithium
- 4.6 kJ/mol  
-
-
-Lutetium
-19.2 kJ/mol  
-
-
-Magnesium
- 9.04 kJ/mol 
-
-
-Manganese
-14.4 kJ/mol  
-
-
-Mercury
- 2.331 kJ/mol
-
-
-Molybdenum
-27.6 kJ/mol  
-
-
-Neodymium
- 7.113 kJ/mol
-
-
-Neon
- 0.324 kJ/mol
-
-
-Neptunium
- 9.46 kJ/mol 
-
-
-Nickel
-17.6 kJ/mol  
-
-
-Niobium
-27.2 kJ/mol  
-
-
-Nitrogen
- 0.72 kJ/mol 
-
-
-Osmium
-29.3 kJ/mol  
-
-
-Oxygen
- 0.444 kJ/mol
-
-
-Palladium
-17.2 kJ/mol  
-
-
-Phosphorus
- 2.51 kJ/mol 
-
-
-Platinum
-19.7 kJ/mol  
-
-
-Plutonium
- 2.8 kJ/mol  
-
-
-Polonium
-10 kJ/mol    
-
-
-Potassium
- 2.4 kJ/mol  
-
-
-Praseodymium
-11.3 kJ/mol  
-
-
-Promethium
-12.6 kJ/mol  
-
-
-Protactinium
-16.7 kJ/mol  
-
-
-Radium
- 7.15 kJ/mol 
-
-
-Radon
- 2.7 kJ/mol  
-
-
-Rhenium
-33.1 kJ/mol  
-
-
-Rhodium
-21.55 kJ/mol 
-
-
-Rubidium
- 2.2 kJ/mol  
-
-
-Ruthenium
-23.7 kJ/mol  
-
-
-Samarium
-10.9 kJ/mol  
-
-
-Scandium
-15.9 kJ/mol  
-
-
-Selenium
- 5.1 kJ/mol  
-
-
-Silicon
-39.6 kJ/mol  
-
-
-Silver
-11.3 kJ/mol  
-
-
-Sodium
- 2.64 kJ/mol 
-
-
-Strontium
- 6.16 kJ/mol 
-
-
-Sulfur
- 1.23 kJ/mol 
-
-
-Tantalum
-31.4 kJ/mol  
-
-
-Technetium
-23.81 kJ/mol 
-
-
-Tellurium
-13.5 kJ/mol  
-
-
-Terbium
-16.3 kJ/mol  
-
-
-Thallium
- 4.31 kJ/mol 
-
-
-Thorium
-19.2 kJ/mol  
-
-
-Thulium
-18.4 kJ/mol  
-
-
-Tin
- 7.2 kJ/mol  
-
-
-Titanium
-20.9 kJ/mol  
-
-
-Tungsten
-35.2 kJ/mol  
-
-
-Uranium
-15.5 kJ/mol  
-
-
-Vanadium
-17.6 kJ/mol  
-
-
-Xenon
- 3.1 kJ/mol  
-
-
-Ytterbium
- 9.2 kJ/mol  
-
-
-Yttrium
-17.2 kJ/mol  
-
-
-Zinc
- 6.67 kJ/mol 
-
-
-Zirconium
-23 kJ/mol    
-"""
-
-STRING_2_VAPORIZATION = """
-Actinium
-293 kJ/mol     
-
-
-Aluminum
-293.72 kJ/mol  
-
-
-Americium
-238.5 kJ/mol   
-
-
-Antimony
- 67.91 kJ/mol  
-
-
-Argon
-  6.53 kJ/mol  
-
-
-Barium
-150.9 kJ/mol   
-
-
-Beryllium
-308.8 kJ/mol   
-
-
-Bismuth
-179.1 kJ/mol   
-
-
-Boron
-538.9 kJ/mol   
-
-
-Bromine
- 30 kJ/mol     
-
-
-Cadmium
- 99.87 kJ/mol  
-
-
-Calcium
-149.95 kJ/mol  
-
-
-Cerium
-313.8 kJ/mol   
-
-
-Cesium
- 65.9 kJ/mol   
-
-
-Chlorine
- 20.403 kJ/mol 
-
-
-Chromium
-348.78 kJ/mol  
-
-
-Cobalt
-382.4 kJ/mol   
-
-
-Copper
-304.6 kJ/mol   
-
-
-Dysprosium
-293 kJ/mol     
-
-
-Erbium
-292.9 kJ/mol   
-
-
-Europium
-175.7 kJ/mol   
-
-
-Fluorine
-  6.548 kJ/mol 
-
-
-Gadolinium
-311.7 kJ/mol   
-
-
-Gallium
-256.1 kJ/mol   
-
-
-Germanium
-334.3 kJ/mol   
-
-
-Gold
-324.4 kJ/mol   
-
-
-Hafnium
-661.1 kJ/mol   
-
-
-Helium
-  0.082 kJ/mol 
-
-
-Holmium
-251 kJ/mol     
-
-
-Hydrogen
-  0.46 kJ/mol  
-
-
-Indium
-226.4 kJ/mol   
-
-
-Iodine
- 41.67 kJ/mol  
-
-
-Iridium
-563.6 kJ/mol   
-
-
-Iron
-351 kJ/mol     
-
-
-Krypton
-  9.05 kJ/mol  
-
-
-Lanthanum
-399.6 kJ/mol   
-
-
-Lead
-179.4 kJ/mol   
-
-
-Lithium
-134.7 kJ/mol   
-
-
-Lutetium
-428 kJ/mol     
-
-
-Magnesium
-128.7 kJ/mol   
-
-
-Manganese
-219.7 kJ/mol   
-
-
-Mercury
- 59.15 kJ/mol  
-
-
-Molybdenum
-594.1 kJ/mol   
-
-
-Neodymium
-283.7 kJ/mol   
-
-
-Neon
-  1.1736 kJ/mol
-
-
-Neptunium
-336.6 kJ/mol   
-
-
-Nickel
-371.8 kJ/mol   
-
-
-Niobium
-696.6 kJ/mol   
-
-
-Nitrogen
-  5.577 kJ/mol 
-
-
-Osmium
-627.6 kJ/mol   
-
-
-Oxygen
-  6.82 kJ/mol  
-
-
-Palladium
-393.3 kJ/mol   
-
-
-Phosphorus
- 51.9 kJ/mol   
-
-
-Platinum
-510.5 kJ/mol   
-
-
-Plutonium
-343.5 kJ/mol   
-
-
-Polonium
-100.8 kJ/mol   
-
-
-Potassium
- 77.53 kJ/mol  
-
-
-Praseodymium
-332.6 kJ/mol   
-
-
-Protactinium
-481 kJ/mol     
-
-
-Radium
-136.8 kJ/mol   
-
-
-Radon
- 19.1 kJ/mol   
-
-
-Rhenium
-707.1 kJ/mol   
-
-
-Rhodium
-495.4 kJ/mol   
-
-
-Rubidium
- 69.2 kJ/mol   
-
-
-Ruthenium
-567.8 kJ/mol   
-
-
-Samarium
-191.6 kJ/mol   
-
-
-Scandium
-304.8 kJ/mol   
-
-
-Selenium
- 26.32 kJ/mol  
-
-
-Silicon
-383.3 kJ/mol   
-
-
-Silver
-255.1 kJ/mol   
-
-
-Sodium
- 89.04 kJ/mol  
-
-
-Strontium
-138.91 kJ/mol  
-
-
-Sulfur
-  9.62 kJ/mol  
-
-
-Tantalum
-753.1 kJ/mol   
-
-
-Technetium
-585.22 kJ/mol  
-
-
-Tellurium
- 50.63 kJ/mol  
-
-
-Terbium
-391 kJ/mol     
-
-
-Thallium
-162.1 kJ/mol   
-
-
-Thorium
-543.9 kJ/mol   
-
-
-Thulium
-247 kJ/mol     
-
-
-Tin
-290.4 kJ/mol   
-
-
-Titanium
-428.9 kJ/mol   
-
-
-Tungsten
-799.1 kJ/mol   
-
-
-Uranium
-422.6 kJ/mol   
-
-
-Vanadium
-458.6 kJ/mol   
-
-
-Xenon
- 12.65 kJ/mol  
-
-
-Ytterbium
-159 kJ/mol     
-
-
-Yttrium
-393.3 kJ/mol   
-
-
-Zinc
-115.3 kJ/mol   
-
-
-Zirconium
-581.6 kJ/mol   
-"""
-
-STRING_3_BULK_MODULUS = """
-Actinium
- 25 GPa  
-
-
-estimated
-
-Aluminum
- 72.2 GPa
-
-
-Antimony
- 38.3 GPa
-
-
-Argon
-77 K
-  1.3 GPa
-
-
-Arsenic
- 39.4 GPa
-
-
-Barium
- 10.3 GPa
-
-
-Beryllium
-100.3 GPa
-
-
-Bismuth
- 31.5 GPa
-
-
-Boron
-178 GPa  
-
-
-Cadmium
- 46.7 GPa
-
-
-Calcium
- 15.2 GPa
-
-
-Carbon
-diamond
-545 GPa  
-
-
-Cerium
-γ-cerium
- 23.9 GPa
-
-
-Cesium
-  2.0 GPa
-
-
-Chromium
-190.1 GPa
-
-
-Cobalt
-191.4 GPa
-
-
-Copper
-137 GPa  
-
-
-Dysprosium
- 38.4 GPa
-
-
-Erbium
- 41.1 GPa
-
-
-Europium
- 14.7 GPa
-
-
-Francium
-  2.0 GPa
-
-
-estimated
-
-Gadolinium
- 38.3 GPa
-
-
-Gallium
-273 K
- 56.9 GPa
-
-
-Germanium
- 77.2 GPa
-
-
-Gold
-173.2 GPa
-
-
-Hafnium
-109 GPa  
-
-
-Holmium
- 39.7 GPa
-
-
-Hydrogen
-4 K
-  0.2 GPa
-
-
-Indium
- 41.1 GPa
-
-
-Iridium
-355 GPa  
-
-
-Iron
-168.3 GPa
-
-
-Krypton
-77 K
-  1.8 GPa
-
-
-Lanthanum
- 24.3 GPa
-
-
-Lead
- 43.0 GPa
-
-
-Lithium
- 11.6 GPa
-
-
-Lutetium
- 41.1 GPa
-
-
-Magnesium
- 35.4 GPa
-
-
-Manganese
- 59.6 GPa
-
-
-Mercury
-1 K
- 38.2 GPa
-
-
-Molybdenum
-272.5 GPa
-
-
-Neodymium
- 32.7 GPa
-
-
-Neon
-4 K
-  1.0 GPa
-
-
-Neptunium
- 68 GPa  
-
-
-estimated
-
-Nickel
-186 GPa  
-
-
-Niobium
-170.2 GPa
-
-
-Nitrogen
-81 K
-  1.2 GPa
-
-
-Osmium
-418 GPa  
-
-
-estimated
-
-Palladium
-180.8 GPa
-
-
-Phosphorus
-black phosphorus
- 30.4 GPa
-
-
-Platinum
-278.3 GPa
-
-
-Plutonium
- 54 GPa  
-
-
-Polonium
- 26 GPa  
-
-
-estimated
-
-Potassium
-  3.2 GPa
-
-
-Praseodymium
- 30.6 GPa
-
-
-Promethium
- 35 GPa  
-
-
-estimated
-
-Protactinium
- 76 GPa  
-
-
-estimated
-
-Radium
- 13.2 GPa
-
-
-estimated
-
-Rhenium
-372 GPa  
-
-
-Rhodium
-270.4 GPa
-
-
-Rubidium
-  3.1 GPa
-
-
-Ruthenium
-320.8 GPa
-
-
-Samarium
- 29.4 GPa
-
-
-Scandium
- 43.5 GPa
-
-
-Selenium
-  9.1 GPa
-
-
-Silicon
- 98.8 GPa
-
-
-Silver
-100.7 GPa
-
-
-Sodium
-  6.8 GPa
-
-
-Strontium
- 11.6 GPa
-
-
-Sulfur
-α-orthorhombic sulfur
- 17.8 GPa
-
-
-Tantalum
-200 GPa  
-
-
-Technetium
-297 GPa  
-
-
-estimated
-
-Tellurium
- 23.0 GPa
-
-
-Terbium
- 39.9 GPa
-
-
-Thallium
- 35.9 GPa
-
-
-Thorium
- 54.3 GPa
-
-
-Thulium
- 39.7 GPa
-
-
-Tin
-gray tin
-111 GPa  
-
-
-Titanium
-105.1 GPa
-
-
-Tungsten
-323.2 GPa
-
-
-Uranium
- 98.7 GPa
-
-
-Vanadium
-161.9 GPa
-
-
-Ytterbium
- 13.3 GPa
-
-
-Yttrium
- 36.6 GPa
-
-
-Zinc
- 59.8 GPa
-
-
-Zirconium
- 83.3 GPa
+JSON_DATA = """
+{
+  "Elementos": {
+    "Hydrogen": {
+      "Temperatura_Critica": "33.19 K_141",
+      "Pressao_Critica": "1.315 MPa_141"
+    },
+    "Helium": {
+      "Temperatura_Critica": "5.19 K_141",
+      "Pressao_Critica": "2.29 bar_141"
+    },
+    "Lithium": {
+      "Temperatura_Critica": "3223 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Beryllium": {
+      "Temperatura_Critica": "13000 K_141*",
+      "Pressao_Critica": "0.7 GPa_141*"
+    },
+    "Boron": {
+      "Temperatura_Critica": "3284 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Carbon": {
+      "Temperatura_Critica": "6743 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Nitrogen": {
+      "Temperatura_Critica": "126.192 ± 0.010 K_141",
+      "Pressao_Critica": "3.3958 ± 0.0017 MPa_141"
+    },
+    "Oxygen": {
+      "Temperatura_Critica": "154.581 K_141",
+      "Pressao_Critica": "5.043 MPa_141"
+    },
+    "Fluorine": {
+      "Temperatura_Critica": "144.32 ± 0.05 K_141",
+      "Pressao_Critica": "5.215 MPa_141"
+    },
+    "Neon": {
+      "Temperatura_Critica": "44.4 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Sodium": {
+      "Temperatura_Critica": "2573 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Magnesium": {
+      "Temperatura_Critica": "2535 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Aluminium": {
+      "Temperatura_Critica": "8550 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Silicon": {
+      "Temperatura_Critica": "5159 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Phosphorus": {
+      "Temperatura_Critica": "994.0 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Sulfur": {
+      "Temperatura_Critica": "1314 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Chlorine": {
+      "Temperatura_Critica": "416.956 K_141",
+      "Pressao_Critica": "7.9914 MPa_141"
+    },
+    "Argon": {
+      "Temperatura_Critica": "150.687 ± 0.015 K_141",
+      "Pressao_Critica": "4.863 ± 0.003 MPa_141"
+    },
+    "Potassium": {
+      "Temperatura_Critica": "2223 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Calcium": {
+      "Temperatura_Critica": "2880 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Scandium": {
+      "Temperatura_Critica": "5400 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Titanium": {
+      "Temperatura_Critica": "15500 K_141*",
+      "Pressao_Critica": "0.7 GPa_141*"
+    },
+    "Vanadium": {
+      "Temperatura_Critica": "5930 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Chromium": {
+      "Temperatura_Critica": "4700 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Manganese": {
+      "Temperatura_Critica": "4327 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Iron": {
+      "Temperatura_Critica": "9250 K_141",
+      "Pressao_Critica": "8750 bar_141"
+    },
+    "Cobalt": {
+      "Temperatura_Critica": "5400 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Nickel": {
+      "Temperatura_Critica": "6000 K_141*",
+      "Pressao_Critica": "0.29 GPa_141*"
+    },
+    "Copper": {
+      "Temperatura_Critica": "5421 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Zinc": {
+      "Temperatura_Critica": "3380 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Gallium": {
+      "Temperatura_Critica": "7620 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Germanium": {
+      "Temperatura_Critica": "8400 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Arsenic": {
+      "Temperatura_Critica": "2100 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Selenium": {
+      "Temperatura_Critica": "1757 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Bromine": {
+      "Temperatura_Critica": "584 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Krypton": {
+      "Temperatura_Critica": "209.4 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Rubidium": {
+      "Temperatura_Critica": "2093 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Strontium": {
+      "Temperatura_Critica": "3059 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Yttrium": {
+      "Temperatura_Critica": "8950 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Zirconium": {
+      "Temperatura_Critica": "8650 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Niobium": {
+      "Temperatura_Critica": "8700 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Molybdenum": {
+      "Temperatura_Critica": "9450 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Technetium": {
+      "Temperatura_Critica": "11500 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Ruthenium": {
+      "Temperatura_Critica": "9600 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Rhodium": {
+      "Temperatura_Critica": "7000 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Palladium": {
+      "Temperatura_Critica": "7100 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Silver": {
+      "Temperatura_Critica": "7480 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Cadmium": {
+      "Temperatura_Critica": "2960 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Indium": {
+      "Temperatura_Critica": "6730 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Tin": {
+      "Temperatura_Critica": "5809 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Antimony": {
+      "Temperatura_Critica": "5070 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Tellurium": {
+      "Temperatura_Critica": "2329 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Iodine": {
+      "Temperatura_Critica": "819 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Xenon": {
+      "Temperatura_Critica": "289.765 ± 0.025 K_141*",
+      "Pressao_Critica": "5.8405 ± 0.0005 MPa_141*"
+    },
+    "Caesium": {
+      "Temperatura_Critica": "1938 ± 10 K_141",
+      "Pressao_Critica": "9.4 ± 0.2 MPa_141"
+    },
+    "Barium": {
+      "Temperatura_Critica": "3270 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Lanthanum": {
+      "Temperatura_Critica": "10500 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Cerium": {
+      "Temperatura_Critica": "10400 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Praseodymium": {
+      "Temperatura_Critica": "8900 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Neodymium": {
+      "Temperatura_Critica": "7900 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Promethium": {
+      "Temperatura_Critica": "6800 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Samarium": {
+      "Temperatura_Critica": "5440 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Europium": {
+      "Temperatura_Critica": "4600 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Gadolinium": {
+      "Temperatura_Critica": "8670 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Terbium": {
+      "Temperatura_Critica": "8470 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Dysprosium": {
+      "Temperatura_Critica": "7640 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Holmium": {
+      "Temperatura_Critica": "7570 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Erbium": {
+      "Temperatura_Critica": "7250 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Thulium": {
+      "Temperatura_Critica": "6430 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Ytterbium": {
+      "Temperatura_Critica": "4420 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Lutetium": {
+      "Temperatura_Critica": "3540 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Hafnium": {
+      "Temperatura_Critica": "10400 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Tantalum": {
+      "Temperatura_Critica": "10250 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Tungsten": {
+      "Temperatura_Critica": "22500 K_141*",
+      "Pressao_Critica": "1.6 GPa_141*"
+    },
+    "Rhenium": {
+      "Temperatura_Critica": "20500 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Osmium": {
+      "Temperatura_Critica": "12700 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Iridium": {
+      "Temperatura_Critica": "7800 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Platinum": {
+      "Temperatura_Critica": "8450 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Gold": {
+      "Temperatura_Critica": "6200 K_141*",
+      "Pressao_Critica": "0.45 GPa_141*"
+    },
+    "Mercury": {
+      "Temperatura_Critica": "1750 K_319",
+      "Pressao_Critica": "172.00 MPa_319"
+    },
+    "Thallium": {
+      "Temperatura_Critica": "2329 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Lead": {
+      "Temperatura_Critica": "5400 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Bismuth": {
+      "Temperatura_Critica": "4620 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Polonium": {
+      "Temperatura_Critica": "2880 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Astatine": {
+      "Temperatura_Critica": "1060 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Radon": {
+      "Temperatura_Critica": "377.0 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Francium": {
+      "Temperatura_Critica": "2030 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Radium": {
+      "Temperatura_Critica": "3510 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Actinium": {
+      "Temperatura_Critica": "16270 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Thorium": {
+      "Temperatura_Critica": "14550 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Protactinium": {
+      "Temperatura_Critica": "14000 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Uranium": {
+      "Temperatura_Critica": "12500 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Neptunium": {
+      "Temperatura_Critica": "12000 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Plutonium": {
+      "Temperatura_Critica": "11140 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Americium": {
+      "Temperatura_Critica": "10800 K_141",
+      "Pressao_Critica": "N/A"
+    },
+    "Curium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Berkelium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Californium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Einsteinium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Fermium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Mendelevium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Nobelium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Lawrencium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Rutherfordium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Dubnium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Seaborgium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Bohrium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Hassium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Meitnerium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Darmstadtium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Roentgenium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Copernicium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Nihonium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Flerovium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Moscovium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Livermorium": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Tennessine": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    },
+    "Oganesson": {
+      "Temperatura_Critica": "N/A",
+      "Pressao_Critica": "N/A"
+    }
+  }
+}
 """
 
 # ==============================================================================
@@ -1107,97 +490,75 @@ Zirconium
 # ==============================================================================
 
 ELEMENT_MAP = {
-    'Actinium': 'Ac', 'Aluminum': 'Al', 'Americium': 'Am', 'Antimony': 'Sb', 'Argon': 'Ar',
-    'Arsenic': 'As', 'Astatine': 'At', 'Barium': 'Ba', 'Beryllium': 'Be', 'Bismuth': 'Bi',
-    'Boron': 'B', 'Bromine': 'Br', 'Cadmium': 'Cd', 'Calcium': 'Ca', 'Carbon': 'C',
-    'Cerium': 'Ce', 'Cesium': 'Cs', 'Chlorine': 'Cl', 'Chromium': 'Cr', 'Cobalt': 'Co',
-    'Copper': 'Cu', 'Dysprosium': 'Dy', 'Erbium': 'Er', 'Europium': 'Eu', 'Fluorine': 'F',
-    'Francium': 'Fr', 'Gadolinium': 'Gd', 'Gallium': 'Ga', 'Germanium': 'Ge', 'Gold': 'Au',
-    'Hafnium': 'Hf', 'Holmium': 'Ho', 'Hydrogen': 'H', 'Indium': 'In', 'Iodine': 'I',
-    'Iridium': 'Ir', 'Iron': 'Fe', 'Krypton': 'Kr', 'Lanthanum': 'La', 'Lead': 'Pb',
-    'Lithium': 'Li', 'Lutetium': 'Lu', 'Magnesium': 'Mg', 'Manganese': 'Mn', 'Mercury': 'Hg',
-    'Molybdenum': 'Mo', 'Neodymium': 'Nd', 'Neon': 'Ne', 'Neptunium': 'Np', 'Nickel': 'Ni',
-    'Niobium': 'Nb', 'Nitrogen': 'N', 'Osmium': 'Os', 'Oxygen': 'O', 'Palladium': 'Pd',
-    'Phosphorus': 'P', 'Platinum': 'Pt', 'Plutonium': 'Pu', 'Polonium': 'Po', 'Potassium': 'K',
-    'Praseodymium': 'Pr', 'Promethium': 'Pm', 'Protactinium': 'Pa', 'Radium': 'Ra',
-    'Radon': 'Rn', 'Rhenium': 'Re', 'Rhodium': 'Rh', 'Rubidium': 'Rb', 'Ruthenium': 'Ru',
-    'Samarium': 'Sm', 'Scandium': 'Sc', 'Selenium': 'Se', 'Silicon': 'Si', 'Silver': 'Ag',
-    'Sodium': 'Na', 'Strontium': 'Sr', 'Sulfur': 'S', 'Tantalum': 'Ta', 'Technetium': 'Tc',
-    'Tellurium': 'Te', 'Terbium': 'Tb', 'Thallium': 'Tl', 'Thorium': 'Th', 'Thulium': 'Tm',
-    'Tin': 'Sn', 'Titanium': 'Ti', 'Tungsten': 'W', 'Uranium': 'U', 'Vanadium': 'V',
-    'Xenon': 'Xe', 'Ytterbium': 'Yb', 'Yttrium': 'Y', 'Zinc': 'Zn', 'Zirconium': 'Zr'
+    'Hydrogen': 'H', 'Helium': 'He', 'Lithium': 'Li', 'Beryllium': 'Be', 'Boron': 'B',
+    'Carbon': 'C', 'Nitrogen': 'N', 'Oxygen': 'O', 'Fluorine': 'F', 'Neon': 'Ne',
+    'Sodium': 'Na', 'Magnesium': 'Mg', 'Aluminium': 'Al', 'Aluminum': 'Al', 'Silicon': 'Si',
+    'Phosphorus': 'P', 'Sulfur': 'S', 'Chlorine': 'Cl', 'Argon': 'Ar', 'Potassium': 'K',
+    'Calcium': 'Ca', 'Scandium': 'Sc', 'Titanium': 'Ti', 'Vanadium': 'V', 'Chromium': 'Cr',
+    'Manganese': 'Mn', 'Iron': 'Fe', 'Cobalt': 'Co', 'Nickel': 'Ni', 'Copper': 'Cu',
+    'Zinc': 'Zn', 'Gallium': 'Ga', 'Germanium': 'Ge', 'Arsenic': 'As', 'Selenium': 'Se',
+    'Bromine': 'Br', 'Krypton': 'Kr', 'Rubidium': 'Rb', 'Strontium': 'Sr', 'Yttrium': 'Y',
+    'Zirconium': 'Zr', 'Niobium': 'Nb', 'Molybdenum': 'Mo', 'Technetium': 'Tc', 'Ruthenium': 'Ru',
+    'Rhodium': 'Rh', 'Palladium': 'Pd', 'Silver': 'Ag', 'Cadmium': 'Cd', 'Indium': 'In',
+    'Tin': 'Sn', 'Antimony': 'Sb', 'Tellurium': 'Te', 'Iodine': 'I', 'Xenon': 'Xe',
+    'Caesium': 'Cs', 'Cesium': 'Cs', 'Barium': 'Ba', 'Lanthanum': 'La', 'Cerium': 'Ce',
+    'Praseodymium': 'Pr', 'Neodymium': 'Nd', 'Promethium': 'Pm', 'Samarium': 'Sm', 'Europium': 'Eu',
+    'Gadolinium': 'Gd', 'Terbium': 'Tb', 'Dysprosium': 'Dy', 'Holmium': 'Ho', 'Erbium': 'Er',
+    'Thulium': 'Tm', 'Ytterbium': 'Yb', 'Lutetium': 'Lu', 'Hafnium': 'Hf', 'Tantalum': 'Ta',
+    'Tungsten': 'W', 'Rhenium': 'Re', 'Osmium': 'Os', 'Iridium': 'Ir', 'Platinum': 'Pt',
+    'Gold': 'Au', 'Mercury': 'Hg', 'Thallium': 'Tl', 'Lead': 'Pb', 'Bismuth': 'Bi',
+    'Polonium': 'Po', 'Astatine': 'At', 'Radon': 'Rn', 'Francium': 'Fr', 'Radium': 'Ra',
+    'Actinium': 'Ac', 'Thorium': 'Th', 'Protactinium': 'Pa', 'Uranium': 'U', 'Neptunium': 'Np',
+    'Plutonium': 'Pu', 'Americium': 'Am', 'Curium': 'Cm', 'Berkelium': 'Bk', 'Californium': 'Cf',
+    'Einsteinium': 'Es', 'Fermium': 'Fm', 'Mendelevium': 'Md', 'Nobelium': 'No', 'Lawrencium': 'Lr',
+    'Rutherfordium': 'Rf', 'Dubnium': 'Db', 'Seaborgium': 'Sg', 'Bohrium': 'Bh', 'Hassium': 'Hs',
+    'Meitnerium': 'Mt', 'Darmstadtium': 'Ds', 'Roentgenium': 'Rg', 'Copernicium': 'Cn', 'Nihonium': 'Nh',
+    'Flerovium': 'Fl', 'Moscovium': 'Mc', 'Livermorium': 'Lv', 'Tennessine': 'Ts', 'Oganesson': 'Og'
 }
 
-def extract_number(text):
-    match = re.search(r"[\d\.]+", text)
-    return match.group(0) if match else "N/A"
+def parse_critical_value(raw_val, is_pressure=False):
+    if raw_val == "N/A" or not raw_val.strip():
+        return "N/A"
 
-def parse_regular_string(string_data, suffix, keyword):
-    """Parseia as strings 1 e 2 (sem variação)."""
-    data = {}
-    current_elem = None
-    for line in string_data.strip().split('\n'):
-        line = line.strip()
-        if not line: continue
-        
-        if line in ELEMENT_MAP:
-            current_elem = ELEMENT_MAP[line]
-        elif current_elem and keyword in line.lower():
-            num = extract_number(line)
-            data[current_elem] = f"{num}{suffix}"
-            current_elem = None
-    return data
-
-def parse_string_with_variations(string_data, suffix):
-    """Parseia a string 3 capturando variações/condições e a flag 'estimated'."""
-    data = {}
-    lines = [line.strip() for line in string_data.strip().split('\n') if line.strip()]
+    has_ast = '*' in raw_val
     
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        is_estimated = False
+    # Mapeamento do sufixo conforme a regra
+    suffix = ""
+    if "_141" in raw_val:
+        suffix = "_19"
+    elif "_319" in raw_val:
+        suffix = "_1"
         
-        if line.lower() == "estimated":
-            is_estimated = True
-            i += 1
-            if i >= len(lines): break
-            line = lines[i]
-            
-        if line in ELEMENT_MAP:
-            current_elem = ELEMENT_MAP[line]
-            i += 1
-            if i >= len(lines): break
-            
-            variation = None
-            next_line = lines[i]
-            
-            # Se a linha seguinte não for o valor em GPa, significa que é a variação (ex: "diamond", "77 K")
-            if "GPa" not in next_line:
-                variation = next_line
-                i += 1
-                if i >= len(lines): break
-                next_line = lines[i]
-            
-            # Chegou no valor
-            if "GPa" in next_line:
-                val_str = extract_number(next_line)
-                ast = "*" if is_estimated else ""
-                
-                data[current_elem] = {
-                    "value": f"{val_str}{ast}{suffix}",
-                    "variation": variation
-                }
-        i += 1
+    # Extrai o primeiro número (para antes de ± ou espaço)
+    num_match = re.search(r"^([\d\.]+)", raw_val.strip())
+    if not num_match:
+        return "N/A"
+    
+    num = num_match.group(1)
+    ast_str = "*" if has_ast else ""
+    
+    # Para a temperatura (tCriticalK), retornamos só a string simples formatada
+    if not is_pressure:
+        return f"{num}{ast_str}{suffix}"
+    else:
+        # Para a pressão (pCritical), capturamos a unidade (letras coladas antes do '_')
+        unit_match = re.search(r"([A-Za-z]+)_", raw_val)
+        unit = unit_match.group(1) if unit_match else ""
         
-    return data
+        return {
+            "value": f"{num}{ast_str}{suffix}",
+            "unit": unit
+        }
 
 def main():
-    data_fusion = parse_regular_string(STRING_1_FUSION, "_13", "kj/mol")
-    data_vaporization = parse_regular_string(STRING_2_VAPORIZATION, "_14", "kj/mol")
-    data_bulk = parse_string_with_variations(STRING_3_BULK_MODULUS, "_15")
+    try:
+        data = json.loads(JSON_DATA)
+        elementos = data.get("Elementos", {})
+    except json.JSONDecodeError:
+        print("Erro: O JSON fornecido é inválido.")
+        return
 
-    ts_file_path = "D:\\NOAH\\Área de Trabalho\\Tudo\\Noah\\Renda Extra\\element viewer\\element-viewer-mcp\\Element-Viewer\\scientific_data.ts"
+    ts_file_path = r"D:\NOAH\Área de Trabalho\Tudo\Noah\Renda Extra\element viewer\element-viewer-mcp\Element-Viewer\scientific_data.ts"
     
     if not os.path.exists(ts_file_path):
         print(f"Erro: O arquivo '{ts_file_path}' não foi encontrado.")
@@ -1206,29 +567,32 @@ def main():
     with open(ts_file_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    symbols_in_file = set(re.findall(r'\n\s+"([A-Z][a-z]?)":\s*\{', content))
+    for elem_name, props in elementos.items():
+        sym = ELEMENT_MAP.get(elem_name)
+        if not sym:
+            continue
 
-    for sym in symbols_in_file:
-        v_fusion = data_fusion.get(sym, "N/A")
-        v_vaporization = data_vaporization.get(sym, "N/A")
-        v_bulk_obj = data_bulk.get(sym, "N/A")
+        raw_tcrit = props.get("Temperatura_Critica", "N/A")
+        raw_pcrit = props.get("Pressao_Critica", "N/A")
 
-        # Formata o bulkModulusGPA para ser objeto ou string dependendo da variação
-        if isinstance(v_bulk_obj, dict):
-            if v_bulk_obj["variation"]:
-                bulk_json = (
-                    f"{{\n"
-                    f"      \"value\": \"{v_bulk_obj['value']}\",\n"
-                    f"      \"variation\": \"{v_bulk_obj['variation']}\"\n"
-                    f"    }}"
-                )
-            else:
-                bulk_json = f"\"{v_bulk_obj['value']}\""
+        v_tcrit = parse_critical_value(raw_tcrit, is_pressure=False)
+        v_pcrit = parse_critical_value(raw_pcrit, is_pressure=True)
+
+        # Trata o formato do pCritical
+        if isinstance(v_pcrit, dict):
+            pcrit_json = (
+                f"{{\n"
+                f"      \"value\": \"{v_pcrit['value']}\",\n"
+                f"      \"unit\": \"{v_pcrit['unit']}\"\n"
+                f"    }}"
+            )
         else:
-            bulk_json = f"\"{v_bulk_obj}\""
+            pcrit_json = f"\"{v_pcrit}\""
 
+        # Encontra o bloco do elemento
         start_match = re.search(rf'\n\s+"{sym}":\s*\{{', content)
-        if not start_match: continue
+        if not start_match: 
+            continue
 
         start_idx = start_match.end() - 1
         brace_count = 0
@@ -1250,12 +614,11 @@ def main():
 
             prefix_comma = "," if content[last_char_idx] not in [',', '{'] else ""
 
-            # Injeção das chaves mantendo a indentação do seu JSON
+            # Injeção das novas propriedades mantendo a indentação
             new_props = (
                 f"{prefix_comma}\n"
-                f"    \"enthalpyFusionKjMol\": \"{v_fusion}\",\n"
-                f"    \"enthalpyVaporizationKjMol\": \"{v_vaporization}\",\n"
-                f"    \"bulkModulusGPA\": {bulk_json}\n"
+                f"    \"tCriticalK\": \"{v_tcrit}\",\n"
+                f"    \"pCritical\": {pcrit_json}\n"
                 f"  "
             )
 
@@ -1264,7 +627,7 @@ def main():
     with open(ts_file_path, 'w', encoding='utf-8') as f:
         f.write(content)
 
-    print("✅ scientific_data.ts foi atualizado com sucesso!")
+    print("✅ scientific_data.ts atualizado: dados de Ponto Crítico (tCriticalK e pCritical) injetados com sucesso!")
 
 if __name__ == "__main__":
     main()

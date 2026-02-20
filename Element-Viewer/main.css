@@ -3,12 +3,23 @@
 @source "../node_modules/@openai/apps-sdk-ui";
 @source ".";
 
+:where([data-radix-popper-content-wrapper]) {
+  z-index: 2147483646 !important;
+}
+
 :where(.tooltip-solid, [role='tooltip'], [data-radix-tooltip-content], [data-slot='tooltip-content']) {
   opacity: 1 !important;
-  background-color: var(--color-surface-elevated) !important;
-  background: var(--color-surface-elevated) !important;
+  background-color: var(--color-surface-elevated, #ffffff) !important;
+  background-image: none !important;
+  background: var(--color-surface-elevated, #ffffff) !important;
+  filter: none !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
+  z-index: 2147483647 !important;
+}
+
+:where(.tooltip-solid *, [role='tooltip'] *, [data-radix-tooltip-content] *, [data-slot='tooltip-content'] *) {
+  opacity: 1 !important;
 }
 
 .line-clamp-2-soft {

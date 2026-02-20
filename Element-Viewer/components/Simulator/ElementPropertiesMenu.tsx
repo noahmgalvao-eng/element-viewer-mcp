@@ -1,8 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
-import { Checkbox } from '@openai/apps-sdk-ui/components/Checkbox';
-import { CodeBlock } from '@openai/apps-sdk-ui/components/CodeBlock';
 import {
   ArrowUp,
   CloseBold,
@@ -11,7 +9,6 @@ import {
 } from '@openai/apps-sdk-ui/components/Icon';
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import { TextLink } from '@openai/apps-sdk-ui/components/TextLink';
-import { Textarea } from '@openai/apps-sdk-ui/components/Textarea';
 import { CopyTooltip, Tooltip } from '@openai/apps-sdk-ui/components/Tooltip';
 import { ChemicalElement, PhysicsState } from '../../types';
 import { SOURCE_DATA } from '../../data/periodic_table_source';
@@ -54,12 +51,16 @@ const FIXED_REFERENCES: ReferenceItem[] = [
   { id: 7, text: 'Wikipedia contributors. (2026). Boiling points of the elements (data page).', href: 'https://en.wikipedia.org/wiki/Boiling_points_of_the_elements_(data_page)' },
   { id: 8, text: 'Wikipedia contributors. (2026). Melting points of the elements (data page).', href: 'https://en.wikipedia.org/wiki/Melting_points_of_the_elements_(data_page)' },
   { id: 9, text: 'Wikipedia contributors. (2024). Template:Infobox oganesson.', href: 'https://en.wikipedia.org/wiki/Template:Infobox_oganesson' },
-  { id: 10, text: 'Thermodynamics of the Elements: Consolidated Master Table of All 118 Chemical Elements. (2026).' },
+  { id: 10, text: 'Wikipedia contributors. (2026, 20 de fevereiro). Boiling points of the elements (data page). Wikipedia.', href: 'https://en.wikipedia.org/wiki/Boiling_points_of_the_elements_(data_page)' },
   { id: 11, text: 'Helmenstine, A. (2023). Triple Point Definition - Triple Point of Water.', href: 'https://sciencenotes.org/triple-point-of-water/' },
-  { id: 12, text: 'Thermodynamics of the Elements: Critical temperature and critical pressure master table. (2026).' },
+  { id: 12, text: 'Wikipedia contributors. (2026, 20 de fevereiro). Triple point. Wikipedia.', href: 'https://en.wikipedia.org/wiki/Triple_point' },
   { id: 13, text: 'KnowledgeDoor. (n.d.). Enthalpy of Fusion. Elements Handbook. Retrieved February 19, 2026.', href: 'https://www.knowledgedoor.com/2/elements_handbook/enthalpy_of_fusion.html' },
   { id: 14, text: 'KnowledgeDoor. (n.d.). Enthalpy of Vaporization. Elements Handbook. Retrieved February 19, 2026.', href: 'https://www.knowledgedoor.com/2/elements_handbook/enthalpy_of_vaporization.html' },
   { id: 15, text: 'KnowledgeDoor. (n.d.). Isothermal Bulk Modulus. Elements Handbook. Retrieved February 19, 2026.', href: 'https://www.knowledgedoor.com/2/elements_handbook/isothermal_bulk_modulus.html' },
+  { id: 16, text: 'Wikipedia contributors. (2026, 20 de fevereiro). Copernicium. Wikipedia.', href: 'https://en.wikipedia.org/wiki/Copernicium' },
+  { id: 17, text: 'Cannon, J. F. (1974). Behavior of the elements at high pressures. Journal of Physical and Chemical Reference Data, 3(3), 781-824.', href: 'https://srd.nist.gov/JPCRD/jpcrd55.pdf' },
+  { id: 18, text: 'KnowledgeDoor. (n.d.). Triple Point. Elements Handbook. Retrieved February 20, 2026.', href: 'https://www.knowledgedoor.com/2/elements_handbook/triple_point.html' },
+  { id: 19, text: 'KnowledgeDoor. (n.d.). Critical Point. Elements Handbook. Retrieved February 20, 2026.', href: 'https://www.knowledgedoor.com/2/elements_handbook/critical_point.html' },
 ];
 
 const SUPERSCRIPT_MAP: Record<string, string> = {
@@ -163,9 +164,6 @@ const PropertyCard: React.FC<{ item: PropertyItem }> = ({ item }) => {
 
 const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperature, onSetPressure }) => {
   const { element, physicsState, x, y } = data;
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [useScientific, setUseScientific] = useState(false);
-  const [notes, setNotes] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   const sourceInfo = SOURCE_DATA.elements.find((entry) => entry.symbol === element.symbol) as
@@ -177,9 +175,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     : 'https://en.wikipedia.org/wiki/Periodic_table';
 
   const fmt = (value: number, unit = '') =>
-    useScientific
-      ? `${value.toExponential(4)}${unit}`
-      : `${value.toLocaleString(undefined, { maximumFractionDigits: 3 })}${unit}`;
+    `${value.toLocaleString(undefined, { maximumFractionDigits: 3 })}${unit}`;
 
   const triplePoint = element.properties.triplePoint;
   const criticalPoint = element.properties.criticalPoint;
@@ -295,25 +291,6 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     [element.name, wikiUrl],
   );
 
-  const quickFactsCode = useMemo(
-    () =>
-      JSON.stringify(
-        {
-          symbol: element.symbol,
-          name: element.name,
-          phase: physicsState.state,
-          temperatureK: physicsState.temperature,
-          pressurePa: physicsState.pressure,
-          meltingPointCurrentK: physicsState.meltingPointCurrent,
-          boilingPointCurrentK: physicsState.boilingPointCurrent,
-          sublimationPointCurrentK: physicsState.sublimationPointCurrent,
-        },
-        null,
-        2,
-      ),
-    [element.name, element.symbol, physicsState],
-  );
-
   const summaryText = element.summary || 'No summary available.';
   const summaryPreview = summaryText.length > 220 ? `${summaryText.slice(0, 220)}...` : summaryText;
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1366;
@@ -354,7 +331,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2">
             <Tooltip content="Set global temperature to this pressure-adjusted melting point" contentClassName={TOOLTIP_CLASS}>
               <span>
                 <Button color="warning" variant="soft" block onClick={() => onSetTemperature(physicsState.meltingPointCurrent)}>
@@ -467,6 +444,30 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
               </Popover.Content>
             </Popover>
 
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-default">Atomic & Chemical</p>
+              <Badge color="secondary" variant="outline">2 colunas</Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {atomicChemicalProperties.map((item) => (
+                <PropertyCard key={item.label} item={item} />
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">
+            <p className="text-sm font-semibold text-default">Physics</p>
+            <div className="grid grid-cols-2 gap-2">
+              {physicsProperties.map((item) => (
+                <PropertyCard key={item.label} item={item} />
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2 rounded-2xl border border-subtle bg-surface p-3">
             <Popover>
               <Popover.Trigger>
                 <Button color="secondary" variant="soft" block>
@@ -504,56 +505,6 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                 </div>
               </Popover.Content>
             </Popover>
-          </div>
-
-          <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-default">Atomic & Chemical</p>
-              <Badge color="secondary" variant="outline">2 colunas</Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {atomicChemicalProperties.map((item) => (
-                <PropertyCard key={item.label} item={item} />
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">
-            <p className="text-sm font-semibold text-default">Physics</p>
-            <div className="grid grid-cols-2 gap-2">
-              {physicsProperties.map((item) => (
-                <PropertyCard key={item.label} item={item} />
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2 rounded-2xl border border-subtle bg-surface p-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-default">Session notes</p>
-              <Badge color="secondary" variant="outline">Optional</Badge>
-            </div>
-            <Textarea
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              placeholder="Write temporary notes for this element..."
-              rows={3}
-              autoResize
-              variant="soft"
-            />
-          </div>
-
-          <div className="space-y-2 rounded-2xl border border-subtle bg-surface p-3">
-            <Checkbox
-              checked={showAdvanced}
-              onCheckedChange={(next) => setShowAdvanced(next)}
-              label="Show advanced data block"
-            />
-            <Checkbox
-              checked={useScientific}
-              onCheckedChange={(next) => setUseScientific(next)}
-              label="Use scientific notation for values"
-            />
-            {showAdvanced && <CodeBlock language="json">{quickFactsCode}</CodeBlock>}
           </div>
         </div>
       </div>

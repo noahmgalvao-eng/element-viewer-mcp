@@ -4,6 +4,7 @@ import { SOURCE_DATA } from "./periodic_table_source";
 import { SCIENTIFIC_DATA } from "./scientific_data";
 import { SCIENTIFIC_DATA as SCIENTIFIC_THERMO_DATA } from "../scientific_data";
 import { CUSTOM_DATA, SODIUM_FALLBACK, ElementCustomData } from "./elements-visuals";
+import { toPascal } from "../utils/units";
 
 // The 11 Frames extracted from the provided SVG liquid path (Preserved from original)
 export const MATTER_PATH_FRAMES = [
@@ -21,6 +22,138 @@ export const MATTER_PATH_FRAMES = [
 ];
 
 const SODIUM_MOLAR_MASS_KG = 22.98976928 / 1000;
+type ThermoEntry = Record<string, any>;
+type ElementPosition = { xpos: number; ypos: number };
+
+const THERMO_DATA_BY_SYMBOL = SCIENTIFIC_THERMO_DATA as Record<string, ThermoEntry>;
+const ELEMENT_POSITIONS_BY_SYMBOL = new Map<string, ElementPosition>();
+const SYMBOLS_BY_COLUMN_ASC = new Map<number, Array<{ symbol: string; ypos: number }>>();
+
+for (const entry of SOURCE_DATA.elements as any[]) {
+  if (!entry || typeof entry.symbol !== "string") continue;
+  if (typeof entry.xpos !== "number" || typeof entry.ypos !== "number") continue;
+
+  const position = { xpos: entry.xpos, ypos: entry.ypos };
+  ELEMENT_POSITIONS_BY_SYMBOL.set(entry.symbol, position);
+
+  if (!SYMBOLS_BY_COLUMN_ASC.has(position.xpos)) {
+    SYMBOLS_BY_COLUMN_ASC.set(position.xpos, []);
+  }
+  SYMBOLS_BY_COLUMN_ASC.get(position.xpos)!.push({ symbol: entry.symbol, ypos: position.ypos });
+}
+
+for (const columnEntries of SYMBOLS_BY_COLUMN_ASC.values()) {
+  columnEntries.sort((a, b) => a.ypos - b.ypos);
+}
+
+const getNestedThermoField = (entry: ThermoEntry | undefined, path: string[]): unknown => {
+  let cursor: any = entry;
+  for (const key of path) {
+    if (!cursor || typeof cursor !== "object" || !(key in cursor)) {
+      return undefined;
+    }
+    cursor = cursor[key];
+  }
+  return cursor;
+};
+
+const isScientificMissing = (value: unknown): boolean => {
+  if (value === undefined || value === null) return true;
+
+  if (typeof value === "object") {
+    const withValue = value as { value?: unknown };
+    if (Object.prototype.hasOwnProperty.call(withValue, "value")) {
+      return isScientificMissing(withValue.value);
+    }
+    return false;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toUpperCase();
+    if (!normalized) return true;
+    return normalized.startsWith("N/A");
+  }
+
+  return false;
+};
+
+const resolveColumnFallback = (symbol: string, path: string[]) => {
+  const currentEntry = THERMO_DATA_BY_SYMBOL[symbol];
+  const displayRaw = getNestedThermoField(currentEntry, path);
+
+  if (!isScientificMissing(displayRaw)) {
+    return {
+      displayRaw,
+      calcRaw: displayRaw
+    };
+  }
+
+  const position = ELEMENT_POSITIONS_BY_SYMBOL.get(symbol);
+  if (!position) {
+    return {
+      displayRaw,
+      calcRaw: displayRaw
+    };
+  }
+
+  const columnEntries = SYMBOLS_BY_COLUMN_ASC.get(position.xpos) || [];
+  for (let idx = columnEntries.length - 1; idx >= 0; idx -= 1) {
+    const candidate = columnEntries[idx];
+    if (candidate.ypos >= position.ypos) continue;
+
+    const candidateEntry = THERMO_DATA_BY_SYMBOL[candidate.symbol];
+    const candidateValue = getNestedThermoField(candidateEntry, path);
+    if (!isScientificMissing(candidateValue)) {
+      return {
+        displayRaw,
+        calcRaw: candidateValue
+      };
+    }
+  }
+
+  return {
+    displayRaw,
+    calcRaw: displayRaw
+  };
+};
+
+const pressureToPascal = (value: number, unitRaw: unknown): number => {
+  const unit = typeof unitRaw === "string" ? unitRaw.trim() : "MPa";
+
+  if (unit === "GPa") {
+    return toPascal(value * 1000, "MPa");
+  }
+
+  if (
+    unit === "Pa" ||
+    unit === "kPa" ||
+    unit === "MPa" ||
+    unit === "bar" ||
+    unit === "atm" ||
+    unit === "psi" ||
+    unit === "kgf_cm2" ||
+    unit === "mmHg" ||
+    unit === "inHg" ||
+    unit === "mmH2O"
+  ) {
+    return toPascal(value, unit);
+  }
+
+  return toPascal(value, "MPa");
+};
+
+const convertPressureDisplayToKpa = (rawValue: string | undefined, unitRaw: unknown): string | undefined => {
+  if (!rawValue) return undefined;
+  if (rawValue === "N/A") return "N/A";
+
+  const isEstimated = rawValue.includes("*");
+  const numeric = parseFloat(rawValue.replace("*", ""));
+  if (isNaN(numeric)) return rawValue;
+
+  const kPaValue = pressureToPascal(numeric, unitRaw) / 1000;
+  const normalized = parseFloat(kPaValue.toFixed(6)).toString();
+  return `${normalized}${isEstimated ? "*" : ""}`;
+};
 
 // Adapter: Transform Raw JSON (Layer 1) + Scientific (Layer 2) + Custom (Layer 3)
 export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any) => {
@@ -31,7 +164,7 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   // Layer 2: Scientific Data (Physics + Color)
   const scientific = (SCIENTIFIC_DATA as any)[symbol];
   // Official thermodynamics/compression dataset (user-updated scientific_data.ts at project root)
-  const scientificThermo = (SCIENTIFIC_THERMO_DATA as any)[symbol];
+  const scientificThermo = THERMO_DATA_BY_SYMBOL[symbol];
 
   // Layer 3: Custom Data (Legacy Props + Simulation Tuning)
   const customData: ElementCustomData = CUSTOM_DATA[symbol] || SODIUM_FALLBACK;
@@ -104,7 +237,9 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
       }
 
       const baseDisplay = parsedValue.str || parsedValue.val.toString();
-      const displayWithVariation = variation ? `${baseDisplay} (${variation})` : baseDisplay;
+      const displayWithVariation = variation
+        ? `${baseDisplay} (somente para a variacao: ${variation})`
+        : baseDisplay;
 
       return {
         val: parsedValue.val,
@@ -125,20 +260,6 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     };
   };
 
-  // Converts display strings from MPa to kPa while preserving estimate marker '*'
-  const convertMpaDisplayToKpa = (rawValue: string | undefined): string | undefined => {
-    if (!rawValue) return undefined;
-    if (rawValue === "N/A") return "N/A";
-
-    const isEstimated = rawValue.includes("*");
-    const numeric = parseFloat(rawValue.replace("*", ""));
-    if (isNaN(numeric)) return rawValue;
-
-    const kPaValue = numeric * 1000;
-    const normalized = parseFloat(kPaValue.toFixed(6)).toString();
-    return `${normalized}${isEstimated ? "*" : ""}`;
-  };
-
   // 2. Resolve Base Properties (Layer 1 Corrections)
   let resolvedDensity = source.density;
   if (source.phase === "Gas" && source.density) {
@@ -155,9 +276,19 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   const shLiquid = parseSciValue(scientific?.specificHeat?.liquid, baseLegacyProps.specificHeatLiquid);
   const shGas = parseSciValue(scientific?.specificHeat?.gas, baseLegacyProps.specificHeatGas);
 
-  // Parse Latent Heats (Layer 2)
-  const lhFusion = parseSciValue(scientific?.latentHeat?.fusion, baseLegacyProps.latentHeatFusion);
-  const lhVap = parseSciValue(scientific?.latentHeat?.vaporization, baseLegacyProps.latentHeatVaporization);
+  const toSciInput = (value: unknown): string | number | undefined =>
+    (typeof value === "string" || typeof value === "number") ? value : undefined;
+
+  // Parse Latent Heats (Official thermodynamic source + column fallback for physics)
+  const lhFusionField = resolveColumnFallback(symbol, ["latentHeat", "fusion"]);
+  const lhVapField = resolveColumnFallback(symbol, ["latentHeat", "vaporization"]);
+
+  const lhFusionCalc = parseSciValue(toSciInput(lhFusionField.calcRaw), baseLegacyProps.latentHeatFusion);
+  const lhVapCalc = parseSciValue(toSciInput(lhVapField.calcRaw), baseLegacyProps.latentHeatVaporization);
+  const lhFusionDisplay = parseSciValue(toSciInput(lhFusionField.displayRaw), baseLegacyProps.latentHeatFusion);
+  const lhVapDisplay = parseSciValue(toSciInput(lhVapField.displayRaw), baseLegacyProps.latentHeatVaporization);
+  const lhFusionSource = lhFusionDisplay.str === "N/A" ? undefined : lhFusionDisplay.source;
+  const lhVapSource = lhVapDisplay.str === "N/A" ? undefined : lhVapDisplay.source;
 
   // Parse Others
   const thermCondRaw = scientific?.thermalConductivity;
@@ -166,70 +297,107 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   const atRadRaw = scientific?.atomicRadiusPm;
   const atRad = parseSciValue(atRadRaw, baseLegacyProps.atomicRadiusPm!);
 
-  // Phase Temps (Prioritize Scientific Data)
-  const rawMelt = scientific?.phaseTemperatures?.meltingK ?? source.melt;
-  const rawBoil = scientific?.phaseTemperatures?.boilingK ?? source.boil;
+  // Phase temperatures (Official thermodynamic source + column fallback for physics)
+  const meltField = resolveColumnFallback(symbol, ["phaseTemperatures", "meltingK"]);
+  const boilField = resolveColumnFallback(symbol, ["phaseTemperatures", "boilingK"]);
+  const tripleTempField = resolveColumnFallback(symbol, ["phaseTemperatures", "triplePointTempK"]);
+  const triplePressField = resolveColumnFallback(symbol, ["phaseTemperatures", "triplePointPressKPa"]);
+  const criticalTempFromTop = resolveColumnFallback(symbol, ["tCriticalK"]);
+  const criticalTempFromPhase = resolveColumnFallback(symbol, ["phaseTemperatures", "criticalTemperatureK"]);
+  const criticalPressFromTop = resolveColumnFallback(symbol, ["pCritical"]);
+  const criticalPressFromPhase = resolveColumnFallback(symbol, ["phaseTemperatures", "criticalPressureMPa"]);
+  const criticalTempField =
+    !isScientificMissing(criticalTempFromTop.displayRaw) || !isScientificMissing(criticalTempFromTop.calcRaw)
+      ? criticalTempFromTop
+      : criticalTempFromPhase;
+  const criticalPressField =
+    !isScientificMissing(criticalPressFromTop.displayRaw) || !isScientificMissing(criticalPressFromTop.calcRaw)
+      ? criticalPressFromTop
+      : criticalPressFromPhase;
 
-  const meltTemp = parseSciValue(rawMelt, baseLegacyProps.meltingPointK);
-  const boilTemp = parseSciValue(rawBoil, 9999);
+  const meltTempCalc = parseSciValue(toSciInput(meltField.calcRaw) ?? source.melt, baseLegacyProps.meltingPointK);
+  const boilTempCalc = parseSciValue(toSciInput(boilField.calcRaw) ?? source.boil, 9999);
+  const meltTempDisplay = parseSciValue(toSciInput(meltField.displayRaw), baseLegacyProps.meltingPointK);
+  const boilTempDisplay = parseSciValue(toSciInput(boilField.displayRaw), 9999);
+  const meltTempSource = meltTempDisplay.str === "N/A" ? undefined : meltTempDisplay.source;
+  const boilTempSource = boilTempDisplay.str === "N/A" ? undefined : boilTempDisplay.source;
 
-  // --- TRIPLE POINT PARSING (Official Source) ---
-  const scientificTemps = scientific?.phaseTemperatures;
+  const tpTempCalcRes = parseSciValue(toSciInput(tripleTempField.calcRaw), -999);
+  const tpTempDisplayRes = parseSciValue(toSciInput(tripleTempField.displayRaw), -999);
+  const tpPressCalcRes = parseSciValue(toSciInput(triplePressField.calcRaw), -999);
+  const tpPressDisplayRes = parseSciValue(toSciInput(triplePressField.displayRaw), -999);
 
-  // Temp Parsing (Sentinel -999)
-  let tpTempRes = parseSciValue(scientificTemps?.triplePointTempK, -999);
-  let tpTemp = tpTempRes.val;
-  let tpTempStr = tpTempRes.str;
-  let tpSource = tpTempRes.source;
+  const triplePointObj = {
+    tempK: tpTempCalcRes.val > 0 ? tpTempCalcRes.val : meltTempCalc.val,
+    pressurePa: tpPressCalcRes.val > 0 ? tpPressCalcRes.val * 1000 : 0
+  };
 
-  if (tpTemp === -999) {
-    // Fallback: If N/A or Missing -> Use Melt Temp, add *, remove source
-    tpTemp = meltTemp.val;
-    tpTempStr = `${meltTemp.val}*`;
-    tpSource = undefined;
-  }
+  const tpSource =
+    (tpTempDisplayRes.str && tpTempDisplayRes.str !== "N/A" ? tpTempDisplayRes.source : undefined) ??
+    (tpPressDisplayRes.str && tpPressDisplayRes.str !== "N/A" ? tpPressDisplayRes.source : undefined);
+  const tpTempDisplayValue =
+    tpTempDisplayRes.str && tpTempDisplayRes.str !== "N/A" ? tpTempDisplayRes.str : "N/A";
+  const tpPressDisplayValue =
+    tpPressDisplayRes.str && tpPressDisplayRes.str !== "N/A" ? tpPressDisplayRes.str : "N/A";
 
-  // Pressure Parsing (Sentinel -999, Input is kPa)
-  let tpPressRes = parseSciValue(scientificTemps?.triplePointPressKPa, -999);
-  let tpPress = tpPressRes.val;
-  let tpPressStr = tpPressRes.str;
+  const parseCriticalPressureValue = (
+    input: unknown,
+    fallbackPa: number
+  ): { val: number; str: string | undefined; source: number | undefined; unit: unknown } => {
+    if (input === undefined || input === null) {
+      return { val: fallbackPa, str: undefined, source: undefined, unit: "MPa" };
+    }
 
-  if (tpPress === -999) {
-    // Fallback: If N/A -> 0, add *, remove source if it was inherited
-    tpPress = 0;
-    tpPressStr = "0*";
-    // Don't use source for estimated N/A
-    if (tpTemp === -999) tpSource = undefined; // If both estimated
-  } else {
-    tpPress = tpPress * 1000; // Convert kPa to Pa
-    // If we didn't have a source from Temp (unlikely if Press exists), take from Press
-    if (!tpSource) tpSource = tpPressRes.source;
-  }
+    if (typeof input === "object") {
+      const valueField = (input as { value?: unknown }).value;
+      const unitField = (input as { unit?: unknown }).unit ?? "MPa";
+      const parsed = parseSciValue(toSciInput(valueField), fallbackPa);
+      if (parsed.str === "N/A" || parsed.val === fallbackPa) {
+        return { val: fallbackPa, str: "N/A", source: undefined, unit: unitField };
+      }
+      return {
+        val: pressureToPascal(parsed.val, unitField),
+        str: parsed.str,
+        source: parsed.source,
+        unit: unitField
+      };
+    }
 
-  // Construct Triple Point Object
-  // Always object if valid or estimated
-  const triplePointObj = { tempK: tpTemp, pressurePa: tpPress };
+    const parsed = parseSciValue(toSciInput(input), fallbackPa);
+    if (parsed.str === "N/A" || parsed.val === fallbackPa) {
+      return { val: fallbackPa, str: parsed.str, source: undefined, unit: "MPa" };
+    }
 
-  // --- CRITICAL POINT PARSING (Official Source, no Sodium fallback) ---
-  const cpTempRes = parseSciValue(scientificTemps?.criticalTemperatureK, -999);
-  const cpPressRes = parseSciValue(scientificTemps?.criticalPressureMPa, -999); // source unit: MPa
+    return {
+      val: pressureToPascal(parsed.val, "MPa"),
+      str: parsed.str,
+      source: parsed.source,
+      unit: "MPa"
+    };
+  };
 
-  const hasCriticalPointFromScientific =
-    cpTempRes.val > 0 &&
-    cpPressRes.val > 0 &&
-    cpTempRes.str !== "N/A" &&
-    cpPressRes.str !== "N/A";
+  const cpTempCalcRes = parseSciValue(toSciInput(criticalTempField.calcRaw), -999);
+  const cpTempDisplayRes = parseSciValue(toSciInput(criticalTempField.displayRaw), -999);
+  const cpPressCalcRes = parseCriticalPressureValue(criticalPressField.calcRaw, -999);
+  const cpPressDisplayRes = parseCriticalPressureValue(criticalPressField.displayRaw, -999);
 
+  const hasCriticalPointFromScientific = cpTempCalcRes.val > 0 && cpPressCalcRes.val > 0;
   const criticalPointObj = hasCriticalPointFromScientific
     ? {
-      tempK: cpTempRes.val,
-      pressurePa: cpPressRes.val * 1_000_000 // MPa -> Pa for calculations
+      tempK: cpTempCalcRes.val,
+      pressurePa: cpPressCalcRes.val
     }
     : undefined;
 
-  const criticalSource = hasCriticalPointFromScientific
-    ? (cpTempRes.source ?? cpPressRes.source)
-    : undefined;
+  const criticalSource =
+    (cpTempDisplayRes.str && cpTempDisplayRes.str !== "N/A" ? cpTempDisplayRes.source : undefined) ??
+    (cpPressDisplayRes.str && cpPressDisplayRes.str !== "N/A" ? cpPressDisplayRes.source : undefined);
+  const cpTempDisplayValue =
+    cpTempDisplayRes.str && cpTempDisplayRes.str !== "N/A" ? cpTempDisplayRes.str : "N/A";
+  const cpPressDisplayValue = convertPressureDisplayToKpa(
+    cpPressDisplayRes.str && cpPressDisplayRes.str !== "N/A" ? cpPressDisplayRes.str : "N/A",
+    cpPressDisplayRes.unit
+  ) || "N/A";
 
   // Oxidation States Handling
   // Scientific data might have string "N/A" instead of array
@@ -249,27 +417,33 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     (baseLegacyProps.enthalpyVapJmol ||
       ((baseLegacyProps.latentHeatVaporization || 0) * SODIUM_MOLAR_MASS_KG)) / 1000;
 
-  const enthalpyFusionOfficial = parseSciValue(scientificThermo?.enthalpyFusionKjMol, fallbackEnthalpyFusionKjMol);
-  const enthalpyVapOfficial = parseSciValue(scientificThermo?.enthalpyVaporizationKjMol, fallbackEnthalpyVapKjMol);
+  const enthalpyFusionField = resolveColumnFallback(symbol, ["enthalpyFusionKjMol"]);
+  const enthalpyVapField = resolveColumnFallback(symbol, ["enthalpyVaporizationKjMol"]);
+  const enthalpyFusionCalc = parseSciValue(toSciInput(enthalpyFusionField.calcRaw), fallbackEnthalpyFusionKjMol);
+  const enthalpyVapCalc = parseSciValue(toSciInput(enthalpyVapField.calcRaw), fallbackEnthalpyVapKjMol);
+  const enthalpyFusionDisplay = parseSciValue(toSciInput(enthalpyFusionField.displayRaw), fallbackEnthalpyFusionKjMol);
+  const enthalpyVapDisplay = parseSciValue(toSciInput(enthalpyVapField.displayRaw), fallbackEnthalpyVapKjMol);
+  const enthalpyFusionSource = enthalpyFusionDisplay.str === "N/A" ? undefined : enthalpyFusionDisplay.source;
+  const enthalpyVapSource = enthalpyVapDisplay.str === "N/A" ? undefined : enthalpyVapDisplay.source;
   const bulkModulusOfficial = parseBulkModulusValue(scientificThermo?.bulkModulusGPA);
 
-  const enthalpyFusionJmolPhysics = ensurePhysical(enthalpyFusionOfficial.val * 1000, baseLegacyProps.enthalpyFusionJmol || 2600);
+  const enthalpyFusionJmolPhysics = ensurePhysical(enthalpyFusionCalc.val * 1000, baseLegacyProps.enthalpyFusionJmol || 2600);
   const enthalpyVapJmolPhysics = ensurePhysical(
-    enthalpyVapOfficial.val * 1000,
+    enthalpyVapCalc.val * 1000,
     baseLegacyProps.enthalpyVapJmol || ((baseLegacyProps.latentHeatVaporization || 0) * SODIUM_MOLAR_MASS_KG)
   );
 
   // 3. Construct Properties Object adhering to Merge Strategy
   const properties: ElementProperties = {
     // --- BASE IDENTITY (Layer 1 + Layer 2 Temperatures) ---
-    meltingPointK: ensurePhysical(meltTemp.val, baseLegacyProps.meltingPointK),
-    boilingPointK: ensurePhysical(boilTemp.val, 9999),
-    meltingPointSource: meltTemp.source,
-    boilingPointSource: boilTemp.source,
+    meltingPointK: ensurePhysical(meltTempCalc.val, baseLegacyProps.meltingPointK),
+    boilingPointK: ensurePhysical(boilTempCalc.val, 9999),
+    meltingPointSource: meltTempSource,
+    boilingPointSource: boilTempSource,
 
     // DISPLAY FIELDS (Strictly Source/Scientific)
-    meltingPointDisplay: meltTemp.str ? `${meltTemp.str} K` : 'N/A',
-    boilingPointDisplay: boilTemp.str ? `${boilTemp.str} K` : 'N/A',
+    meltingPointDisplay: meltTempDisplay.str && meltTempDisplay.str !== "N/A" ? `${meltTempDisplay.str} K` : "N/A",
+    boilingPointDisplay: boilTempDisplay.str && boilTempDisplay.str !== "N/A" ? `${boilTempDisplay.str} K` : "N/A",
     densityDisplay: displayDensity,
     atomicRadiusDisplay: atRad.str ? `${atRad.str} pm` : 'N/A',
     electronegativityDisplay: String(displayElectronegativity),
@@ -277,8 +451,8 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     ionizationEnergyDisplay: displayIon !== "N/A" ? `${displayIon} kJ/mol` : "N/A",
     oxidationStatesDisplay: displayOx,
     thermalConductivityDisplay: thermCond.str ? `${thermCond.str} W/mK` : 'N/A',
-    enthalpyFusionKjMolDisplay: enthalpyFusionOfficial.str || "N/A",
-    enthalpyVaporizationKjMolDisplay: enthalpyVapOfficial.str || "N/A",
+    enthalpyFusionKjMolDisplay: enthalpyFusionDisplay.str && enthalpyFusionDisplay.str !== "N/A" ? enthalpyFusionDisplay.str : "N/A",
+    enthalpyVaporizationKjMolDisplay: enthalpyVapDisplay.str && enthalpyVapDisplay.str !== "N/A" ? enthalpyVapDisplay.str : "N/A",
     bulkModulusDisplay: bulkModulusOfficial.str === "N/A" ? "N/A" : `${bulkModulusOfficial.str} GPa`,
     electricalConductivityDisplay: 'N/A', // Not currently in scientific data source, kept as fallback for UI if added later
 
@@ -311,16 +485,16 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     oxidationStates: physicsOx,
 
     // LATENT HEAT
-    latentHeatFusion: lhFusion.val,
-    latentHeatVaporization: lhVap.val,
+    latentHeatFusion: lhFusionCalc.val,
+    latentHeatVaporization: lhVapCalc.val,
     // Display strings
-    latentHeatFusionDisplay: lhFusion.str,
-    latentHeatVaporizationDisplay: lhVap.str,
+    latentHeatFusionDisplay: lhFusionDisplay.str && lhFusionDisplay.str !== "N/A" ? lhFusionDisplay.str : "N/A",
+    latentHeatVaporizationDisplay: lhVapDisplay.str && lhVapDisplay.str !== "N/A" ? lhVapDisplay.str : "N/A",
     // Sources
-    latentHeatFusionSource: lhFusion.source,
-    latentHeatVaporizationSource: lhVap.source,
-    enthalpyFusionSource: enthalpyFusionOfficial.source,
-    enthalpyVaporizationSource: enthalpyVapOfficial.source,
+    latentHeatFusionSource: lhFusionSource,
+    latentHeatVaporizationSource: lhVapSource,
+    enthalpyFusionSource: enthalpyFusionSource,
+    enthalpyVaporizationSource: enthalpyVapSource,
     bulkModulusSource: bulkModulusOfficial.source,
 
     // --- OFFICIAL THERMO/COMPRESSION SOURCE ---
@@ -335,14 +509,14 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     // --- RETAINED LEGACY (Layer 3 - Custom/Sodium Fallback) ---
     criticalPoint: criticalPointObj,
     criticalPointSource: criticalSource,
-    criticalPointTempDisplay: cpTempRes.str || "N/A",
-    criticalPointPressDisplay: convertMpaDisplayToKpa(cpPressRes.str) || "N/A",
+    criticalPointTempDisplay: cpTempDisplayValue,
+    criticalPointPressDisplay: cpPressDisplayValue,
 
     // Triple Point: Use Calculated from Scientific Data
     triplePoint: triplePointObj,
     triplePointSource: tpSource,
-    triplePointTempDisplay: tpTempStr,
-    triplePointPressDisplay: tpPressStr,
+    triplePointTempDisplay: tpTempDisplayValue,
+    triplePointPressDisplay: tpPressDisplayValue,
 
     // Simulation Tuning Parameters (Always Layer 3)
     simonA_Pa: specificLegacyProps.simonA_Pa ?? baseLegacyProps.simonA_Pa,
