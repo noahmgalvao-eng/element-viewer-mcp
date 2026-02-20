@@ -600,12 +600,14 @@ function App() {
                         </div>
                     </div>
 
-                    <PeriodicTableSelector
-                        selectedElements={selectedElements}
-                        onSelect={handleElementSelect}
-                        isMultiSelect={isMultiSelect}
-                        onToggleMultiSelect={handleToggleMultiSelect}
-                    />
+                    <div className={isInteracting ? 'opacity-0 pointer-events-none' : ''}>
+                        <PeriodicTableSelector
+                            selectedElements={selectedElements}
+                            onSelect={handleElementSelect}
+                            isMultiSelect={isMultiSelect}
+                            onToggleMultiSelect={handleToggleMultiSelect}
+                        />
+                    </div>
 
                     <ControlPanel
                         temperature={temperature}

@@ -40,9 +40,14 @@ export const calculateGeometry = ({
     const { bulkModulusGPa } = element.properties;
 
     // --- COMPRESSION ---
-    const bulkModulusPa = (bulkModulusGPa || 100) * 1e9;
-    const compressionRatio = pressure / (pressure + bulkModulusPa);
-    const theoreticalCompressionFactor = 1 - (compressionRatio * 0.6);
+    const hasOfficialBulkModulus = typeof bulkModulusGPa === "number" && isFinite(bulkModulusGPa) && bulkModulusGPa > 0;
+    const bulkModulusPa = hasOfficialBulkModulus ? (bulkModulusGPa * 1e9) : undefined;
+    const compressionRatio = hasOfficialBulkModulus && bulkModulusPa
+        ? pressure / (pressure + bulkModulusPa)
+        : 0;
+    const theoreticalCompressionFactor = hasOfficialBulkModulus
+        ? (1 - (compressionRatio * 0.6))
+        : 1;
 
     let targetW = INIT_W;
     let targetH = INIT_H;

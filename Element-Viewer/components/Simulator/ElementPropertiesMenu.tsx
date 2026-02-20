@@ -57,6 +57,9 @@ const FIXED_REFERENCES: ReferenceItem[] = [
   { id: 10, text: 'Thermodynamics of the Elements: Consolidated Master Table of All 118 Chemical Elements. (2026).' },
   { id: 11, text: 'Helmenstine, A. (2023). Triple Point Definition - Triple Point of Water.', href: 'https://sciencenotes.org/triple-point-of-water/' },
   { id: 12, text: 'Thermodynamics of the Elements: Critical temperature and critical pressure master table. (2026).' },
+  { id: 13, text: 'KnowledgeDoor. (n.d.). Enthalpy of Fusion. Elements Handbook. Retrieved February 19, 2026.', href: 'https://www.knowledgedoor.com/2/elements_handbook/enthalpy_of_fusion.html' },
+  { id: 14, text: 'KnowledgeDoor. (n.d.). Enthalpy of Vaporization. Elements Handbook. Retrieved February 19, 2026.', href: 'https://www.knowledgedoor.com/2/elements_handbook/enthalpy_of_vaporization.html' },
+  { id: 15, text: 'KnowledgeDoor. (n.d.). Isothermal Bulk Modulus. Elements Handbook. Retrieved February 19, 2026.', href: 'https://www.knowledgedoor.com/2/elements_handbook/isothermal_bulk_modulus.html' },
 ];
 
 const SUPERSCRIPT_MAP: Record<string, string> = {
@@ -250,6 +253,8 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     'J/kg',
     element.properties.latentHeatVaporization,
   );
+  const enthalpyFusionKjMol = parseDisplayValue(element.properties.enthalpyFusionKjMolDisplay, 'kJ/mol');
+  const enthalpyVaporizationKjMol = parseDisplayValue(element.properties.enthalpyVaporizationKjMolDisplay, 'kJ/mol');
   const electricalConductivity = parseDisplayValue(element.properties.electricalConductivityDisplay);
   const bulkModulus = parseDisplayValue(element.properties.bulkModulusDisplay, 'GPa');
 
@@ -276,7 +281,9 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     { label: 'Specific heat (gas)', value: specificHeatGas.value, unit: specificHeatGas.na ? undefined : 'J/kgK', sourceId: element.properties.specificHeatGasSource, estimated: specificHeatGas.estimated },
     { label: 'Latent heat (fusion)', value: latentHeatFusion.value, unit: latentHeatFusion.na ? undefined : 'J/kg', sourceId: element.properties.latentHeatFusionSource, estimated: latentHeatFusion.estimated },
     { label: 'Latent heat (vaporization)', value: latentHeatVaporization.value, unit: latentHeatVaporization.na ? undefined : 'J/kg', sourceId: element.properties.latentHeatVaporizationSource, estimated: latentHeatVaporization.estimated },
-    { label: 'Bulk modulus', value: bulkModulus.value, unit: bulkModulus.na ? undefined : 'GPa', estimated: bulkModulus.estimated },
+    { label: 'enthalpyFusionKjMol', value: enthalpyFusionKjMol.value, unit: enthalpyFusionKjMol.na ? undefined : 'kJ/mol', sourceId: element.properties.enthalpyFusionSource, estimated: enthalpyFusionKjMol.estimated },
+    { label: 'enthalpyVaporizationKjMol', value: enthalpyVaporizationKjMol.value, unit: enthalpyVaporizationKjMol.na ? undefined : 'kJ/mol', sourceId: element.properties.enthalpyVaporizationSource, estimated: enthalpyVaporizationKjMol.estimated },
+    { label: 'bulkModulusGPA', value: bulkModulus.value, unit: bulkModulus.na ? undefined : 'GPa', sourceId: element.properties.bulkModulusSource, estimated: bulkModulus.estimated },
     { label: 'Electrical conductivity', value: electricalConductivity.value, estimated: electricalConductivity.estimated },
   ];
 

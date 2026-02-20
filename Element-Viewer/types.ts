@@ -23,6 +23,8 @@ export interface ElementProperties {
   thermalConductivityDisplay?: string;
   electricalConductivityDisplay?: string;
   bulkModulusDisplay?: string;
+  enthalpyFusionKjMolDisplay?: string;
+  enthalpyVaporizationKjMolDisplay?: string;
 
   specificHeatSolidDisplay?: string;
   specificHeatLiquidDisplay?: string;
@@ -52,6 +54,9 @@ export interface ElementProperties {
   ionizationEnergySource?: number;
   triplePointSource?: number; // NEW
   criticalPointSource?: number;
+  enthalpyFusionSource?: number;
+  enthalpyVaporizationSource?: number;
+  bulkModulusSource?: number;
 
   // --- CRITICAL POINT DATA ---
   criticalPoint?: {

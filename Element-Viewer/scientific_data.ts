@@ -25,6 +25,13 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "13.8033_12",
       "triplePointPressKPa": "7.04_10"
     }
+  ,
+    "enthalpyFusionKjMol": "0.12_13",
+    "enthalpyVaporizationKjMol": "0.46_14",
+    "bulkModulusGPA": {
+      "value": "0.2_15",
+      "variation": "4 K"
+    }
   },
   "He": {
     "mass": "4.0026_2",
@@ -47,6 +54,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2.1768_12",
       "triplePointPressKPa": "5.048_12"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Li": {
     "mass": "6.94_2",
@@ -71,6 +82,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "453.65_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "4.6_13",
+    "enthalpyVaporizationKjMol": "134.7_14",
+    "bulkModulusGPA": "11.6_15"
   },
   "Be": {
     "mass": "9.0122_2",
@@ -95,6 +110,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1560_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "9.8_13",
+    "enthalpyVaporizationKjMol": "308.8_14",
+    "bulkModulusGPA": "100.3_15"
   },
   "B": {
     "mass": "10.81_2",
@@ -119,6 +138,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2348_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "22.2_13",
+    "enthalpyVaporizationKjMol": "538.9_14",
+    "bulkModulusGPA": "178_15"
   },
   "C": {
     "mass": "12.011_2",
@@ -143,6 +166,13 @@ export const SCIENTIFIC_DATA = {
       "boilingK": "5103_10",
       "triplePointTempK": "4765_11",
       "triplePointPressKPa": "10132_11"
+    }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": {
+      "value": "545_15",
+      "variation": "diamond"
     }
   },
   "N": {
@@ -170,6 +200,13 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "63.151_12",
       "triplePointPressKPa": "12.523_12"
     }
+  ,
+    "enthalpyFusionKjMol": "0.72_13",
+    "enthalpyVaporizationKjMol": "5.577_14",
+    "bulkModulusGPA": {
+      "value": "1.2_15",
+      "variation": "81 K"
+    }
   },
   "O": {
     "mass": "15.999_2",
@@ -194,6 +231,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "54.3584_12",
       "triplePointPressKPa": "0.14625_11"
     }
+  ,
+    "enthalpyFusionKjMol": "0.444_13",
+    "enthalpyVaporizationKjMol": "6.82_14",
+    "bulkModulusGPA": "N/A"
   },
   "F": {
     "mass": "18.9984_2",
@@ -218,6 +259,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "53.48_10",
       "triplePointPressKPa": "0.252_12"
     }
+  ,
+    "enthalpyFusionKjMol": "5.1_13",
+    "enthalpyVaporizationKjMol": "6.548_14",
+    "bulkModulusGPA": "N/A"
   },
   "Ne": {
     "mass": "20.1797_2",
@@ -239,6 +284,13 @@ export const SCIENTIFIC_DATA = {
       "boilingK": "27.07_10",
       "triplePointTempK": "24.5561_12",
       "triplePointPressKPa": "43.332_11"
+    }
+  ,
+    "enthalpyFusionKjMol": "0.324_13",
+    "enthalpyVaporizationKjMol": "1.1736_14",
+    "bulkModulusGPA": {
+      "value": "1.0_15",
+      "variation": "4 K"
     }
   },
   "Na": {
@@ -264,6 +316,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "371.0_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "2.64_13",
+    "enthalpyVaporizationKjMol": "89.04_14",
+    "bulkModulusGPA": "6.8_15"
   },
   "Mg": {
     "mass": "24.305_2",
@@ -288,6 +344,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "923_10",
       "triplePointPressKPa": "0.0004_10"
     }
+  ,
+    "enthalpyFusionKjMol": "9.04_13",
+    "enthalpyVaporizationKjMol": "128.7_14",
+    "bulkModulusGPA": "35.4_15"
   },
   "Al": {
     "mass": "26.9815_2",
@@ -312,6 +372,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "933.47_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "10.67_13",
+    "enthalpyVaporizationKjMol": "293.72_14",
+    "bulkModulusGPA": "72.2*_15"
   },
   "Si": {
     "mass": "28.085_2",
@@ -337,6 +401,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1687_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "39.6_13",
+    "enthalpyVaporizationKjMol": "383.3_14",
+    "bulkModulusGPA": "98.8_15"
   },
   "P": {
     "mass": "30.9738_2",
@@ -362,6 +430,13 @@ export const SCIENTIFIC_DATA = {
       "boilingK": "550_10",
       "triplePointTempK": "317.3_10",
       "triplePointPressKPa": "0.003_10"
+    }
+  ,
+    "enthalpyFusionKjMol": "2.51_13",
+    "enthalpyVaporizationKjMol": "51.9_14",
+    "bulkModulusGPA": {
+      "value": "30.4_15",
+      "variation": "black phosphorus"
     }
   },
   "S": {
@@ -389,6 +464,13 @@ export const SCIENTIFIC_DATA = {
       "boilingK": "717.8_10",
       "triplePointTempK": "388.36_10",
       "triplePointPressKPa": "< 0.001_10"
+    }
+  ,
+    "enthalpyFusionKjMol": "1.23_13",
+    "enthalpyVaporizationKjMol": "9.62_14",
+    "bulkModulusGPA": {
+      "value": "17.8_15",
+      "variation": "α-orthorhombic sulfur"
     }
   },
   "Cl": {
@@ -418,6 +500,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "172.17_12",
       "triplePointPressKPa": "1.39_12"
     }
+  ,
+    "enthalpyFusionKjMol": "6.41_13",
+    "enthalpyVaporizationKjMol": "20.403_14",
+    "bulkModulusGPA": "N/A"
   },
   "Ar": {
     "mass": "39.948_2",
@@ -439,6 +525,13 @@ export const SCIENTIFIC_DATA = {
       "boilingK": "87.3_10",
       "triplePointTempK": "83.8058_12",
       "triplePointPressKPa": "68.891_12"
+    }
+  ,
+    "enthalpyFusionKjMol": "1.21_13",
+    "enthalpyVaporizationKjMol": "6.53_14",
+    "bulkModulusGPA": {
+      "value": "1.3_15",
+      "variation": "77 K"
     }
   },
   "K": {
@@ -464,6 +557,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "336.7_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "2.4_13",
+    "enthalpyVaporizationKjMol": "77.53_14",
+    "bulkModulusGPA": "3.2*_15"
   },
   "Ca": {
     "mass": "40.078_2",
@@ -488,6 +585,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1115_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "9.33_13",
+    "enthalpyVaporizationKjMol": "149.95_14",
+    "bulkModulusGPA": "15.2_15"
   },
   "Sc": {
     "mass": "44.9559_2",
@@ -512,6 +613,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1814_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "15.9_13",
+    "enthalpyVaporizationKjMol": "304.8_14",
+    "bulkModulusGPA": "43.5_15"
   },
   "Ti": {
     "mass": "47.867_2",
@@ -536,6 +641,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1941_10",
       "triplePointPressKPa": "0.0053_10"
     }
+  ,
+    "enthalpyFusionKjMol": "20.9_13",
+    "enthalpyVaporizationKjMol": "428.9_14",
+    "bulkModulusGPA": "105.1_15"
   },
   "V": {
     "mass": "50.9415_2",
@@ -560,6 +669,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2183_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "17.6_13",
+    "enthalpyVaporizationKjMol": "458.6_14",
+    "bulkModulusGPA": "161.9_15"
   },
   "Cr": {
     "mass": "51.9961_2",
@@ -585,6 +698,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2180_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "15.3_13",
+    "enthalpyVaporizationKjMol": "348.78_14",
+    "bulkModulusGPA": "190.1_15"
   },
   "Mn": {
     "mass": "54.938_2",
@@ -611,6 +728,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1519_10",
       "triplePointPressKPa": "< 1e-4_10"
     }
+  ,
+    "enthalpyFusionKjMol": "14.4_13",
+    "enthalpyVaporizationKjMol": "219.7_14",
+    "bulkModulusGPA": "59.6_15"
   },
   "Fe": {
     "mass": "55.845_2",
@@ -636,6 +757,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1811_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "14.9_13",
+    "enthalpyVaporizationKjMol": "351_14",
+    "bulkModulusGPA": "168.3_15"
   },
   "Co": {
     "mass": "58.9332_2",
@@ -661,6 +786,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1768_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "15.2_13",
+    "enthalpyVaporizationKjMol": "382.4_14",
+    "bulkModulusGPA": "191.4_15"
   },
   "Ni": {
     "mass": "58.6934_2",
@@ -685,6 +814,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1728_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "17.6_13",
+    "enthalpyVaporizationKjMol": "371.8_14",
+    "bulkModulusGPA": "186*_15"
   },
   "Cu": {
     "mass": "63.546_2",
@@ -709,6 +842,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1357.77_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "13_13",
+    "enthalpyVaporizationKjMol": "304.6_14",
+    "bulkModulusGPA": "137_15"
   },
   "Zn": {
     "mass": "65.38_2",
@@ -733,6 +870,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "692.65_11",
       "triplePointPressKPa": "0.065_11"
     }
+  ,
+    "enthalpyFusionKjMol": "6.67_13",
+    "enthalpyVaporizationKjMol": "115.3_14",
+    "bulkModulusGPA": "59.8_15"
   },
   "Ga": {
     "mass": "69.723_2",
@@ -756,6 +897,13 @@ export const SCIENTIFIC_DATA = {
       "boilingK": "2477_10",
       "triplePointTempK": "302.9166_12",
       "triplePointPressKPa": "N/A_10"
+    }
+  ,
+    "enthalpyFusionKjMol": "5.59_13",
+    "enthalpyVaporizationKjMol": "256.1_14",
+    "bulkModulusGPA": {
+      "value": "56.9_15",
+      "variation": "273 K"
     }
   },
   "Ge": {
@@ -783,6 +931,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1211.4_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "34.7_13",
+    "enthalpyVaporizationKjMol": "334.3_14",
+    "bulkModulusGPA": "77.2_15"
   },
   "As": {
     "mass": "74.9216_2",
@@ -809,6 +961,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1090_11",
       "triplePointPressKPa": "3628_11"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "39.4_15"
   },
   "Se": {
     "mass": "78.971_2",
@@ -836,6 +992,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "494_10",
       "triplePointPressKPa": "< 1e-4_10"
     }
+  ,
+    "enthalpyFusionKjMol": "5.1_13",
+    "enthalpyVaporizationKjMol": "26.32_14",
+    "bulkModulusGPA": "9.1_15"
   },
   "Br": {
     "mass": "79.904_2",
@@ -863,6 +1023,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "265.9_10",
       "triplePointPressKPa": "5.2_10"
     }
+  ,
+    "enthalpyFusionKjMol": "10.8_13",
+    "enthalpyVaporizationKjMol": "30_14",
+    "bulkModulusGPA": "N/A"
   },
   "Kr": {
     "mass": "83.798_2",
@@ -886,6 +1050,13 @@ export const SCIENTIFIC_DATA = {
       "boilingK": "119.93_10",
       "triplePointTempK": "115.775_12",
       "triplePointPressKPa": "73.2_12"
+    }
+  ,
+    "enthalpyFusionKjMol": "1.64_13",
+    "enthalpyVaporizationKjMol": "9.05_14",
+    "bulkModulusGPA": {
+      "value": "1.8_15",
+      "variation": "77 K"
     }
   },
   "Rb": {
@@ -911,6 +1082,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "312.41_12",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "2.2_13",
+    "enthalpyVaporizationKjMol": "69.2_14",
+    "bulkModulusGPA": "3.1_15"
   },
   "Sr": {
     "mass": "87.62_2",
@@ -935,6 +1110,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1050_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "6.16_13",
+    "enthalpyVaporizationKjMol": "138.91_14",
+    "bulkModulusGPA": "11.6_15"
   },
   "Y": {
     "mass": "88.9058_2",
@@ -959,6 +1138,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1799_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "17.2_13",
+    "enthalpyVaporizationKjMol": "393.3_14",
+    "bulkModulusGPA": "36.6_15"
   },
   "Zr": {
     "mass": "91.224_2",
@@ -983,6 +1166,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2128_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "23_13",
+    "enthalpyVaporizationKjMol": "581.6_14",
+    "bulkModulusGPA": "83.3_15"
   },
   "Nb": {
     "mass": "92.9064_2",
@@ -1007,6 +1194,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2750_10",
       "triplePointPressKPa": "< 1e-8_10"
     }
+  ,
+    "enthalpyFusionKjMol": "27.2_13",
+    "enthalpyVaporizationKjMol": "696.6_14",
+    "bulkModulusGPA": "170.2_15"
   },
   "Mo": {
     "mass": "95.95_2",
@@ -1032,6 +1223,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2896_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "27.6_13",
+    "enthalpyVaporizationKjMol": "594.1_14",
+    "bulkModulusGPA": "272.5_15"
   },
   "Tc": {
     "mass": "97.9072_2",
@@ -1057,6 +1252,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2430_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "23.81_13",
+    "enthalpyVaporizationKjMol": "585.22_14",
+    "bulkModulusGPA": "297_15"
   },
   "Ru": {
     "mass": "101.07_2",
@@ -1082,6 +1281,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2607_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "23.7_13",
+    "enthalpyVaporizationKjMol": "567.8_14",
+    "bulkModulusGPA": "320.8_15"
   },
   "Rh": {
     "mass": "102.9055_2",
@@ -1106,6 +1309,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2237_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "21.55_13",
+    "enthalpyVaporizationKjMol": "495.4_14",
+    "bulkModulusGPA": "270.4_15"
   },
   "Pd": {
     "mass": "106.42_2",
@@ -1131,6 +1338,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1825_11",
       "triplePointPressKPa": "0.0035_11"
     }
+  ,
+    "enthalpyFusionKjMol": "17.2_13",
+    "enthalpyVaporizationKjMol": "393.3_14",
+    "bulkModulusGPA": "180.8*_15"
   },
   "Ag": {
     "mass": "107.8682_2",
@@ -1155,6 +1366,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1234.93_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "11.3_13",
+    "enthalpyVaporizationKjMol": "255.1_14",
+    "bulkModulusGPA": "100.7_15"
   },
   "Cd": {
     "mass": "112.414_2",
@@ -1179,6 +1394,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "594.22_10",
       "triplePointPressKPa": "0.001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "6.11_13",
+    "enthalpyVaporizationKjMol": "99.87_14",
+    "bulkModulusGPA": "46.7_15"
   },
   "In": {
     "mass": "114.818_2",
@@ -1203,6 +1422,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "429.7436_12",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "3.27_13",
+    "enthalpyVaporizationKjMol": "226.4_14",
+    "bulkModulusGPA": "41.1_15"
   },
   "Sn": {
     "mass": "118.71_2",
@@ -1228,6 +1451,13 @@ export const SCIENTIFIC_DATA = {
       "boilingK": "2875_10",
       "triplePointTempK": "505.08_10",
       "triplePointPressKPa": "< 1e-6_10"
+    }
+  ,
+    "enthalpyFusionKjMol": "7.2_13",
+    "enthalpyVaporizationKjMol": "290.4_14",
+    "bulkModulusGPA": {
+      "value": "111_15",
+      "variation": "gray tin"
     }
   },
   "Sb": {
@@ -1255,6 +1485,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "903.78_10",
       "triplePointPressKPa": "0.0001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "20.9_13",
+    "enthalpyVaporizationKjMol": "67.91_14",
+    "bulkModulusGPA": "38.3_15"
   },
   "Te": {
     "mass": "127.6_2",
@@ -1282,6 +1516,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "722.66_10",
       "triplePointPressKPa": "0.0001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "13.5_13",
+    "enthalpyVaporizationKjMol": "50.63_14",
+    "bulkModulusGPA": "23.0*_15"
   },
   "I": {
     "mass": "126.9045_2",
@@ -1310,6 +1548,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "386.65_12",
       "triplePointPressKPa": "12.07_12"
     }
+  ,
+    "enthalpyFusionKjMol": "15.27_13",
+    "enthalpyVaporizationKjMol": "41.67_14",
+    "bulkModulusGPA": "N/A"
   },
   "Xe": {
     "mass": "131.293_2",
@@ -1336,6 +1578,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "161.405_12",
       "triplePointPressKPa": "81.61973_12"
     }
+  ,
+    "enthalpyFusionKjMol": "3.1_13",
+    "enthalpyVaporizationKjMol": "12.65_14",
+    "bulkModulusGPA": "N/A"
   },
   "Cs": {
     "mass": "132.9055_2",
@@ -1360,6 +1606,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "301.7_10",
       "triplePointPressKPa": "0.0001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "2.09_13",
+    "enthalpyVaporizationKjMol": "65.9_14",
+    "bulkModulusGPA": "2.0_15"
   },
   "Ba": {
     "mass": "137.327_2",
@@ -1384,6 +1634,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1000_10",
       "triplePointPressKPa": "< 1e-4_10"
     }
+  ,
+    "enthalpyFusionKjMol": "7.66_13",
+    "enthalpyVaporizationKjMol": "150.9_14",
+    "bulkModulusGPA": "10.3_15"
   },
   "La": {
     "mass": "138.9055_2",
@@ -1408,6 +1662,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1193_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "10.04_13",
+    "enthalpyVaporizationKjMol": "399.6_14",
+    "bulkModulusGPA": "24.3_15"
   },
   "Ce": {
     "mass": "140.116_2",
@@ -1433,6 +1691,13 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1068_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "8.87_13",
+    "enthalpyVaporizationKjMol": "313.8_14",
+    "bulkModulusGPA": {
+      "value": "23.9_15",
+      "variation": "γ-cerium"
+    }
   },
   "Pr": {
     "mass": "140.9077_2",
@@ -1457,6 +1722,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1208_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "11.3_13",
+    "enthalpyVaporizationKjMol": "332.6_14",
+    "bulkModulusGPA": "30.6_15"
   },
   "Nd": {
     "mass": "144.242_2",
@@ -1481,6 +1750,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1297_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "7.113_13",
+    "enthalpyVaporizationKjMol": "283.7_14",
+    "bulkModulusGPA": "32.7_15"
   },
   "Pm": {
     "mass": "144.9128_2",
@@ -1505,6 +1778,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1315_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "12.6_13",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "35_15"
   },
   "Sm": {
     "mass": "150.36_2",
@@ -1529,6 +1806,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1345_10",
       "triplePointPressKPa": "0.0001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "10.9_13",
+    "enthalpyVaporizationKjMol": "191.6_14",
+    "bulkModulusGPA": "29.4_15"
   },
   "Eu": {
     "mass": "151.964_2",
@@ -1554,6 +1835,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1099_10",
       "triplePointPressKPa": "0.0001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "10.5_13",
+    "enthalpyVaporizationKjMol": "175.7_14",
+    "bulkModulusGPA": "14.7_15"
   },
   "Gd": {
     "mass": "157.25_2",
@@ -1578,6 +1863,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1585_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "15.5_13",
+    "enthalpyVaporizationKjMol": "311.7_14",
+    "bulkModulusGPA": "38.3*_15"
   },
   "Tb": {
     "mass": "158.9254_2",
@@ -1602,6 +1891,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1629_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "16.3_13",
+    "enthalpyVaporizationKjMol": "391_14",
+    "bulkModulusGPA": "39.9_15"
   },
   "Dy": {
     "mass": "162.5_2",
@@ -1626,6 +1919,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1680_10",
       "triplePointPressKPa": "0.0001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "17.2_13",
+    "enthalpyVaporizationKjMol": "293_14",
+    "bulkModulusGPA": "38.4_15"
   },
   "Ho": {
     "mass": "164.9303_2",
@@ -1650,6 +1947,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1734_10",
       "triplePointPressKPa": "0.0001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "17.2_13",
+    "enthalpyVaporizationKjMol": "251_14",
+    "bulkModulusGPA": "39.7_15"
   },
   "Er": {
     "mass": "167.259_2",
@@ -1674,6 +1975,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1802_10",
       "triplePointPressKPa": "0.0001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "17.2_13",
+    "enthalpyVaporizationKjMol": "292.9_14",
+    "bulkModulusGPA": "41.1_15"
   },
   "Tm": {
     "mass": "168.9342_2",
@@ -1698,6 +2003,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1818_10",
       "triplePointPressKPa": "0.0001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "18.4_13",
+    "enthalpyVaporizationKjMol": "247_14",
+    "bulkModulusGPA": "39.7_15"
   },
   "Yb": {
     "mass": "173.045_2",
@@ -1722,6 +2031,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1097_10",
       "triplePointPressKPa": "0.001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "9.2_13",
+    "enthalpyVaporizationKjMol": "159_14",
+    "bulkModulusGPA": "13.3_15"
   },
   "Lu": {
     "mass": "174.9668_2",
@@ -1746,6 +2059,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1925_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "19.2_13",
+    "enthalpyVaporizationKjMol": "428_14",
+    "bulkModulusGPA": "41.1_15"
   },
   "Hf": {
     "mass": "178.49_2",
@@ -1770,6 +2087,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2506_10",
       "triplePointPressKPa": "< 1e-8_10"
     }
+  ,
+    "enthalpyFusionKjMol": "25.5_13",
+    "enthalpyVaporizationKjMol": "661.1_14",
+    "bulkModulusGPA": "109_15"
   },
   "Ta": {
     "mass": "180.9479_2",
@@ -1794,6 +2115,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "3290_10",
       "triplePointPressKPa": "< 1e-8_10"
     }
+  ,
+    "enthalpyFusionKjMol": "31.4_13",
+    "enthalpyVaporizationKjMol": "753.1_14",
+    "bulkModulusGPA": "200_15"
   },
   "W": {
     "mass": "183.84_2",
@@ -1819,6 +2144,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "3695_10",
       "triplePointPressKPa": "< 1e-11_10"
     }
+  ,
+    "enthalpyFusionKjMol": "35.2_13",
+    "enthalpyVaporizationKjMol": "799.1_14",
+    "bulkModulusGPA": "323.2_15"
   },
   "Re": {
     "mass": "186.207_2",
@@ -1843,6 +2172,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "3459_10",
       "triplePointPressKPa": "< 1e-9_10"
     }
+  ,
+    "enthalpyFusionKjMol": "33.1_13",
+    "enthalpyVaporizationKjMol": "707.1_14",
+    "bulkModulusGPA": "372*_15"
   },
   "Os": {
     "mass": "190.23_2",
@@ -1867,6 +2200,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "3306_10",
       "triplePointPressKPa": "< 1e-9_10"
     }
+  ,
+    "enthalpyFusionKjMol": "29.3_13",
+    "enthalpyVaporizationKjMol": "627.6_14",
+    "bulkModulusGPA": "418_15"
   },
   "Ir": {
     "mass": "192.217_2",
@@ -1892,6 +2229,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2719_10",
       "triplePointPressKPa": "< 1e-8_10"
     }
+  ,
+    "enthalpyFusionKjMol": "26.4_13",
+    "enthalpyVaporizationKjMol": "563.6_14",
+    "bulkModulusGPA": "355_15"
   },
   "Pt": {
     "mass": "195.084_2",
@@ -1917,6 +2258,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2045_11",
       "triplePointPressKPa": "2.0e-4_11"
     }
+  ,
+    "enthalpyFusionKjMol": "19.7_13",
+    "enthalpyVaporizationKjMol": "510.5_14",
+    "bulkModulusGPA": "278.3_15"
   },
   "Au": {
     "mass": "196.9666_2",
@@ -1941,6 +2286,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1337.33_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "12.7_13",
+    "enthalpyVaporizationKjMol": "324.4_14",
+    "bulkModulusGPA": "173.2_15"
   },
   "Hg": {
     "mass": "200.592_2",
@@ -1965,6 +2314,13 @@ export const SCIENTIFIC_DATA = {
       "boilingK": "629.88_10",
       "triplePointTempK": "234.3156_12",
       "triplePointPressKPa": "1.65e-7_12"
+    }
+  ,
+    "enthalpyFusionKjMol": "2.331_13",
+    "enthalpyVaporizationKjMol": "59.15_14",
+    "bulkModulusGPA": {
+      "value": "38.2_15",
+      "variation": "1 K"
     }
   },
   "Tl": {
@@ -1991,6 +2347,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "577_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "4.31_13",
+    "enthalpyVaporizationKjMol": "162.1_14",
+    "bulkModulusGPA": "35.9_15"
   },
   "Pb": {
     "mass": "207.2_2",
@@ -2016,6 +2376,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "600.61_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "5.121_13",
+    "enthalpyVaporizationKjMol": "179.4_14",
+    "bulkModulusGPA": "43.0_15"
   },
   "Bi": {
     "mass": "208.9804_2",
@@ -2040,6 +2404,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "544.7_10",
       "triplePointPressKPa": "< 1e-4_10"
     }
+  ,
+    "enthalpyFusionKjMol": "10.48_13",
+    "enthalpyVaporizationKjMol": "179.1_14",
+    "bulkModulusGPA": "31.5_15"
   },
   "Po": {
     "mass": "209_2",
@@ -2066,6 +2434,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "527_10",
       "triplePointPressKPa": "0.01_10"
     }
+  ,
+    "enthalpyFusionKjMol": "10_13",
+    "enthalpyVaporizationKjMol": "100.8_14",
+    "bulkModulusGPA": "26_15"
   },
   "At": {
     "mass": "210_2",
@@ -2091,6 +2463,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "575_10",
       "triplePointPressKPa": "0.1_10"
     }
+  ,
+    "enthalpyFusionKjMol": "23.8_13",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Rn": {
     "mass": "222_2",
@@ -2113,6 +2489,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "202_10",
       "triplePointPressKPa": "70_10"
     }
+  ,
+    "enthalpyFusionKjMol": "2.7_13",
+    "enthalpyVaporizationKjMol": "19.1_14",
+    "bulkModulusGPA": "N/A"
   },
   "Fr": {
     "mass": "223_2",
@@ -2137,6 +2517,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "300_10",
       "triplePointPressKPa": "0.001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "2.0_15"
   },
   "Ra": {
     "mass": "226_2",
@@ -2161,6 +2545,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "973_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "7.15_13",
+    "enthalpyVaporizationKjMol": "136.8_14",
+    "bulkModulusGPA": "13.2*_15"
   },
   "Ac": {
     "mass": "227_2",
@@ -2185,6 +2573,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1500_10",
       "triplePointPressKPa": "< 1e-6_10"
     }
+  ,
+    "enthalpyFusionKjMol": "14.2_13",
+    "enthalpyVaporizationKjMol": "293_14",
+    "bulkModulusGPA": "25_15"
   },
   "Th": {
     "mass": "232.0377_2",
@@ -2209,6 +2601,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2023_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "19.2_13",
+    "enthalpyVaporizationKjMol": "543.9_14",
+    "bulkModulusGPA": "54.3_15"
   },
   "Pa": {
     "mass": "231.0359_2",
@@ -2233,6 +2629,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1841_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "16.7_13",
+    "enthalpyVaporizationKjMol": "481_14",
+    "bulkModulusGPA": "76*_15"
   },
   "U": {
     "mass": "238.0289_2",
@@ -2257,6 +2657,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1405.3_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "15.5_13",
+    "enthalpyVaporizationKjMol": "422.6_14",
+    "bulkModulusGPA": "98.7_15"
   },
   "Np": {
     "mass": "237_2",
@@ -2281,6 +2685,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "998*_10",
       "triplePointPressKPa": "3200*_10"
     }
+  ,
+    "enthalpyFusionKjMol": "9.46_13",
+    "enthalpyVaporizationKjMol": "336.6_14",
+    "bulkModulusGPA": "68_15"
   },
   "Pu": {
     "mass": "244_2",
@@ -2305,6 +2713,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "912.5_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "2.8_13",
+    "enthalpyVaporizationKjMol": "343.5_14",
+    "bulkModulusGPA": "54_15"
   },
   "Am": {
     "mass": "243_2",
@@ -2329,6 +2741,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1449_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "14.4_13",
+    "enthalpyVaporizationKjMol": "238.5_14",
+    "bulkModulusGPA": "N/A"
   },
   "Cm": {
     "mass": "247_2",
@@ -2353,6 +2769,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1613_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Bk": {
     "mass": "247_2",
@@ -2377,6 +2797,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1259_10",
       "triplePointPressKPa": "< 1e-7_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Cf": {
     "mass": "251_2",
@@ -2401,6 +2825,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1173_10",
       "triplePointPressKPa": "< 1e-5_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Es": {
     "mass": "252_2",
@@ -2425,6 +2853,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1133_10",
       "triplePointPressKPa": "0.001_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Fm": {
     "mass": "257_2",
@@ -2449,6 +2881,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1800_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Md": {
     "mass": "258_2",
@@ -2473,6 +2909,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1100_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "No": {
     "mass": "259_2",
@@ -2497,6 +2937,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1100_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Lr": {
     "mass": "262_2",
@@ -2521,6 +2965,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "1900_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Rf": {
     "mass": "267_2",
@@ -2545,6 +2993,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2400_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Db": {
     "mass": "268_2",
@@ -2567,6 +3019,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "2800_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Sg": {
     "mass": "271_2",
@@ -2589,6 +3045,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "3000_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Bh": {
     "mass": "274_2",
@@ -2611,6 +3071,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "3200_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Hs": {
     "mass": "269_2",
@@ -2633,6 +3097,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "3500_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Mt": {
     "mass": "276_2",
@@ -2655,6 +3123,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "3800_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Ds": {
     "mass": "281_2",
@@ -2677,6 +3149,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "4000_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Rg": {
     "mass": "281_2",
@@ -2699,6 +3175,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "4200_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Cn": {
     "mass": "285_2",
@@ -2721,6 +3201,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "283*_10",
       "triplePointPressKPa": "25*_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Nh": {
     "mass": "286_2",
@@ -2743,6 +3227,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "700_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Fl": {
     "mass": "289_2",
@@ -2765,6 +3253,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "200_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Mc": {
     "mass": "288_2",
@@ -2787,6 +3279,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "670_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Lv": {
     "mass": "293_2",
@@ -2809,6 +3305,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "708_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Ts": {
     "mass": "294_2",
@@ -2831,6 +3331,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "723_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   },
   "Og": {
     "mass": "294_2",
@@ -2853,6 +3357,10 @@ export const SCIENTIFIC_DATA = {
       "triplePointTempK": "325_10",
       "triplePointPressKPa": "N/A_10"
     }
+  ,
+    "enthalpyFusionKjMol": "N/A",
+    "enthalpyVaporizationKjMol": "N/A",
+    "bulkModulusGPA": "N/A"
   }
 } as const;
 

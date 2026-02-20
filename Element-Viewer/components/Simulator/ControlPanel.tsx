@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Input } from '@openai/apps-sdk-ui/components/Input';
 import { Select } from '@openai/apps-sdk-ui/components/Select';
@@ -69,12 +69,34 @@ const ControlPanel: React.FC<Props> = ({
     }
   };
 
-  const endInteraction = () => {
-    if (!activeControl) return;
-    setActiveControl(null);
-    onInteractionChange(false);
-    onSliderRelease?.();
+  const finishInteraction = () => {
+    setActiveControl((current) => {
+      if (!current) return current;
+      onInteractionChange(false);
+      onSliderRelease?.();
+      return null;
+    });
   };
+
+  const endInteraction = () => {
+    finishInteraction();
+  };
+
+  useEffect(() => {
+    if (!activeControl) return;
+
+    const handleWindowPointerEnd = () => {
+      finishInteraction();
+    };
+
+    window.addEventListener('pointerup', handleWindowPointerEnd);
+    window.addEventListener('pointercancel', handleWindowPointerEnd);
+
+    return () => {
+      window.removeEventListener('pointerup', handleWindowPointerEnd);
+      window.removeEventListener('pointercancel', handleWindowPointerEnd);
+    };
+  }, [activeControl, onInteractionChange, onSliderRelease]);
 
   const handleTempInputChange = (value: number) => {
     if (!Number.isFinite(value)) return;
@@ -155,8 +177,7 @@ const ControlPanel: React.FC<Props> = ({
 
         <div
           className="touch-none"
-          onPointerDownCapture={(event) => {
-            event.preventDefault();
+          onPointerDown={() => {
             startInteraction('temperature');
           }}
         >
@@ -225,8 +246,7 @@ const ControlPanel: React.FC<Props> = ({
 
         <div
           className="touch-none"
-          onPointerDownCapture={(event) => {
-            event.preventDefault();
+          onPointerDown={() => {
             startInteraction('pressure');
           }}
         >

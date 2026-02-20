@@ -2,6 +2,7 @@
 import { ChemicalElement, ElementProperties } from "../types";
 import { SOURCE_DATA } from "./periodic_table_source";
 import { SCIENTIFIC_DATA } from "./scientific_data";
+import { SCIENTIFIC_DATA as SCIENTIFIC_THERMO_DATA } from "../scientific_data";
 import { CUSTOM_DATA, SODIUM_FALLBACK, ElementCustomData } from "./elements-visuals";
 
 // The 11 Frames extracted from the provided SVG liquid path (Preserved from original)
@@ -19,6 +20,8 @@ export const MATTER_PATH_FRAMES = [
   "M 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 C 0,0 0,0 0,0 Z"
 ];
 
+const SODIUM_MOLAR_MASS_KG = 22.98976928 / 1000;
+
 // Adapter: Transform Raw JSON (Layer 1) + Scientific (Layer 2) + Custom (Layer 3)
 export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any) => {
 
@@ -27,6 +30,8 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
 
   // Layer 2: Scientific Data (Physics + Color)
   const scientific = (SCIENTIFIC_DATA as any)[symbol];
+  // Official thermodynamics/compression dataset (user-updated scientific_data.ts at project root)
+  const scientificThermo = (SCIENTIFIC_THERMO_DATA as any)[symbol];
 
   // Layer 3: Custom Data (Legacy Props + Simulation Tuning)
   const customData: ElementCustomData = CUSTOM_DATA[symbol] || SODIUM_FALLBACK;
@@ -75,6 +80,48 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
       val: isValid ? val : fallback,
       str: str, // Keep original string (with *) for display, but without suffix
       source: sourceId
+    };
+  };
+
+  // Parses bulk modulus data that may come as:
+  // - "12.3_15"
+  // - "N/A"
+  // - { value: "12.3_15", variation: "diamond" }
+  const parseBulkModulusValue = (
+    input: string | number | { value?: string | number; variation?: string } | undefined
+  ) => {
+    if (input === undefined || input === null) {
+      return { val: undefined as number | undefined, str: "N/A", source: undefined as number | undefined };
+    }
+
+    if (typeof input === "object") {
+      const valueField = input.value;
+      const variation = typeof input.variation === "string" ? input.variation.trim() : "";
+      const parsedValue = parseSciValue(valueField, -1);
+
+      if (parsedValue.str === "N/A" || parsedValue.val <= 0) {
+        return { val: undefined as number | undefined, str: "N/A", source: undefined as number | undefined };
+      }
+
+      const baseDisplay = parsedValue.str || parsedValue.val.toString();
+      const displayWithVariation = variation ? `${baseDisplay} (${variation})` : baseDisplay;
+
+      return {
+        val: parsedValue.val,
+        str: displayWithVariation,
+        source: parsedValue.source
+      };
+    }
+
+    const parsed = parseSciValue(input, -1);
+    if (parsed.str === "N/A" || parsed.val <= 0) {
+      return { val: undefined as number | undefined, str: "N/A", source: undefined as number | undefined };
+    }
+
+    return {
+      val: parsed.val,
+      str: parsed.str || parsed.val.toString(),
+      source: parsed.source
     };
   };
 
@@ -196,9 +243,21 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   const displayAffinity = source.electron_affinity !== undefined && source.electron_affinity !== null ? source.electron_affinity : "N/A";
   const displayElectronegativity = source.electronegativity_pauling !== undefined && source.electronegativity_pauling !== null ? source.electronegativity_pauling : "N/A";
 
-  // Bulk Modulus (Layer 3)
-  const rawBulk = specificLegacyProps.bulkModulusGPa;
-  const displayBulk = rawBulk !== undefined ? `${rawBulk} GPa` : "N/A";
+  // OFFICIAL enthalpy/bulk values from user-updated scientific_data.ts (root)
+  const fallbackEnthalpyFusionKjMol = (baseLegacyProps.enthalpyFusionJmol || 2600) / 1000;
+  const fallbackEnthalpyVapKjMol =
+    (baseLegacyProps.enthalpyVapJmol ||
+      ((baseLegacyProps.latentHeatVaporization || 0) * SODIUM_MOLAR_MASS_KG)) / 1000;
+
+  const enthalpyFusionOfficial = parseSciValue(scientificThermo?.enthalpyFusionKjMol, fallbackEnthalpyFusionKjMol);
+  const enthalpyVapOfficial = parseSciValue(scientificThermo?.enthalpyVaporizationKjMol, fallbackEnthalpyVapKjMol);
+  const bulkModulusOfficial = parseBulkModulusValue(scientificThermo?.bulkModulusGPA);
+
+  const enthalpyFusionJmolPhysics = ensurePhysical(enthalpyFusionOfficial.val * 1000, baseLegacyProps.enthalpyFusionJmol || 2600);
+  const enthalpyVapJmolPhysics = ensurePhysical(
+    enthalpyVapOfficial.val * 1000,
+    baseLegacyProps.enthalpyVapJmol || ((baseLegacyProps.latentHeatVaporization || 0) * SODIUM_MOLAR_MASS_KG)
+  );
 
   // 3. Construct Properties Object adhering to Merge Strategy
   const properties: ElementProperties = {
@@ -218,7 +277,9 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     ionizationEnergyDisplay: displayIon !== "N/A" ? `${displayIon} kJ/mol` : "N/A",
     oxidationStatesDisplay: displayOx,
     thermalConductivityDisplay: thermCond.str ? `${thermCond.str} W/mK` : 'N/A',
-    bulkModulusDisplay: displayBulk,
+    enthalpyFusionKjMolDisplay: enthalpyFusionOfficial.str || "N/A",
+    enthalpyVaporizationKjMolDisplay: enthalpyVapOfficial.str || "N/A",
+    bulkModulusDisplay: bulkModulusOfficial.str === "N/A" ? "N/A" : `${bulkModulusOfficial.str} GPa`,
     electricalConductivityDisplay: 'N/A', // Not currently in scientific data source, kept as fallback for UI if added later
 
     density: physicsDensity,
@@ -258,9 +319,20 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     // Sources
     latentHeatFusionSource: lhFusion.source,
     latentHeatVaporizationSource: lhVap.source,
+    enthalpyFusionSource: enthalpyFusionOfficial.source,
+    enthalpyVaporizationSource: enthalpyVapOfficial.source,
+    bulkModulusSource: bulkModulusOfficial.source,
+
+    // --- OFFICIAL THERMO/COMPRESSION SOURCE ---
+    // enthalpy values always keep sodium fallback for physics when source is N/A/missing,
+    // but UI keeps the raw source string (including N/A and *).
+    enthalpyFusionJmol: enthalpyFusionJmolPhysics,
+    enthalpyVapJmol: enthalpyVapJmolPhysics,
+    // bulk modulus has NO sodium fallback for compression:
+    // missing/invalid source data => undefined => no compression animation.
+    bulkModulusGPa: bulkModulusOfficial.val,
 
     // --- RETAINED LEGACY (Layer 3 - Custom/Sodium Fallback) ---
-    bulkModulusGPa: specificLegacyProps.bulkModulusGPa ?? baseLegacyProps.bulkModulusGPa,
     criticalPoint: criticalPointObj,
     criticalPointSource: criticalSource,
     criticalPointTempDisplay: cpTempRes.str || "N/A",
@@ -275,10 +347,6 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     // Simulation Tuning Parameters (Always Layer 3)
     simonA_Pa: specificLegacyProps.simonA_Pa ?? baseLegacyProps.simonA_Pa,
     simonC: specificLegacyProps.simonC ?? baseLegacyProps.simonC,
-
-    // Optional Enthalpy Overrides
-    enthalpyFusionJmol: specificLegacyProps.enthalpyFusionJmol ?? baseLegacyProps.enthalpyFusionJmol,
-    enthalpyVapJmol: specificLegacyProps.enthalpyVapJmol,
   };
 
   // 4. Construct Visual DNA (Strictly from Layer 2 Scientific Data)
