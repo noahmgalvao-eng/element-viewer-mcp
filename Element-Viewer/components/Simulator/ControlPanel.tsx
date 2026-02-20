@@ -98,20 +98,56 @@ const ControlPanel: React.FC<Props> = ({
     setPressure(Math.pow(10, value));
   };
 
-  if (activeControl === 'temperature') {
-    return (
-      <section
-        className="rounded-3xl border border-transparent bg-transparent p-4 shadow-none"
-        onPointerUp={endInteraction}
-        onPointerCancel={endInteraction}
-      >
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-default">Temperature</p>
+  const isDragging = activeControl !== null;
+  const showTemperatureBlock = !isDragging || activeControl === 'temperature';
+  const showPressureBlock = !isDragging || activeControl === 'pressure';
+
+  return (
+    <section
+      className={`space-y-4 rounded-3xl border p-4 ${
+        isDragging
+          ? 'border-transparent bg-transparent shadow-none touch-none'
+          : 'border-default bg-surface shadow-sm'
+      }`}
+      onPointerUp={endInteraction}
+      onPointerCancel={endInteraction}
+    >
+      {!isDragging && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="heading-xs text-default">Environmental controls</h3>
+            <p className="text-xs text-secondary">Adjust global temperature and pressure.</p>
+          </div>
+        </div>
+      )}
+
+      <div className={`space-y-2 ${showTemperatureBlock ? '' : 'hidden'}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-default">Temperature</p>
+          {isDragging ? (
             <Badge color="secondary" variant="outline">
               {Number(currentTempDisplay.toFixed(tempUnit === 'K' ? 0 : 2))} {tempUnit}
             </Badge>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                value={Number(currentTempDisplay.toFixed(tempUnit === 'K' ? 0 : 2))}
+                onChange={(event) => handleTempInputChange(Number(event.target.value))}
+                className="w-28"
+              />
+              <Select
+                options={TEMP_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
+                value={tempUnit}
+                onChange={(next) => setTempUnit(next.value as TempUnit)}
+                block={false}
+                size="sm"
+              />
+            </div>
+          )}
+        </div>
+
+        <div onPointerDownCapture={() => startInteraction('temperature')}>
           <Slider
             value={currentTempDisplay}
             min={minSliderTemp}
@@ -119,29 +155,59 @@ const ControlPanel: React.FC<Props> = ({
             step={tempUnit === 'K' ? 10 : 1}
             unit={tempUnit}
             onChange={(value) => {
-              startInteraction('temperature');
               handleTempInputChange(value);
             }}
           />
         </div>
-      </section>
-    );
-  }
 
-  if (activeControl === 'pressure') {
-    return (
-      <section
-        className="rounded-3xl border border-transparent bg-transparent p-4 shadow-none"
-        onPointerUp={endInteraction}
-        onPointerCancel={endInteraction}
-      >
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-default">Pressure</p>
+        {!isDragging && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge
+              color={Math.abs(temperature - meltPoint) < 50 ? 'warning' : 'secondary'}
+              variant="soft"
+            >
+              Tmelt {meltPoint.toFixed(2)} K
+            </Badge>
+            <Badge
+              color={Math.abs(temperature - boilPoint) < 100 ? 'danger' : 'secondary'}
+              variant="soft"
+            >
+              Tboil {boilPoint.toFixed(2)} K
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      {!isDragging && <div className="border-t border-subtle pt-4" />}
+
+      <div className={`space-y-2 ${showPressureBlock ? '' : 'hidden'}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-default">Pressure</p>
+          {isDragging ? (
             <Badge color="secondary" variant="outline">
               {compactPressure}
             </Badge>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                step="any"
+                value={Number(currentPressureDisplay.toPrecision(6))}
+                onChange={(event) => handlePressureInputChange(Number(event.target.value))}
+                className="w-32"
+              />
+              <Select
+                options={PRESSURE_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
+                value={pressureUnit}
+                onChange={(next) => setPressureUnit(next.value as PressureUnit)}
+                block={false}
+                size="sm"
+              />
+            </div>
+          )}
+        </div>
+
+        <div onPointerDownCapture={() => startInteraction('pressure')}>
           <Slider
             value={logPressureValue}
             min={-4}
@@ -149,124 +215,28 @@ const ControlPanel: React.FC<Props> = ({
             step={0.05}
             label="Log scale"
             onChange={(value) => {
-              startInteraction('pressure');
               handlePressureSliderChange(value);
             }}
           />
         </div>
-      </section>
-    );
-  }
 
-  return (
-    <section
-      className="space-y-4 rounded-3xl border border-default bg-surface p-4 shadow-sm"
-      onPointerUp={endInteraction}
-      onPointerCancel={endInteraction}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h3 className="heading-xs text-default">Environmental controls</h3>
-          <p className="text-xs text-secondary">Adjust global temperature and pressure.</p>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-default">Temperature</p>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              value={Number(currentTempDisplay.toFixed(tempUnit === 'K' ? 0 : 2))}
-              onChange={(event) => handleTempInputChange(Number(event.target.value))}
-              className="w-28"
-            />
-            <Select
-              options={TEMP_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
-              value={tempUnit}
-              onChange={(next) => setTempUnit(next.value as TempUnit)}
-              block={false}
-              size="sm"
-            />
-          </div>
-        </div>
-
-        <Slider
-          value={currentTempDisplay}
-          min={minSliderTemp}
-          max={maxSliderTemp}
-          step={tempUnit === 'K' ? 10 : 1}
-          unit={tempUnit}
-          onChange={(value) => {
-            startInteraction('temperature');
-            handleTempInputChange(value);
-          }}
-        />
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge
-            color={Math.abs(temperature - meltPoint) < 50 ? 'warning' : 'secondary'}
-            variant="soft"
-          >
-            Tmelt {meltPoint.toFixed(2)} K
+        {!isDragging && (
+          <Badge color="secondary" variant="outline">
+            {compactPressure}
           </Badge>
-          <Badge
-            color={Math.abs(temperature - boilPoint) < 100 ? 'danger' : 'secondary'}
-            variant="soft"
-          >
-            Tboil {boilPoint.toFixed(2)} K
-          </Badge>
-        </div>
+        )}
       </div>
 
-      <div className="border-t border-subtle pt-4" />
+      {!isDragging && <div className="border-t border-subtle pt-4" />}
 
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-default">Pressure</p>
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              step="any"
-              value={Number(currentPressureDisplay.toPrecision(6))}
-              onChange={(event) => handlePressureInputChange(Number(event.target.value))}
-              className="w-32"
-            />
-            <Select
-              options={PRESSURE_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
-              value={pressureUnit}
-              onChange={(next) => setPressureUnit(next.value as PressureUnit)}
-              block={false}
-              size="sm"
-            />
-          </div>
-        </div>
-
-        <Slider
-          value={logPressureValue}
-          min={-4}
-          max={11}
-          step={0.05}
-          label="Log scale"
-          onChange={(value) => {
-            startInteraction('pressure');
-            handlePressureSliderChange(value);
-          }}
+      {!isDragging && (
+        <Switch
+          checked={showParticles}
+          onCheckedChange={setShowParticles}
+          label="X-Ray Vision"
+          labelPosition="start"
         />
-
-        <Badge color="secondary" variant="outline">
-          {compactPressure}
-        </Badge>
-      </div>
-
-      <div className="border-t border-subtle pt-4" />
-
-      <Switch
-        checked={showParticles}
-        onCheckedChange={setShowParticles}
-        label="X-Ray Vision"
-        labelPosition="start"
-      />
+      )}
     </section>
   );
 };

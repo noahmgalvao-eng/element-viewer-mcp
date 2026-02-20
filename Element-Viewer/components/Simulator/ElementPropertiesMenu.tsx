@@ -126,54 +126,62 @@ const parseDisplayValue = (
   unit?: string,
   fallbackNumber?: number,
 ) => {
-  if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
-    return { value: formatNumber(rawValue), estimated: false, na: false };
-  }
-
-  if (typeof rawValue === 'string') {
-    const normalized = cleanStringValue(rawValue);
-    if (!normalized || normalized.toUpperCase() === 'N/A') {
-      return { value: 'N/A', estimated: false, na: true };
+  try {
+    if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
+      return { value: formatNumber(rawValue), estimated: false, na: false };
     }
 
-    const estimated = normalized.includes('*');
-    let value = normalized.replace(/\*/g, '').trim();
-    if (unit && value) {
-      const unitPattern = new RegExp(`\\s*${escapeRegex(unit)}$`, 'i');
-      value = value.replace(unitPattern, '').trim();
+    if (typeof rawValue === 'string') {
+      const normalized = cleanStringValue(rawValue);
+      if (!normalized || normalized.toUpperCase() === 'N/A') {
+        return { value: 'N/A', estimated: false, na: true };
+      }
+
+      const estimated = normalized.includes('*');
+      let value = normalized.replace(/\*/g, '').trim();
+      if (unit && value) {
+        const unitPattern = new RegExp(`\\s*${escapeRegex(unit)}$`, 'i');
+        value = value.replace(unitPattern, '').trim();
+      }
+
+      if (!value || value.toUpperCase() === 'N/A') {
+        return { value: 'N/A', estimated: false, na: true };
+      }
+
+      return { value, estimated, na: false };
     }
 
-    if (!value || value.toUpperCase() === 'N/A') {
-      return { value: 'N/A', estimated: false, na: true };
+    if (typeof fallbackNumber === 'number' && Number.isFinite(fallbackNumber)) {
+      return { value: formatNumber(fallbackNumber), estimated: false, na: false };
     }
-
-    return { value, estimated, na: false };
-  }
-
-  if (typeof fallbackNumber === 'number' && Number.isFinite(fallbackNumber)) {
-    return { value: formatNumber(fallbackNumber), estimated: false, na: false };
+  } catch {
+    return { value: 'N/A', estimated: false, na: true };
   }
 
   return { value: 'N/A', estimated: false, na: true };
 };
 
 const formatElectronConfiguration = (config?: string) => {
-  if (!config || config.trim() === '' || config.trim().toUpperCase() === 'N/A') return 'N/A';
+  try {
+    if (!config || config.trim() === '' || config.trim().toUpperCase() === 'N/A') return 'N/A';
 
-  const tokens = config.trim().split(/\s+/);
-  return tokens.map((token, index) => {
-    const match = token.match(/^(\d+[spdfghijklm])(\d+)$/i);
-    const spacer = index < tokens.length - 1 ? ' ' : '';
+    const tokens = config.trim().split(/\s+/);
+    return tokens.map((token, index) => {
+      const match = token.match(/^(\d+[spdfghijklm])(\d+)$/i);
+      const spacer = index < tokens.length - 1 ? ' ' : '';
 
-    if (!match) return `${token}${spacer}`;
+      if (!match) return `${token}${spacer}`;
 
-    const exponent = match[2]
-      .split('')
-      .map((digit) => SUPERSCRIPT_MAP[digit] || digit)
-      .join('');
+      const exponent = match[2]
+        .split('')
+        .map((digit) => SUPERSCRIPT_MAP[digit] || digit)
+        .join('');
 
-    return `${match[1]}${exponent}${spacer}`;
-  });
+      return `${match[1]}${exponent}${spacer}`;
+    });
+  } catch {
+    return config || 'N/A';
+  }
 };
 
 const PropertyCard: React.FC<{ item: PropertyItem }> = ({ item }) => {
