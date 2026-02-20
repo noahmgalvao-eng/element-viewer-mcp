@@ -2,3 +2,17 @@
 @import "@openai/apps-sdk-ui/css";
 @source "../node_modules/@openai/apps-sdk-ui";
 @source ".";
+
+.tooltip-solid {
+  opacity: 1 !important;
+  background: var(--color-surface-elevated) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.line-clamp-2-soft {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}

@@ -45,6 +45,8 @@ import {
     safeHexColor,
 } from './app/appDefinitions';
 
+const TOOLTIP_CLASS = 'tooltip-solid';
+
 function App() {
     // State for Selection (Array for Multi-Element)
     const [selectedElements, setSelectedElements] = useState<ChemicalElement[]>([ELEMENTS[0]]);
@@ -624,7 +626,7 @@ function App() {
                 className={`fixed z-30 flex flex-col gap-3 transition-all duration-300 ${isSidebarOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
                 style={{ top: `${16 + insets.top}px`, left: `${16 + insets.left}px` }}
             >
-                <Tooltip content="Open settings">
+                <Tooltip content="Open settings" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button
                             color="secondary"
@@ -642,7 +644,7 @@ function App() {
                     </span>
                 </Tooltip>
 
-                <Tooltip content={isPaused ? 'Resume simulation' : 'Pause simulation'}>
+                <Tooltip content={isPaused ? 'Resume simulation' : 'Pause simulation'} contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill uniform size="lg" onClick={handleTogglePause}>
                             {isPaused ? <Play className="size-5" /> : <Pause className="size-5" />}
@@ -650,7 +652,7 @@ function App() {
                     </span>
                 </Tooltip>
 
-                <Tooltip content={isRecording ? 'Stop recording' : 'Start recording'}>
+                <Tooltip content={isRecording ? 'Stop recording' : 'Start recording'} contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button
                             color={isRecording ? 'danger' : 'secondary'}
@@ -665,7 +667,7 @@ function App() {
                     </span>
                 </Tooltip>
 
-                <Tooltip content="Toggle simulation speed">
+                <Tooltip content="Toggle simulation speed" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill size="lg" onClick={handleToggleSpeed}>
                             <Bolt className="size-4" />
@@ -679,7 +681,7 @@ function App() {
                 className="fixed z-30 grid grid-cols-2 gap-2"
                 style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
             >
-                <Tooltip content="Picture-in-picture">
+                <Tooltip content="Picture-in-picture" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill uniform onClick={handleTogglePiP}>
                             <PictureInPicture className="size-4" />
@@ -687,7 +689,7 @@ function App() {
                     </span>
                 </Tooltip>
 
-                <Tooltip content={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
+                <Tooltip content={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill uniform onClick={handleToggleFullscreen}>
                             {isFullscreen ? <Collapse className="size-4" /> : <Expand className="size-4" />}
@@ -697,7 +699,7 @@ function App() {
 
                 <span />
 
-                <Tooltip content="Ask ChatGPT about the current simulation">
+                <Tooltip content="Ask ChatGPT about the current simulation" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="info" variant="soft" pill uniform onClick={handleInfoButtonClick}>
                             <InfoCircle className="size-4" />
@@ -707,7 +709,7 @@ function App() {
 
                 <span />
 
-                <Tooltip content="Run reaction inference">
+                <Tooltip content="Run reaction inference" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="success" variant="soft" pill uniform onClick={handleReactionButtonClick}>
                             <Flask className="size-4" />

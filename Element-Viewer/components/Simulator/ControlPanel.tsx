@@ -1,12 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Input } from '@openai/apps-sdk-ui/components/Input';
-import { RadioGroup } from '@openai/apps-sdk-ui/components/RadioGroup';
 import { Select } from '@openai/apps-sdk-ui/components/Select';
-import { SelectControl } from '@openai/apps-sdk-ui/components/SelectControl';
 import { Slider } from '@openai/apps-sdk-ui/components/Slider';
 import { Switch } from '@openai/apps-sdk-ui/components/Switch';
-import { SettingsSlider } from '@openai/apps-sdk-ui/components/Icon';
 import {
   TempUnit,
   PressureUnit,
@@ -45,7 +42,6 @@ const ControlPanel: React.FC<Props> = ({
 }) => {
   const [tempUnit, setTempUnit] = useState<TempUnit>('K');
   const [pressureUnit, setPressureUnit] = useState<PressureUnit>('Pa');
-  const [pressureReadout, setPressureReadout] = useState<'scientific' | 'compact'>('scientific');
   const [activeControl, setActiveControl] = useState<'temperature' | 'pressure' | null>(null);
 
   const minTempK = 0;
@@ -61,6 +57,11 @@ const ControlPanel: React.FC<Props> = ({
     return -4;
   }, [pressure]);
 
+  const compactPressure = useMemo(
+    () => `${(pressure / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 })} kPa`,
+    [pressure],
+  );
+
   const startInteraction = (target: 'temperature' | 'pressure') => {
     if (activeControl !== target) {
       setActiveControl(target);
@@ -69,6 +70,7 @@ const ControlPanel: React.FC<Props> = ({
   };
 
   const endInteraction = () => {
+    if (!activeControl) return;
     setActiveControl(null);
     onInteractionChange(false);
     onSliderRelease?.();
@@ -96,22 +98,78 @@ const ControlPanel: React.FC<Props> = ({
     setPressure(Math.pow(10, value));
   };
 
+  if (activeControl === 'temperature') {
+    return (
+      <section
+        className="rounded-3xl border border-transparent bg-transparent p-4 shadow-none"
+        onPointerUp={endInteraction}
+        onPointerCancel={endInteraction}
+      >
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-default">Temperature</p>
+            <Badge color="secondary" variant="outline">
+              {Number(currentTempDisplay.toFixed(tempUnit === 'K' ? 0 : 2))} {tempUnit}
+            </Badge>
+          </div>
+          <Slider
+            value={currentTempDisplay}
+            min={minSliderTemp}
+            max={maxSliderTemp}
+            step={tempUnit === 'K' ? 10 : 1}
+            unit={tempUnit}
+            onChange={(value) => {
+              startInteraction('temperature');
+              handleTempInputChange(value);
+            }}
+          />
+        </div>
+      </section>
+    );
+  }
+
+  if (activeControl === 'pressure') {
+    return (
+      <section
+        className="rounded-3xl border border-transparent bg-transparent p-4 shadow-none"
+        onPointerUp={endInteraction}
+        onPointerCancel={endInteraction}
+      >
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-default">Pressure</p>
+            <Badge color="secondary" variant="outline">
+              {compactPressure}
+            </Badge>
+          </div>
+          <Slider
+            value={logPressureValue}
+            min={-4}
+            max={11}
+            step={0.05}
+            label="Log scale"
+            onChange={(value) => {
+              startInteraction('pressure');
+              handlePressureSliderChange(value);
+            }}
+          />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section
       className="space-y-4 rounded-3xl border border-default bg-surface p-4 shadow-sm"
       onPointerUp={endInteraction}
       onPointerCancel={endInteraction}
     >
-      <SelectControl
-        variant="soft"
-        selected
-        block
-        size="sm"
-        StartIcon={SettingsSlider}
-        onInteract={() => {}}
-      >
-        Environmental controls
-      </SelectControl>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="heading-xs text-default">Environmental controls</h3>
+          <p className="text-xs text-secondary">Adjust global temperature and pressure.</p>
+        </div>
+      </div>
 
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -196,21 +254,8 @@ const ControlPanel: React.FC<Props> = ({
           }}
         />
 
-        <RadioGroup
-          aria-label="Pressure readout style"
-          value={pressureReadout}
-          onChange={(next) => setPressureReadout(next)}
-          direction="row"
-          className="text-xs"
-        >
-          <RadioGroup.Item value="scientific">Scientific</RadioGroup.Item>
-          <RadioGroup.Item value="compact">Compact</RadioGroup.Item>
-        </RadioGroup>
-
         <Badge color="secondary" variant="outline">
-          {pressureReadout === 'scientific'
-            ? `${pressure.toExponential(4)} Pa`
-            : `${(pressure / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 })} kPa`}
+          {compactPressure}
         </Badge>
       </div>
 
