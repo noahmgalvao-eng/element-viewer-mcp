@@ -139,7 +139,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
           pointerEvents: isOpen ? 'auto' : 'none',
         }}
       >
-        <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-all duration-100 ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "border border-default bg-surface-elevated shadow-2xl"}`}>
+        <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-all duration-100 ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
           <div
             className="mx-auto mb-1 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
             onPointerDown={handleDragStart}
@@ -283,7 +283,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
                     className="periodic-cell"
                     style={{ gridColumn: position.xpos, gridRow: position.ypos, marginTop: position.ypos >= 9 ? "3px" : undefined }}
                   >
-                    <span className="pointer-events-none absolute left-0.5 top-0 text-[8px] leading-none text-tertiary">
+                    <span className="pointer-events-none absolute left-1 top-1 text-[8px] leading-none text-tertiary">
                       {el.atomicNumber}
                     </span>
                     <span className="text-[10px] font-semibold leading-none sm:text-2xs">{el.symbol}</span>
