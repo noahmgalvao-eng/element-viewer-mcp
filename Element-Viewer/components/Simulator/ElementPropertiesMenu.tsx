@@ -10,7 +10,7 @@ import {
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import { TextLink } from '@openai/apps-sdk-ui/components/TextLink';
 import { CopyTooltip, Tooltip } from '@openai/apps-sdk-ui/components/Tooltip';
-import { ChemicalElement, PhysicsState } from '../../types';
+import { ChemicalElement, MatterState, PhysicsState } from '../../types';
 import { SOURCE_DATA } from '../../data/periodic_table_source';
 
 interface Props {
@@ -182,6 +182,34 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const hasTriplePoint = Boolean(triplePoint && triplePoint.tempK > 0 && triplePoint.pressurePa > 0);
   const hasCriticalPoint = Boolean(criticalPoint && criticalPoint.tempK > 0 && criticalPoint.pressurePa > 0);
 
+
+  const isLiquidLike = [
+    MatterState.LIQUID,
+    MatterState.MELTING,
+    MatterState.BOILING,
+    MatterState.EQUILIBRIUM_MELT,
+    MatterState.EQUILIBRIUM_BOIL,
+    MatterState.EQUILIBRIUM_TRIPLE,
+  ].includes(physicsState.state);
+
+  const isGasLike = [
+    MatterState.GAS,
+    MatterState.SUPERCRITICAL,
+    MatterState.TRANSITION_SCF,
+    MatterState.BOILING,
+    MatterState.EQUILIBRIUM_BOIL,
+    MatterState.SUBLIMATION,
+    MatterState.EQUILIBRIUM_SUB,
+  ].includes(physicsState.state);
+
+  const meltTargetTemp = isLiquidLike
+    ? Math.max(1, physicsState.meltingPointCurrent - 25)
+    : physicsState.meltingPointCurrent + 25;
+  const boilTargetTemp = physicsState.boilingPointCurrent + Math.max(5, physicsState.boilingPointCurrent * 0.02);
+  const sublimationTemp = Math.max(1, physicsState.sublimationPointCurrent || triplePoint?.tempK || physicsState.meltingPointCurrent);
+  const sublimationPressure = triplePoint ? Math.max(1, triplePoint.pressurePa * 0.8) : 1;
+  const sublimationTargetTemp = isGasLike ? Math.max(1, sublimationTemp - 40) : sublimationTemp + 40;
+
   const atomicMass = parseDisplayValue(
     typeof sourceInfo?.atomic_mass === 'number' ? sourceInfo.atomic_mass : element.mass,
     'u',
@@ -331,32 +359,32 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 gap-2">
-            <Tooltip content="Set global temperature to this pressure-adjusted melting point" contentClassName={TOOLTIP_CLASS}>
+          <div className="grid grid-cols-2 gap-2">
+            <Tooltip content="Set global temperature below or above the melting threshold" contentClassName={TOOLTIP_CLASS}>
               <span>
-                <Button color="warning" variant="soft" block onClick={() => onSetTemperature(physicsState.meltingPointCurrent)}>
+                <Button color="warning" variant="soft" block onClick={() => onSetTemperature(meltTargetTemp)}>
                   <ArrowUp className="size-4" />
-                  Melt {fmt(physicsState.meltingPointCurrent, ' K')}
+                  {isLiquidLike ? 'Solidify' : 'Melt'} {isLiquidLike ? '<' : '>'} {fmt(physicsState.meltingPointCurrent, ' K')}
                 </Button>
               </span>
             </Tooltip>
 
-            <Tooltip content="Set global temperature to this pressure-adjusted boiling point" contentClassName={TOOLTIP_CLASS}>
+            <Tooltip content="Set global temperature above the pressure-adjusted boiling point" contentClassName={TOOLTIP_CLASS}>
               <span>
                 <Button
                   color="danger"
                   variant="soft"
                   block
                   disabled={physicsState.boilingPointCurrent >= 49000}
-                  onClick={() => onSetTemperature(physicsState.boilingPointCurrent)}
+                  onClick={() => onSetTemperature(boilTargetTemp)}
                 >
                   <ArrowUp className="size-4" />
-                  Boil {physicsState.boilingPointCurrent >= 49000 ? 'undefined' : fmt(physicsState.boilingPointCurrent, ' K')}
+                  Boil {physicsState.boilingPointCurrent >= 49000 ? 'undefined' : `> ${fmt(physicsState.boilingPointCurrent, ' K')}`}
                 </Button>
               </span>
             </Tooltip>
 
-            <Tooltip content="Set pressure and temperature for sublimation regime" contentClassName={TOOLTIP_CLASS}>
+            <Tooltip content="Set pressure below triple point and temperature around sublimation threshold" contentClassName={TOOLTIP_CLASS}>
               <span>
                 <Button
                   color="secondary"
@@ -365,12 +393,12 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   disabled={!hasTriplePoint}
                   onClick={() => {
                     if (!triplePoint) return;
-                    onSetPressure(Math.max(1, triplePoint.pressurePa / 10));
-                    onSetTemperature(Math.max(1, physicsState.sublimationPointCurrent || triplePoint.tempK));
+                    onSetPressure(sublimationPressure);
+                    onSetTemperature(sublimationTargetTemp);
                   }}
                 >
                   <ArrowUp className="size-4" />
-                  Sublimação
+                  Sublimação {hasTriplePoint ? `< ${fmt(triplePoint!.pressurePa / 1000, ' kPa')} · > ${fmt(sublimationTemp, ' K')}` : ''}
                 </Button>
               </span>
             </Tooltip>
@@ -394,8 +422,8 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
               </span>
             </Tooltip>
 
-            <Tooltip content="Move toward critical regime" contentClassName={TOOLTIP_CLASS}>
-              <span className="sm:col-span-2">
+            <Tooltip content="Move to supercritical regime (T and P above critical values)" contentClassName={TOOLTIP_CLASS}>
+              <span className="col-span-2">
                 <Button
                   color="info"
                   variant="soft"
@@ -408,7 +436,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   }}
                 >
                   <ArrowUp className="size-4" />
-                  Ponto crítico
+                  Supercrítico {hasCriticalPoint ? `> ${fmt(criticalPoint!.tempK, ' K')} · > ${fmt(criticalPoint!.pressurePa / 1000, ' kPa')}` : ''}
                 </Button>
               </span>
             </Tooltip>
