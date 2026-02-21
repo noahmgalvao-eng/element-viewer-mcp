@@ -150,10 +150,12 @@ const PropertyCard: React.FC<{ item: PropertyItem }> = ({ item }) => {
 
   return (
     <div className="rounded-xl border border-subtle bg-surface-secondary p-2.5">
-      <p className="break-words text-3xs uppercase tracking-wide text-secondary">{item.label}</p>
-      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-3xs text-tertiary">
-        {typeof item.sourceId === 'number' && <span>[{item.sourceId}]</span>}
-        {item.estimated && <span>*estimado</span>}
+      <div className="flex items-start justify-between gap-2">
+        <p className="break-words text-3xs uppercase tracking-wide text-secondary">{item.label}</p>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 text-3xs text-tertiary">
+          {typeof item.sourceId === 'number' && <span>[{item.sourceId}]</span>}
+          {item.estimated && <span>*estimado</span>}
+        </div>
       </div>
       <div className="mt-1 break-words text-xs font-mono leading-snug text-default">
         {item.renderedValue && !isNA ? item.renderedValue : finalText}
@@ -202,13 +204,18 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     MatterState.EQUILIBRIUM_SUB,
   ].includes(physicsState.state);
 
-  const meltTargetTemp = isLiquidLike
-    ? Math.max(1, physicsState.meltingPointCurrent - 25)
-    : physicsState.meltingPointCurrent + 25;
-  const boilTargetTemp = physicsState.boilingPointCurrent + Math.max(5, physicsState.boilingPointCurrent * 0.02);
-  const sublimationTemp = Math.max(1, physicsState.sublimationPointCurrent || triplePoint?.tempK || physicsState.meltingPointCurrent);
+  const actionMeltingPoint = Number.isFinite(physicsState.meltingPointCurrent) && physicsState.meltingPointCurrent > 0
+    ? physicsState.meltingPointCurrent
+    : element.properties.meltingPointK;
+  const actionBoilingPoint = Number.isFinite(physicsState.boilingPointCurrent) && physicsState.boilingPointCurrent > 0
+    ? physicsState.boilingPointCurrent
+    : element.properties.boilingPointK;
+  const actionMeltTarget = isLiquidLike ? Math.max(1, actionMeltingPoint - 25) : actionMeltingPoint + 25;
+  const actionBoilTarget = actionBoilingPoint + Math.max(5, actionBoilingPoint * 0.02);
+  const sublimationTemp = Math.max(1, physicsState.sublimationPointCurrent || triplePoint?.tempK || actionMeltingPoint);
   const sublimationPressure = triplePoint ? Math.max(1, triplePoint.pressurePa * 0.8) : 1;
   const sublimationTargetTemp = isGasLike ? Math.max(1, sublimationTemp - 40) : sublimationTemp + 40;
+  const sublimationDirection = isGasLike ? "<" : ">";
 
   const atomicMass = parseDisplayValue(
     typeof sourceInfo?.atomic_mass === 'number' ? sourceInfo.atomic_mass : element.mass,
@@ -362,9 +369,9 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
           <div className="grid grid-cols-2 gap-2">
             <Tooltip content="Set global temperature below or above the melting threshold" contentClassName={TOOLTIP_CLASS}>
               <span>
-                <Button color="warning" variant="soft" block onClick={() => onSetTemperature(meltTargetTemp)}>
+                <Button color="warning" variant="soft" block onClick={() => onSetTemperature(actionMeltTarget)}>
                   <ArrowUp className="size-4" />
-                  {isLiquidLike ? 'Solidify' : 'Melt'} {isLiquidLike ? '<' : '>'} {fmt(physicsState.meltingPointCurrent, ' K')}
+                  {isLiquidLike ? 'Solidificar' : 'Fundir'} · T {isLiquidLike ? '<' : '>'} {fmt(actionMeltingPoint, ' K')}
                 </Button>
               </span>
             </Tooltip>
@@ -375,11 +382,11 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   color="danger"
                   variant="soft"
                   block
-                  disabled={physicsState.boilingPointCurrent >= 49000}
-                  onClick={() => onSetTemperature(boilTargetTemp)}
+                  disabled={actionBoilingPoint >= 49000}
+                  onClick={() => onSetTemperature(actionBoilTarget)}
                 >
                   <ArrowUp className="size-4" />
-                  Boil {physicsState.boilingPointCurrent >= 49000 ? 'undefined' : `> ${fmt(physicsState.boilingPointCurrent, ' K')}`}
+                  Ebulição {actionBoilingPoint >= 49000 ? 'indefinida' : `· T > ${fmt(actionBoilingPoint, ' K')}`}
                 </Button>
               </span>
             </Tooltip>
@@ -398,7 +405,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   }}
                 >
                   <ArrowUp className="size-4" />
-                  Sublimação {hasTriplePoint ? `< ${fmt(triplePoint!.pressurePa / 1000, ' kPa')} · > ${fmt(sublimationTemp, ' K')}` : ''}
+                  Sublimação {hasTriplePoint ? `· T ${sublimationDirection} ${fmt(sublimationTemp, ' K')} · P < ${fmt(triplePoint!.pressurePa / 1000, ' kPa')}` : ''}
                 </Button>
               </span>
             </Tooltip>
@@ -417,7 +424,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   }}
                 >
                   <ArrowUp className="size-4" />
-                  Ponto triplo
+                  Ponto triplo {hasTriplePoint ? `· T = ${fmt(triplePoint!.tempK, ' K')} · P = ${fmt(triplePoint!.pressurePa / 1000, ' kPa')}` : ''}
                 </Button>
               </span>
             </Tooltip>

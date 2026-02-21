@@ -204,7 +204,7 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     // 2. Parse Value (Handle '*' for estimate)
     // parseFloat stops at non-numeric characters generally, but let's be safe
     // If original string had *, keep it in result str for UI
-    const cleanStr = str.replace('*', '');
+    const cleanStr = str.replace('*', '').replace(/[<>≈~]/g, '').trim();
     const val = parseFloat(cleanStr);
 
     const isValid = !isNaN(val) && val >= 0; // Allow 0 for specific cases like pressure
@@ -224,7 +224,7 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     input: string | number | { value?: string | number; variation?: string } | undefined
   ) => {
     if (input === undefined || input === null) {
-      return { val: undefined as number | undefined, str: "N/A", source: undefined as number | undefined };
+      return { val: undefined as number | undefined, str: "N/A", source: undefined as number | undefined, variation: undefined as string | undefined };
     }
 
     if (typeof input === "object") {
@@ -233,30 +233,28 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
       const parsedValue = parseSciValue(valueField, -1);
 
       if (parsedValue.str === "N/A" || parsedValue.val <= 0) {
-        return { val: undefined as number | undefined, str: "N/A", source: undefined as number | undefined };
+        return { val: undefined as number | undefined, str: "N/A", source: undefined as number | undefined, variation: undefined as string | undefined };
       }
 
       const baseDisplay = parsedValue.str || parsedValue.val.toString();
-      const displayWithVariation = variation
-        ? `${baseDisplay} (somente para a variacao: ${variation})`
-        : baseDisplay;
-
       return {
         val: parsedValue.val,
-        str: displayWithVariation,
-        source: parsedValue.source
+        str: baseDisplay,
+        source: parsedValue.source,
+        variation: variation || undefined
       };
     }
 
     const parsed = parseSciValue(input, -1);
     if (parsed.str === "N/A" || parsed.val <= 0) {
-      return { val: undefined as number | undefined, str: "N/A", source: undefined as number | undefined };
+      return { val: undefined as number | undefined, str: "N/A", source: undefined as number | undefined, variation: undefined as string | undefined };
     }
 
     return {
       val: parsed.val,
       str: parsed.str || parsed.val.toString(),
-      source: parsed.source
+      source: parsed.source,
+      variation: undefined
     };
   };
 
@@ -453,7 +451,11 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     thermalConductivityDisplay: thermCond.str ? `${thermCond.str} W/mK` : 'N/A',
     enthalpyFusionKjMolDisplay: enthalpyFusionDisplay.str && enthalpyFusionDisplay.str !== "N/A" ? enthalpyFusionDisplay.str : "N/A",
     enthalpyVaporizationKjMolDisplay: enthalpyVapDisplay.str && enthalpyVapDisplay.str !== "N/A" ? enthalpyVapDisplay.str : "N/A",
-    bulkModulusDisplay: bulkModulusOfficial.str === "N/A" ? "N/A" : `${bulkModulusOfficial.str} GPa`,
+    bulkModulusDisplay: bulkModulusOfficial.str === "N/A"
+      ? "N/A"
+      : bulkModulusOfficial.variation
+        ? `${bulkModulusOfficial.str} GPa (Variação: ${bulkModulusOfficial.variation})`
+        : `${bulkModulusOfficial.str} GPa`,
     electricalConductivityDisplay: 'N/A', // Not currently in scientific data source, kept as fallback for UI if added later
 
     density: physicsDensity,
