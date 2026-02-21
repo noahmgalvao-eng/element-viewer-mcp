@@ -1,6 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { Alert } from '@openai/apps-sdk-ui/components/Alert';
-import { Avatar, AvatarGroup } from '@openai/apps-sdk-ui/components/Avatar';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
 import {
@@ -13,15 +12,11 @@ import {
     PictureInPicture,
     Play,
     Record,
-    Settings,
-    Sparkle,
     Stop,
-    X,
 } from '@openai/apps-sdk-ui/components/Icon';
 import { Tooltip } from '@openai/apps-sdk-ui/components/Tooltip';
 import { applyDocumentTheme } from '@openai/apps-sdk-ui/theme';
 import PeriodicTableSelector from './components/Simulator/PeriodicTableSelector';
-import ControlPanel from './components/Simulator/ControlPanel';
 import SimulationUnit from './components/Simulator/SimulationUnit';
 import ElementPropertiesMenu from './components/Simulator/ElementPropertiesMenu';
 import RecordingStatsModal from './components/Simulator/RecordingStatsModal';
@@ -62,11 +57,9 @@ function App() {
     const [timeScale, setTimeScale] = useState<number>(1);
     const [isPaused, setIsPaused] = useState(false);
     const [contextMenu, setContextMenu] = useState<ContextMenuData | null>(null);
-    const [isInteracting, setIsInteracting] = useState(false);
     const [aiMessage, setAiMessage] = useState<string | null>(null);
 
     // Refs
-    const sidebarRef = useRef<HTMLElement>(null);
     const simulationRegistry = useRef<Map<number, () => PhysicsState>>(new Map());
     const aiMessageTimeoutRef = useRef<number | null>(null);
     const lastProcessedAiTimestampRef = useRef(0);
@@ -517,21 +510,6 @@ function App() {
         });
     };
 
-    // --- CLICK OUTSIDE HANDLER ---
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            // If sidebar is open, and click is NOT inside the sidebar ref
-            if (isSidebarOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
-                setSidebarOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isSidebarOpen]);
-
     // --- GRID LAYOUT LOGIC ---
     const count = selectedElements.length;
 
@@ -562,90 +540,25 @@ function App() {
                 </div>
             )}
 
-            <aside
-                ref={sidebarRef}
-                className={`fixed bottom-2 left-2 right-2 top-2 z-40 transition-all duration-300 md:bottom-4 md:right-auto md:w-[24rem] ${isSidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-[120%] opacity-0 pointer-events-none'}`}
-            >
-                <div className={`flex h-full flex-col gap-4 overflow-y-auto rounded-3xl border border-default bg-surface-elevated p-4 shadow-xl ${isInteracting ? 'opacity-95' : 'opacity-100'}`}>
-                    <div className="flex items-center justify-between border-b border-subtle pb-3">
-                        <div className="space-y-1">
-                            <p className="heading-xs text-default">Matter Simulator</p>
-                            <div className="flex items-center gap-2">
-                                <Badge color={isPaused ? 'warning' : 'success'} variant="soft">
-                                    {isPaused ? 'Paused' : 'Running'}
-                                </Badge>
-                                <Badge color="secondary" variant="outline">
-                                    {count} visible
-                                </Badge>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <AvatarGroup size={28}>
-                                {selectedElements.slice(0, 4).map((element) => (
-                                    <Avatar key={element.atomicNumber} name={element.symbol} size={28} color="discovery" />
-                                ))}
-                            </AvatarGroup>
-                            <Button
-                                color="secondary"
-                                variant="ghost"
-                                pill
-                                uniform
-                                size="sm"
-                                onClick={() => setSidebarOpen(false)}
-                                aria-label="Close panel"
-                            >
-                                <X className="size-4" />
-                            </Button>
-                        </div>
-                    </div>
-
-                    <div className={isInteracting ? 'opacity-0 pointer-events-none' : ''}>
-                        <PeriodicTableSelector
-                            selectedElements={selectedElements}
-                            onSelect={handleElementSelect}
-                            isMultiSelect={isMultiSelect}
-                            onToggleMultiSelect={handleToggleMultiSelect}
-                        />
-                    </div>
-
-                    <ControlPanel
-                        temperature={temperature}
-                        setTemperature={setTemperature}
-                        pressure={pressure}
-                        setPressure={setPressure}
-                        meltPoint={selectedElements[0].properties.meltingPointK}
-                        boilPoint={selectedElements[0].properties.boilingPointK}
-                        showParticles={showParticles}
-                        setShowParticles={setShowParticles}
-                        onInteractionChange={setIsInteracting}
-                        onSliderRelease={handleSliderRelease}
-                    />
-                </div>
-            </aside>
+            <PeriodicTableSelector
+                selectedElements={selectedElements}
+                onSelect={handleElementSelect}
+                isMultiSelect={isMultiSelect}
+                onToggleMultiSelect={handleToggleMultiSelect}
+                isOpen={isSidebarOpen}
+                onOpenChange={setSidebarOpen}
+                temperature={temperature}
+                setTemperature={setTemperature}
+                pressure={pressure}
+                setPressure={setPressure}
+                showParticles={showParticles}
+                setShowParticles={setShowParticles}
+            />
 
             <div
                 className={`fixed z-30 flex flex-col gap-3 transition-all duration-300 ${isSidebarOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
                 style={{ top: `${16 + insets.top}px`, left: `${16 + insets.left}px` }}
             >
-                <Tooltip content="Open settings" contentClassName={TOOLTIP_CLASS}>
-                    <span>
-                        <Button
-                            color="secondary"
-                            variant="soft"
-                            pill
-                            uniform
-                            size="lg"
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                setSidebarOpen(true);
-                            }}
-                        >
-                            <Settings className="size-5" />
-                        </Button>
-                    </span>
-                </Tooltip>
-
                 <Tooltip content={isPaused ? 'Resume simulation' : 'Pause simulation'} contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill uniform size="lg" onClick={handleTogglePause}>
@@ -755,17 +668,6 @@ function App() {
                 <RecordingStatsModal recordings={recordingResults} onClose={() => setRecordingResults(null)} />
             )}
 
-            {!isSidebarOpen && (
-                <div
-                    className="pointer-events-none fixed bottom-3 left-1/2 z-20 -translate-x-1/2"
-                    style={{ bottom: `${12 + insets.bottom}px` }}
-                >
-                    <Badge color="discovery" variant="soft">
-                        <Sparkle className="mr-1 inline size-3.5" />
-                        Tap a particle to inspect details
-                    </Badge>
-                </div>
-            )}
         </div>
     );
 }
