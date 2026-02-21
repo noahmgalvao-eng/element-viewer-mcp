@@ -175,7 +175,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
               onPointerUp={() => setActiveSlider(null)}
               onPointerCancel={() => setActiveSlider(null)}
             >
-              <Slider value={temperature} min={0} max={6000} step={10} onChange={setTemperature} />
+              <Slider value={temperature} min={0} max={6000} step={10} className="hide-slider-value" onChange={setTemperature} />
             </div>
 
             <div className={`${activeSlider === 'temperature' ? 'opacity-0 pointer-events-none h-0 overflow-hidden' : 'mt-1.5'}`}>
@@ -195,6 +195,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
                   min={-4}
                   max={11}
                   step={0.05}
+                  className="hide-slider-value"
                   onChange={(value) => setPressure(value <= -3.9 ? 0 : Math.pow(10, value))}
                 />
               </div>
@@ -223,8 +224,8 @@ const PeriodicTableSelector: React.FC<Props> = ({
                     variant={isSelected ? 'solid' : 'soft'}
                     size="sm"
                     onClick={() => onSelect(el)}
-                    className="!relative !aspect-square !h-[1.45rem] sm:!h-9 !w-full !min-w-0 !rounded-md !px-0 !py-0 !gap-0 !text-center"
-                    style={{ gridColumn: position.xpos, gridRow: position.ypos }}
+                    className="!relative !aspect-square !h-[1.62rem] sm:!h-9 !w-full !min-w-0 !rounded-md !px-0 !py-0 !gap-0 !text-center"
+                    style={{ gridColumn: position.xpos, gridRow: position.ypos, marginTop: position.ypos >= 9 ? "3px" : undefined }}
                   >
                     <span className="pointer-events-none absolute left-0.5 top-0 text-[8px] leading-none text-tertiary">
                       {el.atomicNumber}

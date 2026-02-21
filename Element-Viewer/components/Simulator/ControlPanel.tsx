@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
+import { Select } from '@openai/apps-sdk-ui/components/Select';
 import { Slider } from '@openai/apps-sdk-ui/components/Slider';
 import { Switch } from '@openai/apps-sdk-ui/components/Switch';
 import {
   TempUnit,
   fromKelvin,
+  fromPascal,
 } from '../../utils/units';
 
 interface Props {
@@ -47,11 +49,6 @@ const ControlPanel: React.FC<Props> = ({
     return -4;
   }, [pressure]);
 
-  const compactPressure = useMemo(
-    () => `${(pressure / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 })} kPa`,
-    [pressure],
-  );
-
   const startInteraction = (target: 'temperature' | 'pressure') => {
     if (activeControl !== target) {
       setActiveControl(target);
@@ -66,10 +63,6 @@ const ControlPanel: React.FC<Props> = ({
       onSliderRelease?.();
       return null;
     });
-  };
-
-  const endInteraction = () => {
-    finishInteraction();
   };
 
   useEffect(() => {
@@ -107,8 +100,8 @@ const ControlPanel: React.FC<Props> = ({
           ? 'border-transparent bg-transparent shadow-none touch-none'
           : 'border-default bg-surface shadow-sm'
       }`}
-      onPointerUp={endInteraction}
-      onPointerCancel={endInteraction}
+      onPointerUp={finishInteraction}
+      onPointerCancel={finishInteraction}
     >
       <div
         className={`flex flex-wrap items-center justify-between gap-2 ${
@@ -121,32 +114,33 @@ const ControlPanel: React.FC<Props> = ({
         </div>
       </div>
 
-      <div
-        className={`space-y-2 ${
-          isDraggingPressure ? 'opacity-0 pointer-events-none' : ''
-        }`}
-      >
+      <div className={`space-y-2 ${isDraggingPressure ? 'opacity-0 pointer-events-none' : ''}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-default">Temperature</p>
-          <Badge color="secondary" variant="outline">
-            {Number(currentTempDisplay.toFixed(tempUnit === 'K' ? 0 : 2))} {tempUnit}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge color="secondary" variant="outline">
+              {Number(currentTempDisplay.toFixed(tempUnit === 'K' ? 0 : 2))} {tempUnit}
+            </Badge>
+            <Select
+              options={TEMP_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
+              value={tempUnit}
+              onChange={(next) => setTempUnit(next.value as TempUnit)}
+              block={false}
+              size="sm"
+            />
+          </div>
         </div>
 
-        <div
-          className="touch-none"
-          onPointerDown={() => {
-            startInteraction('temperature');
-          }}
-        >
+        <div className="touch-none" onPointerDown={() => startInteraction('temperature')}>
           <Slider
             value={currentTempDisplay}
             min={minSliderTemp}
             max={maxSliderTemp}
             step={tempUnit === 'K' ? 10 : 1}
             unit={tempUnit}
+            className="hide-slider-value"
             onChange={(value) => {
-              setTemperature(value);
+              setTemperature(toKelvin(value, tempUnit));
             }}
           />
         </div>
@@ -171,32 +165,33 @@ const ControlPanel: React.FC<Props> = ({
 
       <div className={`border-t border-subtle pt-4 ${isDragging ? 'opacity-0 pointer-events-none' : ''}`} />
 
-      <div
-        className={`space-y-2 ${
-          isDraggingTemperature ? 'opacity-0 pointer-events-none' : ''
-        }`}
-      >
+      <div className={`space-y-2 ${isDraggingTemperature ? 'opacity-0 pointer-events-none' : ''}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-default">Pressure</p>
-          <Badge color="secondary" variant="outline">
-            {compactPressure}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge color="secondary" variant="outline">
+              {pressure > 0
+                ? `${Number(currentPressureDisplay.toPrecision(6)).toLocaleString()} ${pressureUnit}`
+                : `0 ${pressureUnit}`}
+            </Badge>
+            <Select
+              options={PRESSURE_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
+              value={pressureUnit}
+              onChange={(next) => setPressureUnit(next.value as PressureUnit)}
+              block={false}
+              size="sm"
+            />
+          </div>
         </div>
 
-        <div
-          className="touch-none"
-          onPointerDown={() => {
-            startInteraction('pressure');
-          }}
-        >
+        <div className="touch-none" onPointerDown={() => startInteraction('pressure')}>
           <Slider
             value={logPressureValue}
             min={-4}
             max={11}
             step={0.05}
-            onChange={(value) => {
-              handlePressureSliderChange(value);
-            }}
+            className="hide-slider-value"
+            onChange={handlePressureSliderChange}
           />
         </div>
       </div>
