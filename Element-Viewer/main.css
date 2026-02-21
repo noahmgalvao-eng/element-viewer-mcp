@@ -28,3 +28,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
+
+.hide-slider-value [class*='SliderValue'] {
+  display: none !important;
+}
