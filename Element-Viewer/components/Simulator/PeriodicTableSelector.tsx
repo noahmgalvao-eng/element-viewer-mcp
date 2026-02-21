@@ -1,13 +1,22 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
 import { ChevronDown } from '@openai/apps-sdk-ui/components/Icon';
 import { SegmentedControl } from '@openai/apps-sdk-ui/components/SegmentedControl';
+import { Select } from '@openai/apps-sdk-ui/components/Select';
 import { Slider } from '@openai/apps-sdk-ui/components/Slider';
 import { Switch } from '@openai/apps-sdk-ui/components/Switch';
 import { ELEMENTS } from '../../data/elements';
 import { SOURCE_DATA } from '../../data/periodic_table_source';
 import { ChemicalElement } from '../../types';
+import {
+  PRESSURE_UNITS,
+  PressureUnit,
+  TEMP_UNITS,
+  TempUnit,
+  fromKelvin,
+  fromPascal
+} from '../../utils/units';
 
 interface Props {
   selectedElements: ChemicalElement[];
@@ -45,6 +54,8 @@ const PeriodicTableSelector: React.FC<Props> = ({
   setShowParticles,
 }) => {
   const [activeSlider, setActiveSlider] = useState<'temperature' | 'pressure' | null>(null);
+  const [tempUnit, setTempUnit] = useState<TempUnit>('K');
+  const [pressureUnit, setPressureUnit] = useState<PressureUnit>('Pa');
   const [dragOffset, setDragOffset] = useState(0);
   const [isDraggingSheet, setIsDraggingSheet] = useState(false);
   const pointerStartY = useRef<number | null>(null);
@@ -92,7 +103,22 @@ const PeriodicTableSelector: React.FC<Props> = ({
 
   const pressureSliderValue = pressure <= 0.0001 ? -4 : Math.log10(pressure);
 
+  const displayedTemperature = fromKelvin(temperature, tempUnit);
+  const displayedPressure = fromPascal(pressure, pressureUnit);
   const isSliderActive = activeSlider !== null;
+
+  useEffect(() => {
+    if (!isSliderActive) return;
+
+    const releaseSlider = () => setActiveSlider(null);
+    window.addEventListener('pointerup', releaseSlider);
+    window.addEventListener('pointercancel', releaseSlider);
+
+    return () => {
+      window.removeEventListener('pointerup', releaseSlider);
+      window.removeEventListener('pointercancel', releaseSlider);
+    };
+  }, [isSliderActive]);
 
   return (
     <>
@@ -106,14 +132,14 @@ const PeriodicTableSelector: React.FC<Props> = ({
       )}
 
       <section
-        className="fixed inset-x-0 bottom-0 z-40 px-2 pb-0.5"
+        className="fixed inset-x-0 bottom-0 z-40 px-0 pb-0"
         style={{
           transform: `translateY(${isOpen ? dragOffset : 580}px)`,
           transition: isDraggingSheet ? 'none' : 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
           pointerEvents: isOpen ? 'auto' : 'none',
         }}
       >
-        <div className="mx-auto w-full max-w-5xl rounded-t-3xl border border-default bg-surface-elevated px-2 pb-2 pt-1 shadow-2xl sm:p-3">
+        <div className="periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl border border-default bg-surface-elevated shadow-2xl sm:p-3">
           <div
             className="mx-auto mb-1 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
             onPointerDown={handleDragStart}
@@ -163,27 +189,55 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="mb-1 rounded-xl border border-subtle bg-surface p-2">
+          <div className={`mb-1 rounded-xl border border-subtle bg-surface p-2 transition-opacity duration-100 ${isSliderActive ? 'opacity-0' : 'opacity-100'}`}>
             <div className="mb-1 flex items-center justify-between gap-2">
-              <p className="text-2xs text-secondary">Temperature (K)</p>
-              <Badge color="secondary" variant="outline" size="sm">
-                {Math.round(temperature)} K
-              </Badge>
+              <p className="text-2xs text-secondary">Temperature</p>
+              <div className="flex items-center gap-1">
+                <Badge color="secondary" variant="outline" size="sm">
+                  {Number(displayedTemperature.toFixed(tempUnit === 'K' ? 0 : 2)).toLocaleString()} {tempUnit}
+                </Badge>
+                <Select
+                  options={TEMP_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
+                  value={tempUnit}
+                  onChange={(next) => setTempUnit(next.value as TempUnit)}
+                  block={false}
+                  size="sm"
+                />
+              </div>
             </div>
             <div
               onPointerDown={() => setActiveSlider('temperature')}
               onPointerUp={() => setActiveSlider(null)}
               onPointerCancel={() => setActiveSlider(null)}
             >
-              <Slider value={temperature} min={0} max={6000} step={10} className="hide-slider-value" onChange={setTemperature} />
+              <Slider
+                value={temperature}
+                min={0}
+                max={6000}
+                step={10}
+                unit="K"
+                className="hide-slider-value"
+                onChange={setTemperature}
+              />
             </div>
 
-            <div className={`${activeSlider === 'temperature' ? 'opacity-0 pointer-events-none h-0 overflow-hidden' : 'mt-1.5'}`}>
+            <div className="mt-1.5">
               <div className="mb-1 flex items-center justify-between gap-2">
-                <p className="text-2xs text-secondary">Pressure (Pa)</p>
-                <Badge color="secondary" variant="outline" size="sm">
-                  {pressure.toExponential(2)} Pa
-                </Badge>
+                <p className="text-2xs text-secondary">Pressure</p>
+                <div className="flex items-center gap-1">
+                  <Badge color="secondary" variant="outline" size="sm">
+                    {pressure > 0
+                      ? `${Number(displayedPressure.toPrecision(6)).toLocaleString()} ${pressureUnit}`
+                      : `0 ${pressureUnit}`}
+                  </Badge>
+                  <Select
+                    options={PRESSURE_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
+                    value={pressureUnit}
+                    onChange={(next) => setPressureUnit(next.value as PressureUnit)}
+                    block={false}
+                    size="sm"
+                  />
+                </div>
               </div>
               <div
                 onPointerDown={() => setActiveSlider('pressure')}
@@ -202,12 +256,12 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="mb-1 flex justify-end">
+          <div className={`mb-1 flex justify-end transition-opacity duration-100 ${isSliderActive ? 'opacity-0' : 'opacity-100'}`}>
             <Switch checked={showParticles} onCheckedChange={setShowParticles} label="X-Ray Vision" size="sm" />
           </div>
 
-          <div className={`${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'} transition-opacity duration-100`}>
-            <div className="grid grid-cols-[repeat(18,minmax(0,1fr))] grid-rows-[repeat(10,minmax(0,auto))] gap-[2px] sm:gap-1">
+          <div className={`${isSliderActive ? 'opacity-0' : 'opacity-100'} transition-opacity duration-100`}>
+            <div className="periodic-grid">
               {visibleElements.map((el) => {
                 const position = POSITION_BY_SYMBOL.get(el.symbol);
                 if (!position) return null;
@@ -224,7 +278,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
                     variant={isSelected ? 'solid' : 'soft'}
                     size="sm"
                     onClick={() => onSelect(el)}
-                    className="!relative !aspect-square !h-[1.62rem] sm:!h-9 !w-full !min-w-0 !rounded-md !px-0 !py-0 !gap-0 !text-center"
+                    className="periodic-cell"
                     style={{ gridColumn: position.xpos, gridRow: position.ypos, marginTop: position.ypos >= 9 ? "3px" : undefined }}
                   >
                     <span className="pointer-events-none absolute left-0.5 top-0 text-[8px] leading-none text-tertiary">
