@@ -1,18 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
-import { Input } from '@openai/apps-sdk-ui/components/Input';
-import { Select } from '@openai/apps-sdk-ui/components/Select';
 import { Slider } from '@openai/apps-sdk-ui/components/Slider';
 import { Switch } from '@openai/apps-sdk-ui/components/Switch';
 import {
   TempUnit,
-  PressureUnit,
-  TEMP_UNITS,
-  PRESSURE_UNITS,
-  toKelvin,
   fromKelvin,
-  toPascal,
-  fromPascal,
 } from '../../utils/units';
 
 interface Props {
@@ -40,8 +32,7 @@ const ControlPanel: React.FC<Props> = ({
   onInteractionChange,
   onSliderRelease,
 }) => {
-  const [tempUnit, setTempUnit] = useState<TempUnit>('K');
-  const [pressureUnit, setPressureUnit] = useState<PressureUnit>('Pa');
+  const [tempUnit] = useState<TempUnit>('K');
   const [activeControl, setActiveControl] = useState<'temperature' | 'pressure' | null>(null);
 
   const minTempK = 0;
@@ -50,7 +41,6 @@ const ControlPanel: React.FC<Props> = ({
   const maxSliderTemp = fromKelvin(maxTempK, tempUnit);
 
   const currentTempDisplay = fromKelvin(temperature, tempUnit);
-  const currentPressureDisplay = fromPascal(pressure, pressureUnit);
 
   const logPressureValue = useMemo(() => {
     if (pressure > 0.0001) return Math.log10(pressure);
@@ -98,20 +88,6 @@ const ControlPanel: React.FC<Props> = ({
     };
   }, [activeControl, onInteractionChange, onSliderRelease]);
 
-  const handleTempInputChange = (value: number) => {
-    if (!Number.isFinite(value)) return;
-    setTemperature(toKelvin(value, tempUnit));
-  };
-
-  const handlePressureInputChange = (value: number) => {
-    if (!Number.isFinite(value)) return;
-    if (value <= 0) {
-      setPressure(0);
-      return;
-    }
-    setPressure(toPascal(value, pressureUnit));
-  };
-
   const handlePressureSliderChange = (value: number) => {
     if (value <= -3.9) {
       setPressure(0);
@@ -152,27 +128,9 @@ const ControlPanel: React.FC<Props> = ({
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-default">Temperature</p>
-          {isDragging ? (
-            <Badge color="secondary" variant="outline">
-              {Number(currentTempDisplay.toFixed(tempUnit === 'K' ? 0 : 2))} {tempUnit}
-            </Badge>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                value={Number(currentTempDisplay.toFixed(tempUnit === 'K' ? 0 : 2))}
-                onChange={(event) => handleTempInputChange(Number(event.target.value))}
-                className="w-28"
-              />
-              <Select
-                options={TEMP_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
-                value={tempUnit}
-                onChange={(next) => setTempUnit(next.value as TempUnit)}
-                block={false}
-                size="sm"
-              />
-            </div>
-          )}
+          <Badge color="secondary" variant="outline">
+            {Number(currentTempDisplay.toFixed(tempUnit === 'K' ? 0 : 2))} {tempUnit}
+          </Badge>
         </div>
 
         <div
@@ -188,7 +146,7 @@ const ControlPanel: React.FC<Props> = ({
             step={tempUnit === 'K' ? 10 : 1}
             unit={tempUnit}
             onChange={(value) => {
-              handleTempInputChange(value);
+              setTemperature(value);
             }}
           />
         </div>
@@ -220,28 +178,9 @@ const ControlPanel: React.FC<Props> = ({
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-default">Pressure</p>
-          {isDragging ? (
-            <Badge color="secondary" variant="outline">
-              {compactPressure}
-            </Badge>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Input
-                type="number"
-                step="any"
-                value={Number(currentPressureDisplay.toPrecision(6))}
-                onChange={(event) => handlePressureInputChange(Number(event.target.value))}
-                className="w-32"
-              />
-              <Select
-                options={PRESSURE_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
-                value={pressureUnit}
-                onChange={(next) => setPressureUnit(next.value as PressureUnit)}
-                block={false}
-                size="sm"
-              />
-            </div>
-          )}
+          <Badge color="secondary" variant="outline">
+            {compactPressure}
+          </Badge>
         </div>
 
         <div
@@ -255,17 +194,10 @@ const ControlPanel: React.FC<Props> = ({
             min={-4}
             max={11}
             step={0.05}
-            label="Log scale"
             onChange={(value) => {
               handlePressureSliderChange(value);
             }}
           />
-        </div>
-
-        <div className={`${isDragging ? 'opacity-0 pointer-events-none' : ''}`}>
-          <Badge color="secondary" variant="outline">
-            {compactPressure}
-          </Badge>
         </div>
       </div>
 

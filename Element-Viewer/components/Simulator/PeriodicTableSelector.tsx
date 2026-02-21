@@ -46,6 +46,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
 }) => {
   const [activeSlider, setActiveSlider] = useState<'temperature' | 'pressure' | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
+  const [isDraggingSheet, setIsDraggingSheet] = useState(false);
   const pointerStartY = useRef<number | null>(null);
   const dragRafRef = useRef<number | null>(null);
   const pendingDragOffset = useRef(0);
@@ -61,6 +62,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
 
   const handleDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
     pointerStartY.current = event.clientY;
+    setIsDraggingSheet(true);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -74,11 +76,13 @@ const PeriodicTableSelector: React.FC<Props> = ({
   };
 
   const handleDragEnd = () => {
-    if (dragOffset > 80) {
+    const finalOffset = Math.max(dragOffset, pendingDragOffset.current);
+    if (finalOffset > 80) {
       onOpenChange(false);
     }
     pointerStartY.current = null;
     setDragOffset(0);
+    setIsDraggingSheet(false);
     pendingDragOffset.current = 0;
     if (dragRafRef.current) {
       cancelAnimationFrame(dragRafRef.current);
@@ -95,36 +99,40 @@ const PeriodicTableSelector: React.FC<Props> = ({
       {!isOpen && (
         <div className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2">
           <Button color="secondary" variant="soft" pill onClick={() => onOpenChange(true)}>
+            <ChevronDown className="size-4 rotate-180" />
             Open periodic table
           </Button>
         </div>
       )}
 
       <section
-        className="fixed inset-x-0 bottom-0 z-40 px-2 pb-1"
+        className="fixed inset-x-0 bottom-0 z-40 px-2 pb-0.5"
         style={{
           transform: `translateY(${isOpen ? dragOffset : 580}px)`,
-          transition: pointerStartY.current ? 'none' : 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+          transition: isDraggingSheet ? 'none' : 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
           pointerEvents: isOpen ? 'auto' : 'none',
         }}
       >
-        <div className="mx-auto w-full max-w-5xl rounded-t-3xl border border-default bg-surface-elevated px-2 pb-2 pt-2 shadow-2xl sm:p-3">
+        <div className="mx-auto w-full max-w-5xl rounded-t-3xl border border-default bg-surface-elevated px-2 pb-2 pt-1 shadow-2xl sm:p-3">
           <div
             className="mx-auto mb-1 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
             onPointerDown={handleDragStart}
             onPointerMove={handleDragMove}
             onPointerUp={handleDragEnd}
             onPointerCancel={handleDragEnd}
+            onPointerLeave={handleDragEnd}
             style={{ touchAction: 'none' }}
           >
-            <div className="mb-1 h-1.5 w-14 rounded-full bg-border" />
+            <div className="h-1.5 w-14 rounded-full bg-border" />
+          </div>
+          <div className="mb-1 flex justify-center">
             <Button color="secondary" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
               <ChevronDown className="size-4" />
               Hide
             </Button>
           </div>
 
-          <div className="mb-2 flex items-start justify-between gap-2">
+          <div className="mb-1.5 flex items-start justify-between gap-2">
             <SegmentedControl
               aria-label="Selection mode"
               value={isMultiSelect ? 'compare' : 'single'}
@@ -155,8 +163,8 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="mb-2 rounded-xl border border-subtle bg-surface p-2">
-            <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="mb-1 rounded-xl border border-subtle bg-surface p-2">
+            <div className="mb-1 flex items-center justify-between gap-2">
               <p className="text-2xs text-secondary">Temperature (K)</p>
               <Badge color="secondary" variant="outline" size="sm">
                 {Math.round(temperature)} K
@@ -170,9 +178,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
               <Slider value={temperature} min={0} max={6000} step={10} onChange={setTemperature} />
             </div>
 
-            <div className={`${activeSlider === 'temperature' ? 'opacity-0 pointer-events-none h-0 overflow-hidden' : 'mt-2'}`}>
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-2xs text-secondary">Pressure (Pa, log)</p>
+            <div className={`${activeSlider === 'temperature' ? 'opacity-0 pointer-events-none h-0 overflow-hidden' : 'mt-1.5'}`}>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <p className="text-2xs text-secondary">Pressure (Pa)</p>
                 <Badge color="secondary" variant="outline" size="sm">
                   {pressure.toExponential(2)} Pa
                 </Badge>
@@ -215,7 +223,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
                     variant={isSelected ? 'solid' : 'soft'}
                     size="sm"
                     onClick={() => onSelect(el)}
-                    className="!relative !aspect-square !h-[2.1rem] sm:!h-8 !w-full !min-w-0 !rounded-md !px-0 !py-0 !gap-0 !text-center"
+                    className="!relative !aspect-square !h-[1.45rem] sm:!h-9 !w-full !min-w-0 !rounded-md !px-0 !py-0 !gap-0 !text-center"
                     style={{ gridColumn: position.xpos, gridRow: position.ypos }}
                   >
                     <span className="pointer-events-none absolute left-0.5 top-0 text-[8px] leading-none text-tertiary">
