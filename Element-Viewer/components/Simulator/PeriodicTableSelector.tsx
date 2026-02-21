@@ -139,7 +139,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
           pointerEvents: isOpen ? 'auto' : 'none',
         }}
       >
-        <div className="periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl border border-default bg-surface-elevated shadow-2xl sm:p-3">
+        <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-all duration-100 ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "border border-default bg-surface-elevated shadow-2xl"}`}>
           <div
             className="mx-auto mb-1 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
             onPointerDown={handleDragStart}
@@ -158,7 +158,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </Button>
           </div>
 
-          <div className="mb-1.5 flex items-start justify-between gap-2">
+          <div className={`mb-1.5 flex items-start justify-between gap-2 transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <SegmentedControl
               aria-label="Selection mode"
               value={isMultiSelect ? 'compare' : 'single'}
@@ -189,39 +189,41 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className={`mb-1 rounded-xl border border-subtle bg-surface p-2 transition-opacity duration-100 ${isSliderActive ? 'opacity-0' : 'opacity-100'}`}>
-            <div className="mb-1 flex items-center justify-between gap-2">
-              <p className="text-2xs text-secondary">Temperature</p>
-              <div className="flex items-center gap-1">
-                <Badge color="secondary" variant="outline" size="sm">
-                  {Number(displayedTemperature.toFixed(tempUnit === 'K' ? 0 : 2)).toLocaleString()} {tempUnit}
-                </Badge>
-                <Select
-                  options={TEMP_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
-                  value={tempUnit}
-                  onChange={(next) => setTempUnit(next.value as TempUnit)}
-                  block={false}
-                  size="sm"
+          <div className={`mb-1 rounded-xl p-2 transition-all duration-100 ${isSliderActive ? 'border-transparent bg-transparent shadow-none' : 'border border-subtle bg-surface'}`}>
+            <div className={`${isSliderActive && activeSlider !== 'temperature' ? 'opacity-0 pointer-events-none absolute' : ''}`}>
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <p className="text-2xs text-secondary">Temperature</p>
+                <div className="flex items-center gap-1">
+                  <Badge color="secondary" variant="outline" size="sm">
+                    {Number(displayedTemperature.toFixed(tempUnit === 'K' ? 0 : 2)).toLocaleString()} {tempUnit}
+                  </Badge>
+                  <Select
+                    options={TEMP_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
+                    value={tempUnit}
+                    onChange={(next) => setTempUnit(next.value as TempUnit)}
+                    block={false}
+                    size="sm"
+                  />
+                </div>
+              </div>
+              <div
+                onPointerDown={() => setActiveSlider('temperature')}
+                onPointerUp={() => setActiveSlider(null)}
+                onPointerCancel={() => setActiveSlider(null)}
+              >
+                <Slider
+                  value={temperature}
+                  min={0}
+                  max={6000}
+                  step={10}
+                  unit="K"
+                  className="hide-slider-value"
+                  onChange={setTemperature}
                 />
               </div>
             </div>
-            <div
-              onPointerDown={() => setActiveSlider('temperature')}
-              onPointerUp={() => setActiveSlider(null)}
-              onPointerCancel={() => setActiveSlider(null)}
-            >
-              <Slider
-                value={temperature}
-                min={0}
-                max={6000}
-                step={10}
-                unit="K"
-                className="hide-slider-value"
-                onChange={setTemperature}
-              />
-            </div>
 
-            <div className="mt-1.5">
+            <div className={`mt-1.5 ${isSliderActive && activeSlider !== 'pressure' ? 'opacity-0 pointer-events-none absolute' : ''}`}>
               <div className="mb-1 flex items-center justify-between gap-2">
                 <p className="text-2xs text-secondary">Pressure</p>
                 <div className="flex items-center gap-1">
