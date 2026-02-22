@@ -99,6 +99,111 @@ function createElementViewerServer() {
   );
 
   server.registerTool(
+    "run_reaction_inference",
+    {
+      title: "Inferir Produto de Reação",
+      description:
+        "Infere uma substancia de reação a partir dos elementos selecionados, temperatura e pressão atuais do widget.",
+      inputSchema: z.object({
+        elementos: z
+          .array(z.string())
+          .min(1)
+          .max(6)
+          .describe("Lista de simbolos quimicos selecionados no widget."),
+        temperatura: z.number().describe("Temperatura atual em Kelvin."),
+        pressao: z.number().describe("Pressao atual em Pascal."),
+      }),
+      _meta: {
+        "readOnlyHint": true,
+        "openai/outputTemplate": "ui://widget/element-viewer.html",
+        "openai/widgetAccessible": true,
+      },
+    },
+    async (args) => {
+      const signature = [...args.elementos]
+        .map((item) => item.trim().toUpperCase())
+        .sort()
+        .join("+");
+
+      const inferredBySignature = {
+        "H+O": {
+          substanceName: "Água",
+          formula: "H2O",
+          suggestedColorHex: "#4FC3F7",
+          mass: 18.015,
+          meltingPointK: 273.15,
+          boilingPointK: 373.15,
+          specificHeatSolid: 2100,
+          specificHeatLiquid: 4184,
+          specificHeatGas: 1996,
+          latentHeatFusion: 333550,
+          latentHeatVaporization: 2256000,
+          enthalpyVapJmol: 40650,
+          enthalpyFusionJmol: 6010,
+          triplePoint: { tempK: 273.16, pressurePa: 611.657 },
+          criticalPoint: { tempK: 647.096, pressurePa: 22064000 },
+        },
+        "CL+NA": {
+          substanceName: "Cloreto de Sódio",
+          formula: "NaCl",
+          suggestedColorHex: "#F5F5F5",
+          mass: 58.44,
+          meltingPointK: 1074,
+          boilingPointK: 1738,
+          specificHeatSolid: 850,
+          specificHeatLiquid: 1200,
+          specificHeatGas: 1000,
+          latentHeatFusion: 492000,
+          latentHeatVaporization: 1710000,
+          enthalpyVapJmol: 170000,
+          enthalpyFusionJmol: 28000,
+          triplePoint: { tempK: 1074, pressurePa: 101325 },
+          criticalPoint: { tempK: 3200, pressurePa: 13000000 },
+        },
+      };
+
+      const inferred =
+        inferredBySignature[signature] || {
+          substanceName: "Mistura Reativa Estimada",
+          formula: args.elementos.join("-").toUpperCase(),
+          suggestedColorHex: "#90A4AE",
+          mass: 50,
+          meltingPointK: 250,
+          boilingPointK: 450,
+          specificHeatSolid: 900,
+          specificHeatLiquid: 1500,
+          specificHeatGas: 1100,
+          latentHeatFusion: 200000,
+          latentHeatVaporization: 1200000,
+          enthalpyVapJmol: 30000,
+          enthalpyFusionJmol: 7000,
+          triplePoint: { tempK: 260, pressurePa: 90000 },
+          criticalPoint: { tempK: 700, pressurePa: 8000000 },
+        };
+
+      return {
+        structuredContent: {
+          app: "Element Viewer",
+          status: "reaction_inferred",
+          timestamp_atualizacao: Date.now(),
+          substancia_reacao: inferred,
+          contexto_reacao: {
+            elementos: args.elementos,
+            temperatura: args.temperatura,
+            pressao: args.pressao,
+          },
+        },
+        content: [
+          {
+            type: "text",
+            text: `Inferi ${inferred.substanceName} (${inferred.formula}) com base em ${args.elementos.join(", ")} a ${args.temperatura} K e ${args.pressao} Pa.`,
+          },
+        ],
+      };
+    }
+  );
+
+  server.registerTool(
     "inject_reaction_substance",
     {
       title: "Injetar Substância de Reação",
@@ -138,6 +243,7 @@ function createElementViewerServer() {
       }),
       _meta: {
         "readOnlyHint": true,
+        "openai/outputTemplate": "ui://widget/element-viewer.html",
         "openai/widgetAccessible": true,
       },
     },

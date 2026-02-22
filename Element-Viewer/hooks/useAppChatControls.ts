@@ -1,7 +1,6 @@
 ﻿import type React from 'react';
 import { useCallback } from 'react';
 import { ChemicalElement, DisplayMode } from '../types';
-import { roundTo } from '../app/appDefinitions';
 
 interface UseAppChatControlsProps {
   requestDisplayMode: (mode: DisplayMode) => Promise<unknown>;
@@ -50,11 +49,13 @@ export function useAppChatControls({
 
   const handleReactionButtonClick = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.openai?.sendFollowUpMessage) return;
+    if (!window.openai?.callTool) return;
 
-    const selectedSymbols = selectedElements.map((el) => `${el.name} (${el.symbol})`).join(', ');
-    const prompt = `At temperature ${roundTo(temperature, 2)} K and pressure ${roundTo(pressure, 2)} Pa, what product would likely result from these reacting elements: ${selectedSymbols}? Provide a single concise answer, briefly explain assumptions and limits, then call inject_reaction_substance with all required fields.`;
-    await window.openai.sendFollowUpMessage({ prompt });
+    await window.openai.callTool('run_reaction_inference', {
+      elementos: selectedElements.map((el) => el.symbol),
+      temperatura: temperature,
+      pressao: pressure,
+    });
   }, [selectedElements, temperature, pressure]);
 
   return {
