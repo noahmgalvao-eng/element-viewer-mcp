@@ -41,82 +41,141 @@ function createElementViewerServer() {
   );
 
   // --- 2. REGISTER TOOL: ABRIR E ATUALIZAR SIMULADOR ---
-server.registerTool(
-  "gerenciar_simulador_interativo",
-  {
-    title: "Gerenciar Element Viewer",
-    description: "ÚNICA ferramenta para interagir com a interface. OBRIGATÓRIO definir a propriedade 'acao' para decidir o comportamento.",
-    inputSchema: z.object({
-      // Aqui está o "IF" - O modelo é obrigado a escolher o caminho
-      acao: z.enum(["atualizar", "reagir"])
-             .describe("Use 'atualizar' se o usuário pedir para abrir, adicionar elementos ou mudar temperatura. Use 'reagir' APENAS se o usuário pedir explicitamente para reagir os elementos atuais."),
-      
-      mensagem_interpretacao: z.string()
-             .describe("Frase em primeira pessoa sobre a ação. Ex: 'Abri o simulador com o Oxigênio.' ou 'Gerei a substância da reação.'"),
-      
-      // Campos do "atualizar" (usamos nullish para evitar o erro das 4 tentativas)
-      elementos: z.array(z.string()).max(6).nullish()
-             .describe("Lista de símbolos químicos. Use apenas se acao='atualizar'."),
-      temperatura_K: z.number().max(6000).nullish(),
-      pressao_Pa: z.number().max(100000000000).nullish(),
-      
-      // Campos do "reagir" (também com nullish)
-      substancia_reacao: z.object({
-        substanceName: z.string(),
-        formula: z.string(),
-        suggestedColorHex: z.string(),
-        mass: z.number(),
-        meltingPointK: z.number(),
-        boilingPointK: z.number(),
-        specificHeatSolid: z.number(),
-        specificHeatLiquid: z.number(),
-        specificHeatGas: z.number(),
-        latentHeatFusion: z.number(),
-        latentHeatVaporization: z.number(),
-        enthalpyVapJmol: z.number(),
-        enthalpyFusionJmol: z.number(),
-        triplePoint: z.object({ tempK: z.number(), pressurePa: z.number() }),
-        criticalPoint: z.object({ tempK: z.number(), pressurePa: z.number() })
-      }).nullish().describe("Preencha APENAS se acao='reagir'.")
-    }),
-    _meta: {
-      "readOnlyHint": true,
-      "openai/outputTemplate": "ui://widget/element-viewer.html",
-      "openai/widgetAccessible": true,
-    }
-  },
-  async (args) => {
-    // Monta o objeto de base sempre mantendo o status "open" para não resetar o widget
-    const payload = {
-      app: "Element Viewer",
-      status: "open", // <- Importante para manter a estabilidade no Front
-      timestamp_atualizacao: Date.now(),
-      configuracao_ia: {
-        interpretacao_do_modelo: args.mensagem_interpretacao,
-        // O "??" converte tanto undefined quanto null do modelo em null real para o seu frontend
-        elementos: args.elementos ?? null,
-        temperatura_K: args.temperatura_K ?? null,
-        pressao_Pa: args.pressao_Pa ?? null
+  server.registerTool(
+    "abrir_simulador_interativo",
+    {
+      title: "Abrir ou Atualizar Element Viewer",
+      description:
+        "Use esta ferramenta para abrir o app OU para ATUALIZAR a visualizacao atual se o app ja estiver em tela cheia. O app reage em tempo real. Importante: Se o usuario pedir para 'adicionar' um elemento, voce DEVE consultar o widgetState atual, pegar os elementos que ja estao na tela e enviar a lista COMPLETA (antigos + novos) no parametro 'elementos'.",
+      inputSchema: z.object({
+        elementos: z
+          .array(z.string())
+          .max(6)
+          .optional()
+          .describe(
+            "Lista COMPLETA de simbolos quimicos para mostrar. Se vazio, mantem o que esta na tela."
+          ),
+        temperatura_K: z
+          .number()
+          .max(6000)
+          .optional()
+          .describe("Nova temperatura em Kelvin. Se nao especificada, deixe vazio."),
+        pressao_Pa: z
+          .number()
+          .max(100000000000)
+          .optional()
+          .describe("Nova pressao em Pascal. Se nao especificada, deixe vazio."),
+        mensagem_interpretacao: z
+          .string()
+          .describe(
+            "Frase curta em primeira pessoa sobre a acao. Ex: 'Adicionei o Oxigenio e aumentei a temperatura para 5000K na sua tela.'"
+          ),
+      }),
+      _meta: {
+        "readOnlyHint": true,
+        "openai/outputTemplate": "ui://widget/element-viewer.html",
+        "openai/widgetAccessible": true,
       },
-      substancia_reacao: null
-    };
-
-    // Aplica a lógica da reação apenas se a ação for a correta e a substância existir
-    if (args.acao === "reagir" && args.substancia_reacao) {
-      payload.substancia_reacao = args.substancia_reacao;
-    }
-
-    return {
-      structuredContent: payload,
+    },
+    async (args) => ({
+      structuredContent: {
+        app: "Element Viewer",
+        status: "open",
+        timestamp_atualizacao: Date.now(),
+        configuracao_ia: {
+          elementos: args.elementos || null,
+          temperatura_K: args.temperatura_K || null,
+          pressao_Pa: args.pressao_Pa || null,
+          interpretacao_do_modelo: args.mensagem_interpretacao,
+        },
+      },
       content: [
         {
           type: "text",
           text: args.mensagem_interpretacao,
         },
       ],
-    };
-  }
-);
+    })
+  );
+
+  server.registerTool(
+    "inject_reaction_substance",
+    {
+      title: "Injetar Substância de Reação",
+      description:
+        "Use esta ferramenta quando o usuario pedir para reagir os elementos atuais. Retorne uma unica substancia com propriedades termodinamicas completas para o motor do simulador.",
+      inputSchema: z.object({
+        substanceName: z.string().describe("Nome da substancia gerada (ex.: Agua)."),
+        formula: z.string().describe("Formula/simbolo exibido na UI (ex.: H2O)."),
+        suggestedColorHex: z
+          .string()
+          .describe("Cor HEX sugerida para renderizacao visual (ex.: #4FC3F7)."),
+        mass: z.number().describe("Massa molar em u."),
+        meltingPointK: z.number().describe("Ponto de fusao em Kelvin."),
+        boilingPointK: z.number().describe("Ponto de ebulicao em Kelvin."),
+        specificHeatSolid: z.number().describe("Calor especifico no estado solido em J/kg.K."),
+        specificHeatLiquid: z.number().describe("Calor especifico no estado liquido em J/kg.K."),
+        specificHeatGas: z.number().describe("Calor especifico no estado gasoso em J/kg.K."),
+        latentHeatFusion: z.number().describe("Calor latente de fusao em J/kg."),
+        latentHeatVaporization: z.number().describe("Calor latente de vaporizacao em J/kg."),
+        enthalpyVapJmol: z.number().describe("Entalpia molar de vaporizacao em J/mol."),
+        enthalpyFusionJmol: z.number().describe("Entalpia molar de fusao em J/mol."),
+        triplePoint: z
+          .object({
+            tempK: z.number().describe("Temperatura do ponto triplo em Kelvin."),
+            pressurePa: z.number().describe("Pressao do ponto triplo em Pascal."),
+          })
+          .describe("Ponto triplo da substancia."),
+        criticalPoint: z
+          .object({
+            tempK: z.number().describe("Temperatura critica em Kelvin."),
+            pressurePa: z.number().describe("Pressao critica em Pascal."),
+          })
+          .describe("Ponto critico da substancia."),
+        mensagem_interpretacao: z
+          .string()
+          .describe("Frase curta explicando o resultado e as limitacoes da reacao."),
+      }),
+      _meta: {
+        "readOnlyHint": true,
+        "openai/outputTemplate": "ui://widget/element-viewer.html",
+        "openai/widgetAccessible": true,
+      },
+    },
+    async (args) => ({
+      structuredContent: {
+        app: "Element Viewer",
+        status: "reaction_substance_injected",
+        timestamp_atualizacao: Date.now(),
+        substancia_reacao: {
+          substanceName: args.substanceName,
+          formula: args.formula,
+          suggestedColorHex: args.suggestedColorHex,
+          mass: args.mass,
+          meltingPointK: args.meltingPointK,
+          boilingPointK: args.boilingPointK,
+          specificHeatSolid: args.specificHeatSolid,
+          specificHeatLiquid: args.specificHeatLiquid,
+          specificHeatGas: args.specificHeatGas,
+          latentHeatFusion: args.latentHeatFusion,
+          latentHeatVaporization: args.latentHeatVaporization,
+          enthalpyVapJmol: args.enthalpyVapJmol,
+          enthalpyFusionJmol: args.enthalpyFusionJmol,
+          triplePoint: args.triplePoint,
+          criticalPoint: args.criticalPoint,
+        },
+        configuracao_ia: {
+          interpretacao_do_modelo: args.mensagem_interpretacao,
+        },
+      },
+      content: [
+        {
+          type: "text",
+          text: args.mensagem_interpretacao,
+        },
+      ],
+    })
+  );
 
   return server;
 }
