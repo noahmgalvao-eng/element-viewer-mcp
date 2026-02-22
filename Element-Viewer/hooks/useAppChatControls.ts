@@ -55,7 +55,7 @@ export function useAppChatControls({
     const selectedSymbols = selectedElements.map((el) => `${el.name} (${el.symbol})`).join(', ');
     
     // Prompt corrigido para evitar alucinação do Schema
-    const prompt = `call the injection_substance tool. `;
+    const prompt = `call the injec_reaction_substance tool. `;
     
     await window.openai.sendFollowUpMessage({ prompt });
   }, [selectedElements, temperature, pressure]);
