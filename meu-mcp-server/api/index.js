@@ -138,6 +138,7 @@ function createElementViewerServer() {
       }),
       _meta: {
         "readOnlyHint": true,
+        "openai/outputTemplate": "ui://widget/element-viewer.html",
         "openai/widgetAccessible": true,
       },
     },
