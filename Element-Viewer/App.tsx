@@ -325,8 +325,7 @@ function App() {
             }, 8000);
         };
 
-        const verificarAtualizacoesIA = () => {
-            const rawContent = readOpenAiStructuredContent();
+        const processarAtualizacaoIA = (rawContent: unknown) => {
             if (!rawContent || typeof rawContent !== 'object') return;
 
             const content = rawContent as IAStructuredContent;
@@ -380,10 +379,34 @@ function App() {
             }
         };
 
+        const verificarAtualizacoesIA = () => {
+            processarAtualizacaoIA(readOpenAiStructuredContent());
+        };
+
+        const handleOpenAiSetGlobals = (event: Event) => {
+            const customEvent = event as CustomEvent<{ toolOutput?: unknown } | undefined>;
+            const detail = customEvent?.detail;
+            const detailAsRecord = detail && typeof detail === 'object'
+                ? (detail as Record<string, unknown>)
+                : null;
+            const globals = window.openai as (typeof window.openai & { toolOutput?: unknown; structuredContent?: unknown }) | undefined;
+
+            const toolOutput = detailAsRecord?.toolOutput ?? globals?.toolOutput;
+            const structuredFromToolOutput =
+                toolOutput && typeof toolOutput === 'object' && 'structuredContent' in (toolOutput as Record<string, unknown>)
+                    ? (toolOutput as Record<string, unknown>).structuredContent
+                    : null;
+
+            processarAtualizacaoIA(structuredFromToolOutput ?? toolOutput ?? readOpenAiStructuredContent());
+        };
+
+        window.addEventListener('openai:set_globals', handleOpenAiSetGlobals);
+
         const intervalId = window.setInterval(verificarAtualizacoesIA, 500);
         verificarAtualizacoesIA();
 
         return () => {
+            window.removeEventListener('openai:set_globals', handleOpenAiSetGlobals);
             window.clearInterval(intervalId);
             clearAiMessageTimeout();
         };
@@ -673,4 +696,3 @@ function App() {
 }
 
 export default App;
-
