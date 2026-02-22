@@ -53,7 +53,12 @@ export function useAppChatControls({
     if (!window.openai?.sendFollowUpMessage) return;
 
     const selectedSymbols = selectedElements.map((el) => `${el.name} (${el.symbol})`).join(', ');
-    const prompt = `At temperature ${roundTo(temperature, 2)} K and pressure ${roundTo(pressure, 2)} Pa, what product would likely result from these reacting elements: ${selectedSymbols}? Provide a single concise answer, briefly explain assumptions and limits, then call inject_reaction_substance with all required fields.`;
+    
+    // Prompt corrigido para evitar alucinação do Schema
+    const prompt = `React these elements: ${selectedSymbols} at ${roundTo(temperature, 2)} K and ${roundTo(pressure, 2)} Pa. 
+    MANDATORY INSTRUCTION: Call the 'inject_reaction_substance' tool IMMEDIATELY on your first try. 
+    Do NOT invent any properties. Put your brief explanation strictly inside the 'mensagem_interpretacao' property.`;
+    
     await window.openai.sendFollowUpMessage({ prompt });
   }, [selectedElements, temperature, pressure]);
 
