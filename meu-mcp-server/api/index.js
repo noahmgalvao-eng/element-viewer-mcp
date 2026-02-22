@@ -42,140 +42,83 @@ function createElementViewerServer() {
 
   // --- 2. REGISTER TOOL: ABRIR E ATUALIZAR SIMULADOR ---
   server.registerTool(
-    "abrir_simulador_interativo",
-    {
-      title: "Abrir ou Atualizar Element Viewer",
-      description:
-        "Use esta ferramenta para abrir o app OU para ATUALIZAR a visualizacao atual se o app ja estiver em tela cheia. O app reage em tempo real. Importante: Se o usuario pedir para 'adicionar' um elemento, voce DEVE consultar o widgetState atual, pegar os elementos que ja estao na tela e enviar a lista COMPLETA (antigos + novos) no parametro 'elementos'.",
-      inputSchema: z.object({
-        elementos: z
-          .array(z.string())
-          .max(6)
-          .optional()
-          .describe(
-            "Lista COMPLETA de simbolos quimicos para mostrar. Se vazio, mantem o que esta na tela."
-          ),
-        temperatura_K: z
-          .number()
-          .max(6000)
-          .optional()
-          .describe("Nova temperatura em Kelvin. Se nao especificada, deixe vazio."),
-        pressao_Pa: z
-          .number()
-          .max(100000000000)
-          .optional()
-          .describe("Nova pressao em Pascal. Se nao especificada, deixe vazio."),
-        mensagem_interpretacao: z
-          .string()
-          .describe(
-            "Frase curta em primeira pessoa sobre a acao. Ex: 'Adicionei o Oxigenio e aumentei a temperatura para 5000K na sua tela.'"
-          ),
-      }),
-      _meta: {
-        "readOnlyHint": true,
-        "openai/outputTemplate": "ui://widget/element-viewer.html",
-        "openai/widgetAccessible": true,
+  "gerenciar_simulador_interativo",
+  {
+    title: "Gerenciar Element Viewer",
+    description: "ÚNICA ferramenta para interagir com a interface. Use a propriedade 'acao' para definir o que fazer. Se for apenas adicionar/remover elementos ou mudar temperatura, use 'atualizar'. Se o usuário pedir para REAGIR elementos (ou clicar no botão de reação), use 'reagir' e preencha o objeto de substância.",
+    inputSchema: z.object({
+      // ESTA É A CHAVE (O SEU "IF")
+      acao: z.enum(["atualizar", "reagir"])
+             .describe("Obrigatório. Define se você está apenas atualizando a tela ('atualizar') ou injetando o produto de uma reação química ('reagir')."),
+      
+      mensagem_interpretacao: z.string().describe("Frase curta explicando a ação tomada."),
+      
+      // Campos para quando acao === "atualizar"
+      elementos: z.array(z.string()).max(6).optional()
+                  .describe("Use APENAS se acao='atualizar'. Lista completa de símbolos."),
+      temperatura_K: z.number().optional(),
+      pressao_Pa: z.number().optional(),
+      
+      // Campos para quando acao === "reagir"
+      substancia_reacao: z.object({
+        substanceName: z.string(),
+        formula: z.string(),
+        suggestedColorHex: z.string(),
+        mass: z.number(),
+        meltingPointK: z.number(),
+        boilingPointK: z.number(),
+        specificHeatSolid: z.number(),
+        specificHeatLiquid: z.number(),
+        specificHeatGas: z.number(),
+        latentHeatFusion: z.number(),
+        latentHeatVaporization: z.number(),
+        enthalpyVapJmol: z.number(),
+        enthalpyFusionJmol: z.number(),
+        triplePoint: z.object({ tempK: z.number(), pressurePa: z.number() }),
+        criticalPoint: z.object({ tempK: z.number(), pressurePa: z.number() })
+      }).optional().describe("Preencha APENAS se acao='reagir'. Propriedades termodinâmicas do produto da reação.")
+    }),
+    _meta: {
+      "readOnlyHint": true,
+      "openai/outputTemplate": "ui://widget/element-viewer.html",
+      "openai/widgetAccessible": true,
+    }
+  },
+  async (args) => {
+    // Montamos o payload base que será enviado ao frontend
+    const payload = {
+      app: "Element Viewer",
+      timestamp_atualizacao: Date.now(),
+      configuracao_ia: {
+        interpretacao_do_modelo: args.mensagem_interpretacao,
+        elementos: null,
+        temperatura_K: null,
+        pressao_Pa: null
       },
-    },
-    async (args) => ({
-      structuredContent: {
-        app: "Element Viewer",
-        status: "open",
-        timestamp_atualizacao: Date.now(),
-        configuracao_ia: {
-          elementos: args.elementos || null,
-          temperatura_K: args.temperatura_K || null,
-          pressao_Pa: args.pressao_Pa || null,
-          interpretacao_do_modelo: args.mensagem_interpretacao,
-        },
-      },
-      content: [
-        {
-          type: "text",
-          text: args.mensagem_interpretacao,
-        },
-      ],
-    })
-  );
+      substancia_reacao: null
+    };
 
-  server.registerTool(
-    "inject_reaction_substance",
-    {
-      title: "Injetar Substância de Reação",
-      description:
-        "Use esta ferramenta quando o usuario pedir para reagir os elementos atuais. Retorne uma unica substancia com propriedades termodinamicas completas para o motor do simulador.",
-      inputSchema: z.object({
-        substanceName: z.string().describe("Nome da substancia gerada (ex.: Agua)."),
-        formula: z.string().describe("Formula/simbolo exibido na UI (ex.: H2O)."),
-        suggestedColorHex: z
-          .string()
-          .describe("Cor HEX sugerida para renderizacao visual (ex.: #4FC3F7)."),
-        mass: z.number().describe("Massa molar em u."),
-        meltingPointK: z.number().describe("Ponto de fusao em Kelvin."),
-        boilingPointK: z.number().describe("Ponto de ebulicao em Kelvin."),
-        specificHeatSolid: z.number().describe("Calor especifico no estado solido em J/kg.K."),
-        specificHeatLiquid: z.number().describe("Calor especifico no estado liquido em J/kg.K."),
-        specificHeatGas: z.number().describe("Calor especifico no estado gasoso em J/kg.K."),
-        latentHeatFusion: z.number().describe("Calor latente de fusao em J/kg."),
-        latentHeatVaporization: z.number().describe("Calor latente de vaporizacao em J/kg."),
-        enthalpyVapJmol: z.number().describe("Entalpia molar de vaporizacao em J/mol."),
-        enthalpyFusionJmol: z.number().describe("Entalpia molar de fusao em J/mol."),
-        triplePoint: z
-          .object({
-            tempK: z.number().describe("Temperatura do ponto triplo em Kelvin."),
-            pressurePa: z.number().describe("Pressao do ponto triplo em Pascal."),
-          })
-          .describe("Ponto triplo da substancia."),
-        criticalPoint: z
-          .object({
-            tempK: z.number().describe("Temperatura critica em Kelvin."),
-            pressurePa: z.number().describe("Pressao critica em Pascal."),
-          })
-          .describe("Ponto critico da substancia."),
-        mensagem_interpretacao: z
-          .string()
-          .describe("Frase curta explicando o resultado e as limitacoes da reacao."),
-      }),
-      _meta: {
-        "readOnlyHint": true,
-        "openai/outputTemplate": "ui://widget/element-viewer.html",
-        "openai/widgetAccessible": true,
-      },
-    },
-    async (args) => ({
-      structuredContent: {
-        app: "Element Viewer",
-        status: "reaction_substance_injected",
-        timestamp_atualizacao: Date.now(),
-        substancia_reacao: {
-          substanceName: args.substanceName,
-          formula: args.formula,
-          suggestedColorHex: args.suggestedColorHex,
-          mass: args.mass,
-          meltingPointK: args.meltingPointK,
-          boilingPointK: args.boilingPointK,
-          specificHeatSolid: args.specificHeatSolid,
-          specificHeatLiquid: args.specificHeatLiquid,
-          specificHeatGas: args.specificHeatGas,
-          latentHeatFusion: args.latentHeatFusion,
-          latentHeatVaporization: args.latentHeatVaporization,
-          enthalpyVapJmol: args.enthalpyVapJmol,
-          enthalpyFusionJmol: args.enthalpyFusionJmol,
-          triplePoint: args.triplePoint,
-          criticalPoint: args.criticalPoint,
-        },
-        configuracao_ia: {
-          interpretacao_do_modelo: args.mensagem_interpretacao,
-        },
-      },
+    // Aqui acontece o IF no servidor, repassando apenas os dados certos para o Front
+    if (args.acao === "atualizar") {
+      payload.configuracao_ia.elementos = args.elementos || null;
+      payload.configuracao_ia.temperatura_K = args.temperatura_K || null;
+      payload.configuracao_ia.pressao_Pa = args.pressao_Pa || null;
+    } else if (args.acao === "reagir" && args.substancia_reacao) {
+      payload.substancia_reacao = args.substancia_reacao;
+      // Você pode até passar a temperatura e pressão atuais aqui se quiser manter o ambiente
+    }
+
+    return {
+      structuredContent: payload,
       content: [
         {
           type: "text",
           text: args.mensagem_interpretacao,
         },
       ],
-    })
-  );
+    };
+  }
+);
 
   return server;
 }

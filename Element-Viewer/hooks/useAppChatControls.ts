@@ -53,7 +53,10 @@ export function useAppChatControls({
     if (!window.openai?.sendFollowUpMessage) return;
 
     const selectedSymbols = selectedElements.map((el) => `${el.name} (${el.symbol})`).join(', ');
-    const prompt = `At temperature ${roundTo(temperature, 2)} K and pressure ${roundTo(pressure, 2)} Pa, what product would likely result from these reacting elements: ${selectedSymbols}? Provide a single concise answer, briefly explain assumptions and limits, then call inject_reaction_substance with all required fields.`;
+    
+    // Mudamos o final do prompt para instruir a IA a usar a ferramenta unificada no modo "reagir"
+    const prompt = `At temperature ${roundTo(temperature, 2)} K and pressure ${roundTo(pressure, 2)} Pa, what product would likely result from these reacting elements: ${selectedSymbols}? Provide a single concise answer, briefly explain assumptions and limits, then call the tool gerenciar_simulador_interativo setting the parameter "acao" to "reagir" and filling the "substancia_reacao" object.`;
+    
     await window.openai.sendFollowUpMessage({ prompt });
   }, [selectedElements, temperature, pressure]);
 
