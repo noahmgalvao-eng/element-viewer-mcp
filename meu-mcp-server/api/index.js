@@ -41,25 +41,26 @@ function createElementViewerServer() {
   );
 
   // --- 2. REGISTER TOOL: ABRIR E ATUALIZAR SIMULADOR ---
-  server.registerTool(
+server.registerTool(
   "gerenciar_simulador_interativo",
   {
     title: "Gerenciar Element Viewer",
-    description: "ÚNICA ferramenta para interagir com a interface. Use a propriedade 'acao' para definir o que fazer. Se for apenas adicionar/remover elementos ou mudar temperatura, use 'atualizar'. Se o usuário pedir para REAGIR elementos (ou clicar no botão de reação), use 'reagir' e preencha o objeto de substância.",
+    description: "ÚNICA ferramenta para interagir com a interface. OBRIGATÓRIO definir a propriedade 'acao' para decidir o comportamento.",
     inputSchema: z.object({
-      // ESTA É A CHAVE (O SEU "IF")
+      // Aqui está o "IF" - O modelo é obrigado a escolher o caminho
       acao: z.enum(["atualizar", "reagir"])
-             .describe("Obrigatório. Define se você está apenas atualizando a tela ('atualizar') ou injetando o produto de uma reação química ('reagir')."),
+             .describe("Use 'atualizar' se o usuário pedir para abrir, adicionar elementos ou mudar temperatura. Use 'reagir' APENAS se o usuário pedir explicitamente para reagir os elementos atuais."),
       
-      mensagem_interpretacao: z.string().describe("Frase curta explicando a ação tomada."),
+      mensagem_interpretacao: z.string()
+             .describe("Frase em primeira pessoa sobre a ação. Ex: 'Abri o simulador com o Oxigênio.' ou 'Gerei a substância da reação.'"),
       
-      // Campos para quando acao === "atualizar"
-      elementos: z.array(z.string()).max(6).optional()
-                  .describe("Use APENAS se acao='atualizar'. Lista completa de símbolos."),
-      temperatura_K: z.number().optional(),
-      pressao_Pa: z.number().optional(),
+      // Campos do "atualizar" (usamos nullish para evitar o erro das 4 tentativas)
+      elementos: z.array(z.string()).max(6).nullish()
+             .describe("Lista de símbolos químicos. Use apenas se acao='atualizar'."),
+      temperatura_K: z.number().max(6000).nullish(),
+      pressao_Pa: z.number().max(100000000000).nullish(),
       
-      // Campos para quando acao === "reagir"
+      // Campos do "reagir" (também com nullish)
       substancia_reacao: z.object({
         substanceName: z.string(),
         formula: z.string(),
@@ -76,7 +77,7 @@ function createElementViewerServer() {
         enthalpyFusionJmol: z.number(),
         triplePoint: z.object({ tempK: z.number(), pressurePa: z.number() }),
         criticalPoint: z.object({ tempK: z.number(), pressurePa: z.number() })
-      }).optional().describe("Preencha APENAS se acao='reagir'. Propriedades termodinâmicas do produto da reação.")
+      }).nullish().describe("Preencha APENAS se acao='reagir'.")
     }),
     _meta: {
       "readOnlyHint": true,
@@ -85,27 +86,24 @@ function createElementViewerServer() {
     }
   },
   async (args) => {
-    // Montamos o payload base que será enviado ao frontend
+    // Monta o objeto de base sempre mantendo o status "open" para não resetar o widget
     const payload = {
       app: "Element Viewer",
+      status: "open", // <- Importante para manter a estabilidade no Front
       timestamp_atualizacao: Date.now(),
       configuracao_ia: {
         interpretacao_do_modelo: args.mensagem_interpretacao,
-        elementos: null,
-        temperatura_K: null,
-        pressao_Pa: null
+        // O "??" converte tanto undefined quanto null do modelo em null real para o seu frontend
+        elementos: args.elementos ?? null,
+        temperatura_K: args.temperatura_K ?? null,
+        pressao_Pa: args.pressao_Pa ?? null
       },
       substancia_reacao: null
     };
 
-    // Aqui acontece o IF no servidor, repassando apenas os dados certos para o Front
-    if (args.acao === "atualizar") {
-      payload.configuracao_ia.elementos = args.elementos || null;
-      payload.configuracao_ia.temperatura_K = args.temperatura_K || null;
-      payload.configuracao_ia.pressao_Pa = args.pressao_Pa || null;
-    } else if (args.acao === "reagir" && args.substancia_reacao) {
+    // Aplica a lógica da reação apenas se a ação for a correta e a substância existir
+    if (args.acao === "reagir" && args.substancia_reacao) {
       payload.substancia_reacao = args.substancia_reacao;
-      // Você pode até passar a temperatura e pressão atuais aqui se quiser manter o ambiente
     }
 
     return {
