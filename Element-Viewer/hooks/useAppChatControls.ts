@@ -55,7 +55,7 @@ export function useAppChatControls({
     const selectedSymbols = selectedElements.map((el) => `${el.name} (${el.symbol})`).join(', ');
     
     // Prompt corrigido para evitar alucinação do Schema
-    const prompt = `React these elements: ${selectedSymbols} at ${roundTo(temperature, 2)} K and ${roundTo(pressure, 2)} Pa. `;
+    const prompt = `React these elements. `;
     
     await window.openai.sendFollowUpMessage({ prompt });
   }, [selectedElements, temperature, pressure]);
