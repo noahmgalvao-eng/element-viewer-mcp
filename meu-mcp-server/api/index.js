@@ -103,7 +103,7 @@ function createElementViewerServer() {
     {
       title: "Injetar Substância de Reação",
       description:
-        "Use esta ferramenta quando o usuario pedir para reagir os elementos atuais. Retorne uma unica substancia com propriedades termodinamicas completas para o motor do simulador.",
+        "Use esta ferramenta quando o usuario pedir para reagir os elementos atuais. Retorne uma unica substancia com propriedades termodinamicas completas para o motor do simulador. Esta tool deve atualizar o widget ja aberto, sem abrir um novo card/widget no chat.",
       inputSchema: z.object({
         substanceName: z.string().describe("Nome da substancia gerada (ex.: Agua)."),
         formula: z.string().describe("Formula/simbolo exibido na UI (ex.: H2O)."),
@@ -138,7 +138,6 @@ function createElementViewerServer() {
       }),
       _meta: {
         "readOnlyHint": true,
-        "openai/outputTemplate": "ui://widget/element-viewer.html",
         "openai/widgetAccessible": true,
       },
     },
