@@ -556,7 +556,7 @@ function App() {
             />
 
             <div
-                className={`fixed z-30 flex flex-col gap-3 transition-all duration-300 ${isSidebarOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
+                className="fixed z-50 flex flex-col gap-3"
                 style={{ top: `${16 + insets.top}px`, left: `${16 + insets.left}px` }}
             >
                 <Tooltip content={isPaused ? 'Resume simulation' : 'Pause simulation'} contentClassName={TOOLTIP_CLASS}>

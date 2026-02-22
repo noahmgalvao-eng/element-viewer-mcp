@@ -39,6 +39,16 @@
   padding: 0.25rem;
 }
 
+.periodic-sheet-surface {
+  background-color: var(--color-surface-elevated, rgba(255, 255, 255, 0.92));
+}
+
+@supports (background-color: color-mix(in srgb, white 30%, transparent)) {
+  .periodic-sheet-surface {
+    background-color: color-mix(in srgb, var(--color-surface-elevated, #ffffff) 30%, transparent);
+  }
+}
+
 .periodic-grid {
   display: grid;
   width: 100%;

@@ -1,14 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
-import { Button } from '@openai/apps-sdk-ui/components/Button';
+import { Button, ButtonLink } from '@openai/apps-sdk-ui/components/Button';
 import {
   ArrowUp,
   CloseBold,
   ExternalLink,
-  InfoCircle,
 } from '@openai/apps-sdk-ui/components/Icon';
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
-import { TextLink } from '@openai/apps-sdk-ui/components/TextLink';
 import { CopyTooltip, Tooltip } from '@openai/apps-sdk-ui/components/Tooltip';
 import { ChemicalElement, MatterState, PhysicsState } from '../../types';
 import { SOURCE_DATA } from '../../data/periodic_table_source';
@@ -295,7 +293,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     { label: 'Raio atômico', value: atomicRadius.value, unit: atomicRadius.na ? undefined : 'pm', sourceId: element.properties.atomicRadiusSource, estimated: atomicRadius.estimated },
     { label: 'Afinidade eletrônica', value: electronAffinity.value, unit: electronAffinity.na ? undefined : 'kJ/mol', sourceId: periodicSourceRef, estimated: electronAffinity.estimated },
     { label: '1ª Energia de ionização', value: ionizationEnergy.value, unit: ionizationEnergy.na ? undefined : 'kJ/mol', sourceId: periodicSourceRef, estimated: ionizationEnergy.estimated },
-    { label: 'Estados de oxidação', value: oxidationStates.value, estimated: oxidationStates.estimated },
+    { label: 'Estados de oxidação', value: oxidationStates.value, sourceId: periodicSourceRef, estimated: oxidationStates.estimated },
     { label: 'Electron configuration', value: electronConfiguration.value, sourceId: periodicSourceRef, renderedValue: electronConfiguration.na ? undefined : formatElectronConfiguration(electronConfigurationRaw) },
   ];
 
@@ -327,7 +325,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   );
 
   const summaryText = element.summary || 'No summary available.';
-  const summaryPreview = summaryText.length > 220 ? `${summaryText.slice(0, 220)}...` : summaryText;
+  const canExpandDescription = summaryText.length > 140;
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1366;
   const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 768;
   const side = x > viewportWidth * 0.6 ? 'left' : 'right';
@@ -340,7 +338,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   return (
     <div className="fixed inset-0 z-[100]" onMouseDown={onClose}>
       <div
-        className="pointer-events-auto fixed w-[min(96vw,27rem)] max-h-[min(86vh,40rem)] overflow-y-auto rounded-3xl border border-default bg-surface shadow-xl"
+        className="pointer-events-auto fixed w-[min(96vw,27rem)] max-h-[min(86vh,40rem)] overflow-y-auto overflow-x-hidden rounded-3xl border border-default bg-surface shadow-xl"
         style={{ left: `${panelLeft}px`, top: `${panelTop}px` }}
         onMouseDown={(event) => event.stopPropagation()}
       >
@@ -359,6 +357,20 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
               <p className="text-xs text-secondary">
                 {sourceInfo?.category || element.classification.groupName || 'Generated substance'}
               </p>
+              <p className={`max-w-[20rem] text-xs leading-5 text-default ${showFullDescription ? 'whitespace-pre-wrap' : 'line-clamp-2-soft'}`}>
+                {summaryText}
+              </p>
+              {canExpandDescription && (
+                <Button
+                  color="secondary"
+                  variant="ghost"
+                  size="sm"
+                  className="w-fit px-0"
+                  onClick={() => setShowFullDescription((prev) => !prev)}
+                >
+                  {showFullDescription ? 'Ver menos' : 'Ver mais...'}
+                </Button>
+              )}
             </div>
 
             <Button color="secondary" variant="ghost" pill uniform onClick={onClose} aria-label="Close details">
@@ -366,7 +378,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Tooltip content="Set global temperature below or above the melting threshold" contentClassName={TOOLTIP_CLASS}>
               <span>
                 <Button color="warning" variant="soft" block onClick={() => onSetTemperature(actionMeltTarget)}>
@@ -392,11 +404,13 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
             </Tooltip>
 
             <Tooltip content="Set pressure below triple point and temperature around sublimation threshold" contentClassName={TOOLTIP_CLASS}>
-              <span>
+              <span className="sm:col-span-2">
                 <Button
                   color="secondary"
                   variant="soft"
                   block
+                  size="lg"
+                  className="min-h-14 whitespace-normal text-left leading-tight"
                   disabled={!hasTriplePoint}
                   onClick={() => {
                     if (!triplePoint) return;
@@ -411,11 +425,13 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
             </Tooltip>
 
             <Tooltip content="Set environment to triple point" contentClassName={TOOLTIP_CLASS}>
-              <span>
+              <span className="sm:col-span-2">
                 <Button
                   color="success"
                   variant="soft"
                   block
+                  size="lg"
+                  className="min-h-14 whitespace-normal text-left leading-tight"
                   disabled={!hasTriplePoint}
                   onClick={() => {
                     if (!triplePoint) return;
@@ -430,7 +446,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
             </Tooltip>
 
             <Tooltip content="Move to supercritical regime (T and P above critical values)" contentClassName={TOOLTIP_CLASS}>
-              <span className="col-span-2">
+              <span className="sm:col-span-2">
                 <Button
                   color="info"
                   variant="soft"
@@ -449,44 +465,11 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
             </Tooltip>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Popover>
-              <Popover.Trigger>
-                <Button color="secondary" variant="soft" block>
-                  <InfoCircle className="size-4" />
-                  Ver descrição
-                </Button>
-              </Popover.Trigger>
-              <Popover.Content
-                side="top"
-                align="start"
-                sideOffset={8}
-                minWidth={300}
-                maxWidth={380}
-                className="z-[130] rounded-2xl border border-default bg-surface shadow-lg"
-              >
-                <div className="max-h-56 space-y-2 overflow-y-auto p-3" onMouseDown={(event) => event.stopPropagation()}>
-                  <p className="text-xs font-medium text-secondary">Descrição do elemento</p>
-                  <p className={`text-sm leading-5 text-default ${showFullDescription ? 'whitespace-pre-wrap' : 'line-clamp-2-soft'}`}>
-                    {showFullDescription ? summaryText : summaryPreview}
-                  </p>
-                  {summaryText.length > 220 && (
-                    <Button color="secondary" variant="ghost" size="sm" onClick={() => setShowFullDescription((prev) => !prev)}>
-                      {showFullDescription ? 'Ver menos' : 'Ver mais'}
-                    </Button>
-                  )}
-                </div>
-              </Popover.Content>
-            </Popover>
-
-          </div>
-
           <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-default">Atomic & Chemical</p>
-              <Badge color="secondary" variant="outline">2 colunas</Badge>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {atomicChemicalProperties.map((item) => (
                 <PropertyCard key={item.label} item={item} />
               ))}
@@ -495,7 +478,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
 
           <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">
             <p className="text-sm font-semibold text-default">Physics</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {physicsProperties.map((item) => (
                 <PropertyCard key={item.label} item={item} />
               ))}
@@ -528,9 +511,18 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                           <div className="min-w-0 space-y-1">
                             <p className="break-words text-sm text-default">{reference.text}</p>
                             {reference.href && (
-                              <TextLink as="a" href={reference.href} forceExternal>
-                                {reference.href}
-                              </TextLink>
+                              <ButtonLink
+                                as="a"
+                                href={reference.href}
+                                external
+                                color="secondary"
+                                variant="soft"
+                                size="sm"
+                                className="w-fit"
+                              >
+                                <ExternalLink className="size-4" />
+                                Abrir link
+                              </ButtonLink>
                             )}
                           </div>
                         </div>
