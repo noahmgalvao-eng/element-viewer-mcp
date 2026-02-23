@@ -1,16 +1,12 @@
-﻿import type React from 'react';
+import type React from 'react';
 import { useCallback } from 'react';
-import { ChemicalElement, DisplayMode } from '../types';
-import { roundTo } from '../app/appDefinitions';
+import { DisplayMode } from '../types';
 
 interface UseAppChatControlsProps {
   requestDisplayMode: (mode: DisplayMode) => Promise<unknown>;
   isFullscreen: boolean;
   syncStateToChatGPT: () => Promise<void>;
   handleInfoClick: () => Promise<void>;
-  selectedElements: ChemicalElement[];
-  temperature: number;
-  pressure: number;
 }
 
 export function useAppChatControls({
@@ -18,9 +14,6 @@ export function useAppChatControls({
   isFullscreen,
   syncStateToChatGPT,
   handleInfoClick,
-  selectedElements,
-  temperature,
-  pressure,
 }: UseAppChatControlsProps) {
   const handleTogglePiP = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -48,22 +41,9 @@ export function useAppChatControls({
     await handleInfoClick();
   }, [syncStateToChatGPT, handleInfoClick]);
 
-  const handleReactionButtonClick = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.openai?.sendFollowUpMessage) return;
-
-    const selectedSymbols = selectedElements.map((el) => `${el.name} (${el.symbol})`).join(', ');
-    
-    // Prompt corrigido para evitar alucinação do Schema
-    const prompt = `adicionar Nitrogenio`;
-    
-    await window.openai.sendFollowUpMessage({ prompt });
-  }, [selectedElements, temperature, pressure]);
-
   return {
     handleTogglePiP,
     handleToggleFullscreen,
     handleInfoButtonClick,
-    handleReactionButtonClick,
   };
 }

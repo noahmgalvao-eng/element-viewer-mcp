@@ -2,15 +2,16 @@
 import { Alert } from '@openai/apps-sdk-ui/components/Alert';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
+import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import {
     Bolt,
     Collapse,
     Expand,
-    Flask,
-    InfoCircle,
+    Lightbulb,
     Pause,
     PictureInPicture,
     Play,
+    QuestionMarkCircle,
     Record,
     Stop,
 } from '@openai/apps-sdk-ui/components/Icon';
@@ -208,15 +209,11 @@ function App() {
         handleTogglePiP,
         handleToggleFullscreen,
         handleInfoButtonClick,
-        handleReactionButtonClick,
     } = useAppChatControls({
         requestDisplayMode,
         isFullscreen,
         syncStateToChatGPT,
         handleInfoClick,
-        selectedElements,
-        temperature,
-        pressure,
     });
 
     const buildReactionElement = (reaction: IAReactionSubstance): ChemicalElement => {
@@ -617,20 +614,52 @@ function App() {
                 <Tooltip content="Ask ChatGPT about the current simulation" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="info" variant="soft" pill uniform onClick={handleInfoButtonClick}>
-                            <InfoCircle className="size-4" />
+                            <Lightbulb className="size-4" />
                         </Button>
                     </span>
                 </Tooltip>
 
                 <span />
 
-                <Tooltip content="Run reaction inference" contentClassName={TOOLTIP_CLASS}>
-                    <span>
-                        <Button color="success" variant="soft" pill uniform onClick={handleReactionButtonClick}>
-                            <Flask className="size-4" />
+                <Popover>
+                    <Popover.Trigger>
+                        <Button color="secondary" variant="soft" pill uniform aria-label="O que posso pedir ao ChatGPT?">
+                            <QuestionMarkCircle className="size-4" />
                         </Button>
-                    </span>
-                </Tooltip>
+                    </Popover.Trigger>
+                    <Popover.Content
+                        side="left"
+                        align="start"
+                        sideOffset={8}
+                        minWidth={300}
+                        maxWidth={380}
+                        className="z-[130] rounded-2xl border border-default bg-surface shadow-lg"
+                    >
+                        <div className="space-y-2 p-3 text-sm text-default">
+                            <p className="heading-xs text-default">O que posso pedir ao ChatGPT?</p>
+                            <ol className="list-decimal space-y-2 pl-4">
+                                <li>
+                                    Pedir elementos, temperatura e pressão de sua escolha.
+                                    <p className="italic text-secondary text-xs">
+                                        Ex: &quot;Agora quero ver carbono, sódio e hélio a 5000 K e 2 ATM&quot;
+                                    </p>
+                                </li>
+                                <li>
+                                    Surpreenda-se com sugestões de combinações de elementos.
+                                    <p className="italic text-secondary text-xs">
+                                        Ex: &quot;Me mostre uma combinação inusitada!&quot;
+                                    </p>
+                                </li>
+                                <li>
+                                    Ao selecionar 2 ou mais elementos, digite &quot;Reagir&quot; no chat e veja a mágica acontecer!
+                                </li>
+                                <li>
+                                    Solicitar uma explicação do que está sendo visto na tela da simulação.
+                                </li>
+                            </ol>
+                        </div>
+                    </Popover.Content>
+                </Popover>
             </div>
 
             <main className={`h-full w-full grid gap-px bg-border-subtle ${gridClass}`}>
