@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
 import { ChevronDown } from '@openai/apps-sdk-ui/components/Icon';
+import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import { SegmentedControl } from '@openai/apps-sdk-ui/components/SegmentedControl';
 import { Select } from '@openai/apps-sdk-ui/components/Select';
 import { Slider } from '@openai/apps-sdk-ui/components/Slider';
@@ -38,6 +39,153 @@ const POSITION_BY_SYMBOL = new Map<string, { xpos: number; ypos: number }>(
     .filter((entry) => typeof entry.symbol === 'string' && typeof entry.xpos === 'number' && typeof entry.ypos === 'number')
     .map((entry) => [entry.symbol, { xpos: entry.xpos, ypos: entry.ypos }]),
 );
+
+const CATEGORY_BY_SYMBOL = new Map<string, string>(
+  SOURCE_DATA.elements
+    .filter((entry) => typeof entry.symbol === 'string')
+    .map((entry) => [entry.symbol, typeof entry.category === 'string' ? entry.category.toLowerCase() : '']),
+);
+
+const AMETAIS = new Set(['H', 'C', 'N', 'O', 'P', 'S', 'Se']);
+const METAIS_ALCALINOS = new Set(['Li', 'Na', 'K', 'Rb', 'Cs', 'Fr']);
+const METAIS_ALCALINOS_TERROSOS = new Set(['Be', 'Mg', 'Ca', 'Sr', 'Ba', 'Ra']);
+const GASES_NOBRES = new Set(['He', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn', 'Og']);
+const HALOGENIOS = new Set(['F', 'Cl', 'Br', 'I', 'At', 'Ts']);
+const SEMIMETAIS = new Set(['B', 'Si', 'Ge', 'As', 'Sb', 'Te', 'Po']);
+const OUTROS_METAIS = new Set(['Al', 'Ga', 'In', 'Sn', 'Tl', 'Pb', 'Bi', 'Nh', 'Fl', 'Mc', 'Lv']);
+
+type ElementTone =
+  | 'ametais'
+  | 'metaisAlcalinos'
+  | 'metaisAlcalinoTerrosos'
+  | 'gasesNobres'
+  | 'halogenios'
+  | 'semimetais'
+  | 'outrosMetais'
+  | 'lantanideos'
+  | 'actinidios'
+  | 'metaisTransicao';
+
+type ToneStyle = {
+  base: string;
+  hover: string;
+  active: string;
+  ring: string;
+};
+
+const TONE_STYLES: Record<ElementTone, ToneStyle> = {
+  ametais: {
+    base: 'var(--green-100)',
+    hover: 'var(--green-200)',
+    active: 'var(--green-300)',
+    ring: '#0f5132',
+  },
+  metaisAlcalinos: {
+    base: 'var(--orange-200)',
+    hover: 'var(--orange-300)',
+    active: 'var(--orange-400)',
+    ring: '#7a3c14',
+  },
+  metaisAlcalinoTerrosos: {
+    base: 'var(--yellow-200)',
+    hover: 'var(--yellow-300)',
+    active: 'var(--yellow-400)',
+    ring: '#6f5500',
+  },
+  gasesNobres: {
+    base: 'var(--blue-200)',
+    hover: 'var(--blue-300)',
+    active: 'var(--blue-400)',
+    ring: '#104f95',
+  },
+  halogenios: {
+    base: 'var(--blue-100)',
+    hover: 'var(--blue-200)',
+    active: 'var(--blue-300)',
+    ring: '#1e5f9f',
+  },
+  semimetais: {
+    base: 'color-mix(in oklab, var(--blue-200) 72%, var(--green-100) 28%)',
+    hover: 'color-mix(in oklab, var(--blue-300) 72%, var(--green-200) 28%)',
+    active: 'color-mix(in oklab, var(--blue-400) 72%, var(--green-300) 28%)',
+    ring: '#0f5f6e',
+  },
+  outrosMetais: {
+    base: 'var(--gray-250)',
+    hover: 'var(--gray-300)',
+    active: 'var(--gray-350)',
+    ring: '#4b4b4b',
+  },
+  lantanideos: {
+    base: 'var(--blue-75)',
+    hover: 'var(--blue-100)',
+    active: 'var(--blue-200)',
+    ring: '#3f6fa9',
+  },
+  actinidios: {
+    base: 'var(--purple-200)',
+    hover: 'var(--purple-300)',
+    active: 'var(--purple-400)',
+    ring: '#5b3c8a',
+  },
+  metaisTransicao: {
+    base: 'var(--red-100)',
+    hover: 'var(--red-200)',
+    active: 'var(--red-300)',
+    ring: '#8d3b38',
+  },
+};
+
+const LEGEND_ITEMS: Array<{ tone: ElementTone; label: string; symbols?: string }> = [
+  { tone: 'ametais', label: 'Verde claro - Ametais', symbols: 'H, C, N, O, P, S, Se' },
+  { tone: 'metaisAlcalinos', label: 'Laranja - Metais alcalinos', symbols: 'Li, Na, K, Rb, Cs, Fr' },
+  {
+    tone: 'metaisAlcalinoTerrosos',
+    label: 'Amarelo - Metais alcalino-terrosos',
+    symbols: 'Be, Mg, Ca, Sr, Ba, Ra',
+  },
+  { tone: 'gasesNobres', label: 'Azul - Gases nobres', symbols: 'He, Ne, Ar, Kr, Xe, Rn, Og' },
+  { tone: 'halogenios', label: 'Azul-claro - Halogênios', symbols: 'F, Cl, Br, I, At, Ts' },
+  { tone: 'semimetais', label: 'Azul-ciano - Semimetais', symbols: 'B, Si, Ge, As, Sb, Te, Po' },
+  {
+    tone: 'outrosMetais',
+    label: 'Cinza - Outros metais',
+    symbols: 'Al, Ga, In, Sn, Tl, Pb, Bi, Nh, Fl, Mc, Lv',
+  },
+  { tone: 'lantanideos', label: 'Azul bebê - Lantanídeos' },
+  { tone: 'actinidios', label: 'Roxo - Actinídeos' },
+  { tone: 'metaisTransicao', label: 'Vermelho-claro - Metais de transição', symbols: 'restantes' },
+];
+
+type PeriodicCellStyle = React.CSSProperties & {
+  '--button-background-color'?: string;
+  '--button-background-color-hover'?: string;
+  '--button-background-color-active'?: string;
+  '--button-text-color'?: string;
+  '--button-ring-color'?: string;
+  '--periodic-cell-muted'?: string;
+};
+
+type LegendSwatchStyle = React.CSSProperties & {
+  '--legend-swatch-color'?: string;
+};
+
+const getElementTone = (symbol: string, position: { xpos: number; ypos: number }): ElementTone => {
+  if (AMETAIS.has(symbol)) return 'ametais';
+  if (METAIS_ALCALINOS.has(symbol)) return 'metaisAlcalinos';
+  if (METAIS_ALCALINOS_TERROSOS.has(symbol)) return 'metaisAlcalinoTerrosos';
+  if (GASES_NOBRES.has(symbol)) return 'gasesNobres';
+  if (HALOGENIOS.has(symbol)) return 'halogenios';
+  if (SEMIMETAIS.has(symbol)) return 'semimetais';
+  if (OUTROS_METAIS.has(symbol)) return 'outrosMetais';
+  if (position.ypos === 9) return 'lantanideos';
+  if (position.ypos === 10) return 'actinidios';
+
+  const sourceCategory = CATEGORY_BY_SYMBOL.get(symbol) ?? '';
+  if (sourceCategory.includes('transition metal')) return 'metaisTransicao';
+
+  return 'metaisTransicao';
+};
 
 const PeriodicTableSelector: React.FC<Props> = ({
   selectedElements,
@@ -158,35 +306,8 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </Button>
           </div>
 
-          <div className={`mb-1.5 flex items-start justify-between gap-2 transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-            <SegmentedControl
-              aria-label="Selection mode"
-              value={isMultiSelect ? 'compare' : 'single'}
-              onChange={(next) => {
-                if ((next === 'compare') !== isMultiSelect) {
-                  onToggleMultiSelect();
-                }
-              }}
-            >
-              <SegmentedControl.Option value="single">Single</SegmentedControl.Option>
-              <SegmentedControl.Option value="compare">Compare</SegmentedControl.Option>
-            </SegmentedControl>
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {selectedPreview.map((element) => (
-                  <span
-                    key={element.atomicNumber}
-                    className="flex size-6 items-center justify-center rounded-full border border-default bg-surface text-[10px] font-semibold"
-                    title={element.name}
-                  >
-                    {element.symbol}
-                  </span>
-                ))}
-              </div>
-              <Badge color={isMultiSelect ? 'info' : 'secondary'} variant="soft">
-                {selectedElements.length}/6
-              </Badge>
-            </div>
+          <div className={`mb-1.5 flex justify-end transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <Switch checked={showParticles} onCheckedChange={setShowParticles} label="X-Ray Vision" size="sm" />
           </div>
 
           <div className={`mb-1 rounded-xl p-2 transition-all duration-100 ${isSliderActive ? 'border-transparent bg-transparent shadow-none' : 'border border-subtle bg-surface'}`}>
@@ -258,12 +379,74 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className={`mb-1 flex justify-end transition-opacity duration-100 ${isSliderActive ? 'opacity-0' : 'opacity-100'}`}>
-            <Switch checked={showParticles} onCheckedChange={setShowParticles} label="X-Ray Vision" size="sm" />
+          <div className={`mb-1.5 flex items-start justify-between gap-2 transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <SegmentedControl
+              aria-label="Selection mode"
+              value={isMultiSelect ? 'compare' : 'single'}
+              onChange={(next) => {
+                if ((next === 'compare') !== isMultiSelect) {
+                  onToggleMultiSelect();
+                }
+              }}
+            >
+              <SegmentedControl.Option value="single">Single</SegmentedControl.Option>
+              <SegmentedControl.Option value="compare">Compare</SegmentedControl.Option>
+            </SegmentedControl>
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {selectedPreview.map((element) => (
+                  <span
+                    key={element.atomicNumber}
+                    className="flex size-6 items-center justify-center rounded-full border border-default bg-surface text-[10px] font-semibold"
+                    title={element.name}
+                  >
+                    {element.symbol}
+                  </span>
+                ))}
+              </div>
+              <Badge color={isMultiSelect ? 'info' : 'secondary'} variant="soft">
+                {selectedElements.length}/6
+              </Badge>
+            </div>
           </div>
 
           <div className={`${isSliderActive ? 'opacity-0' : 'opacity-100'} transition-opacity duration-100`}>
             <div className="periodic-grid">
+              <div className="periodic-legend-anchor" style={{ gridColumn: '8 / span 4', gridRow: 1 }}>
+                <Popover>
+                  <Popover.Trigger>
+                    <Button color="secondary" variant="outline" size="sm">
+                      Legenda
+                    </Button>
+                  </Popover.Trigger>
+                  <Popover.Content
+                    side="top"
+                    align="center"
+                    sideOffset={8}
+                    minWidth={280}
+                    maxWidth={340}
+                    className="periodic-legend-popover"
+                  >
+                    <div className="space-y-2 p-3">
+                      <p className="heading-xs text-default">Cor - Rótulo do grupo</p>
+                      <ul className="periodic-legend-list">
+                        {LEGEND_ITEMS.map((item) => (
+                          <li key={item.label} className="periodic-legend-item">
+                            <span
+                              className="periodic-legend-swatch"
+                              style={{ '--legend-swatch-color': TONE_STYLES[item.tone].base } as LegendSwatchStyle}
+                            />
+                            <div>
+                              <p className="periodic-legend-label">{item.label}</p>
+                              {item.symbols && <p className="periodic-legend-symbols">({item.symbols})</p>}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Popover.Content>
+                </Popover>
+              </div>
               {visibleElements.map((el) => {
                 const position = POSITION_BY_SYMBOL.get(el.symbol);
                 if (!position) return null;
@@ -272,18 +455,35 @@ const PeriodicTableSelector: React.FC<Props> = ({
                 const selectionIndex = selectedElements.findIndex(
                   (selected) => selected.atomicNumber === el.atomicNumber,
                 );
+                const tone = getElementTone(el.symbol, position);
+                const toneStyle = TONE_STYLES[tone];
+                const cellStyle: PeriodicCellStyle = {
+                  gridColumn: position.xpos,
+                  gridRow: position.ypos,
+                  marginTop: position.ypos === 9 ? '12px' : position.ypos === 10 ? '3px' : undefined,
+                  '--button-background-color': toneStyle.base,
+                  '--button-background-color-hover': toneStyle.hover,
+                  '--button-background-color-active': toneStyle.active,
+                  '--button-text-color': '#111111',
+                  '--button-ring-color': toneStyle.ring,
+                  '--periodic-cell-muted': 'color-mix(in oklab, #111111 62%, transparent)',
+                };
 
                 return (
                   <Button
                     key={el.atomicNumber}
-                    color={isSelected ? 'primary' : 'secondary'}
-                    variant={isSelected ? 'solid' : 'soft'}
+                    color="secondary"
+                    variant="solid"
                     size="sm"
                     onClick={() => onSelect(el)}
-                    className="periodic-cell"
-                    style={{ gridColumn: position.xpos, gridRow: position.ypos, marginTop: position.ypos >= 9 ? "3px" : undefined }}
+                    className={`periodic-cell ${isSelected ? 'periodic-cell-selected' : ''}`}
+                    style={cellStyle}
                   >
-                    <span className="pointer-events-none absolute left-1 top-1 text-[8px] leading-none text-tertiary">
+                    {isSelected && <span className="periodic-cell-selection-ring" aria-hidden />}
+                    <span
+                      className="pointer-events-none absolute left-1 top-1 text-[8px] leading-none"
+                      style={{ color: 'var(--periodic-cell-muted)' }}
+                    >
                       {el.atomicNumber}
                     </span>
                     <span className="text-[10px] font-semibold leading-none sm:text-2xs">{el.symbol}</span>
