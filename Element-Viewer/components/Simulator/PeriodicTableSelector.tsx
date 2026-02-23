@@ -111,10 +111,10 @@ const TONE_STYLES: Record<ElementTone, ToneStyle> = {
     ring: '#0f5f6e',
   },
   outrosMetais: {
-    base: 'var(--gray-250)',
-    hover: 'var(--gray-300)',
-    active: 'var(--gray-350)',
-    ring: '#4b4b4b',
+    base: 'var(--gray-150)',
+    hover: 'var(--gray-200)',
+    active: 'var(--gray-250)',
+    ring: '#6d6d6d',
   },
   lantanideos: {
     base: 'var(--blue-75)',
@@ -136,25 +136,17 @@ const TONE_STYLES: Record<ElementTone, ToneStyle> = {
   },
 };
 
-const LEGEND_ITEMS: Array<{ tone: ElementTone; label: string; symbols?: string }> = [
-  { tone: 'ametais', label: 'Verde claro - Ametais', symbols: 'H, C, N, O, P, S, Se' },
-  { tone: 'metaisAlcalinos', label: 'Laranja - Metais alcalinos', symbols: 'Li, Na, K, Rb, Cs, Fr' },
-  {
-    tone: 'metaisAlcalinoTerrosos',
-    label: 'Amarelo - Metais alcalino-terrosos',
-    symbols: 'Be, Mg, Ca, Sr, Ba, Ra',
-  },
-  { tone: 'gasesNobres', label: 'Azul - Gases nobres', symbols: 'He, Ne, Ar, Kr, Xe, Rn, Og' },
-  { tone: 'halogenios', label: 'Azul-claro - Halogênios', symbols: 'F, Cl, Br, I, At, Ts' },
-  { tone: 'semimetais', label: 'Azul-ciano - Semimetais', symbols: 'B, Si, Ge, As, Sb, Te, Po' },
-  {
-    tone: 'outrosMetais',
-    label: 'Cinza - Outros metais',
-    symbols: 'Al, Ga, In, Sn, Tl, Pb, Bi, Nh, Fl, Mc, Lv',
-  },
-  { tone: 'lantanideos', label: 'Azul bebê - Lantanídeos' },
-  { tone: 'actinidios', label: 'Roxo - Actinídeos' },
-  { tone: 'metaisTransicao', label: 'Vermelho-claro - Metais de transição', symbols: 'restantes' },
+const LEGEND_ITEMS: Array<{ tone: ElementTone; label: string }> = [
+  { tone: 'ametais', label: 'Verde claro - Ametais' },
+  { tone: 'metaisAlcalinos', label: 'Laranja - Metais alcalinos' },
+  { tone: 'metaisAlcalinoTerrosos', label: 'Amarelo - Metais alcalino-terrosos' },
+  { tone: 'gasesNobres', label: 'Azul - Gases nobres' },
+  { tone: 'halogenios', label: 'Azul-claro - Halogenios' },
+  { tone: 'semimetais', label: 'Azul-ciano - Semimetais' },
+  { tone: 'outrosMetais', label: 'Cinza - Outros metais' },
+  { tone: 'lantanideos', label: 'Azul bebe - Lantanideos' },
+  { tone: 'actinidios', label: 'Roxo - Actinidios' },
+  { tone: 'metaisTransicao', label: 'Vermelho-claro - Metais de transicao' },
 ];
 
 type PeriodicCellStyle = React.CSSProperties & {
@@ -168,6 +160,10 @@ type PeriodicCellStyle = React.CSSProperties & {
 
 type LegendSwatchStyle = React.CSSProperties & {
   '--legend-swatch-color'?: string;
+};
+
+type PreviewAvatarStyle = React.CSSProperties & {
+  '--preview-avatar-color'?: string;
 };
 
 const getElementTone = (symbol: string, position: { xpos: number; ypos: number }): ElementTone => {
@@ -185,6 +181,12 @@ const getElementTone = (symbol: string, position: { xpos: number; ypos: number }
   if (sourceCategory.includes('transition metal')) return 'metaisTransicao';
 
   return 'metaisTransicao';
+};
+
+const getToneStyleBySymbol = (symbol: string): ToneStyle | null => {
+  const position = POSITION_BY_SYMBOL.get(symbol);
+  if (!position) return null;
+  return TONE_STYLES[getElementTone(symbol, position)];
 };
 
 const PeriodicTableSelector: React.FC<Props> = ({
@@ -299,14 +301,14 @@ const PeriodicTableSelector: React.FC<Props> = ({
           >
             <div className="h-1.5 w-14 rounded-full bg-border" />
           </div>
-          <div className="mb-1 flex justify-center">
+          <div className="mb-0.5 flex justify-center">
             <Button color="secondary" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
               <ChevronDown className="size-4" />
               Hide
             </Button>
           </div>
 
-          <div className={`mb-1.5 flex justify-end transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <div className={`mb-1 flex justify-end transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <Switch checked={showParticles} onCheckedChange={setShowParticles} label="X-Ray Vision" size="sm" />
           </div>
 
@@ -339,6 +341,8 @@ const PeriodicTableSelector: React.FC<Props> = ({
                   step={10}
                   unit="K"
                   className="hide-slider-value"
+                  trackColor="var(--red-100)"
+                  rangeColor="var(--red-500)"
                   onChange={setTemperature}
                 />
               </div>
@@ -373,13 +377,48 @@ const PeriodicTableSelector: React.FC<Props> = ({
                   max={11}
                   step={0.05}
                   className="hide-slider-value"
+                  trackColor="var(--purple-100)"
+                  rangeColor="var(--purple-500)"
                   onChange={(value) => setPressure(value <= -3.9 ? 0 : Math.pow(10, value))}
                 />
               </div>
             </div>
           </div>
 
-          <div className={`mb-1.5 flex items-start justify-between gap-2 transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <div className={`relative mb-1.5 flex items-center justify-between gap-2 transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+              <div className="pointer-events-auto">
+                <Popover>
+                  <Popover.Trigger>
+                    <Button color="secondary" variant="outline" size="sm">
+                      Legenda
+                    </Button>
+                  </Popover.Trigger>
+                  <Popover.Content
+                    side="top"
+                    align="center"
+                    sideOffset={8}
+                    minWidth={260}
+                    maxWidth={320}
+                    className="periodic-legend-popover"
+                  >
+                    <div className="p-3">
+                      <ul className="periodic-legend-list">
+                        {LEGEND_ITEMS.map((item) => (
+                          <li key={item.label} className="periodic-legend-item">
+                            <span
+                              className="periodic-legend-swatch"
+                              style={{ '--legend-swatch-color': TONE_STYLES[item.tone].base } as LegendSwatchStyle}
+                            />
+                            <p className="periodic-legend-label">{item.label}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Popover.Content>
+                </Popover>
+              </div>
+            </div>
             <SegmentedControl
               aria-label="Selection mode"
               value={isMultiSelect ? 'compare' : 'single'}
@@ -394,15 +433,23 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </SegmentedControl>
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
-                {selectedPreview.map((element) => (
-                  <span
-                    key={element.atomicNumber}
-                    className="flex size-6 items-center justify-center rounded-full border border-default bg-surface text-[10px] font-semibold"
-                    title={element.name}
-                  >
-                    {element.symbol}
-                  </span>
-                ))}
+                {selectedPreview.map((element) => {
+                  const toneStyle = getToneStyleBySymbol(element.symbol);
+                  const avatarStyle: PreviewAvatarStyle | undefined = toneStyle
+                    ? { '--preview-avatar-color': toneStyle.base }
+                    : undefined;
+
+                  return (
+                    <span
+                      key={element.atomicNumber}
+                      className="periodic-preview-avatar flex size-6 items-center justify-center rounded-full border border-default text-[10px] font-semibold"
+                      style={avatarStyle}
+                      title={element.name}
+                    >
+                      {element.symbol}
+                    </span>
+                  );
+                })}
               </div>
               <Badge color={isMultiSelect ? 'info' : 'secondary'} variant="soft">
                 {selectedElements.length}/6
@@ -412,41 +459,6 @@ const PeriodicTableSelector: React.FC<Props> = ({
 
           <div className={`${isSliderActive ? 'opacity-0' : 'opacity-100'} transition-opacity duration-100`}>
             <div className="periodic-grid">
-              <div className="periodic-legend-anchor" style={{ gridColumn: '8 / span 4', gridRow: 1 }}>
-                <Popover>
-                  <Popover.Trigger>
-                    <Button color="secondary" variant="outline" size="sm">
-                      Legenda
-                    </Button>
-                  </Popover.Trigger>
-                  <Popover.Content
-                    side="top"
-                    align="center"
-                    sideOffset={8}
-                    minWidth={280}
-                    maxWidth={340}
-                    className="periodic-legend-popover"
-                  >
-                    <div className="space-y-2 p-3">
-                      <p className="heading-xs text-default">Cor - Rótulo do grupo</p>
-                      <ul className="periodic-legend-list">
-                        {LEGEND_ITEMS.map((item) => (
-                          <li key={item.label} className="periodic-legend-item">
-                            <span
-                              className="periodic-legend-swatch"
-                              style={{ '--legend-swatch-color': TONE_STYLES[item.tone].base } as LegendSwatchStyle}
-                            />
-                            <div>
-                              <p className="periodic-legend-label">{item.label}</p>
-                              {item.symbols && <p className="periodic-legend-symbols">({item.symbols})</p>}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </Popover.Content>
-                </Popover>
-              </div>
               {visibleElements.map((el) => {
                 const position = POSITION_BY_SYMBOL.get(el.symbol);
                 if (!position) return null;

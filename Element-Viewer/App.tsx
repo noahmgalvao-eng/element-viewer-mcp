@@ -558,8 +558,18 @@ function App() {
             >
                 <Tooltip content={isPaused ? 'Resume simulation' : 'Pause simulation'} contentClassName={TOOLTIP_CLASS}>
                     <span>
-                        <Button color="secondary" variant="soft" pill uniform size="lg" onClick={handleTogglePause}>
-                            {isPaused ? <Play className="size-5" /> : <Pause className="size-5" />}
+                        <Button
+                            color="secondary"
+                            variant="soft"
+                            pill
+                            uniform
+                            size="lg"
+                            className="control-icon-center"
+                            onClick={handleTogglePause}
+                        >
+                            <span className="flex w-full items-center justify-center">
+                                {isPaused ? <Play className="size-5" /> : <Pause className="size-5" />}
+                            </span>
                         </Button>
                     </span>
                 </Tooltip>
@@ -572,9 +582,19 @@ function App() {
                             pill
                             uniform
                             size="lg"
+                            className="control-icon-center"
                             onClick={handleToggleRecord}
                         >
-                            {isRecording ? <Stop className="size-5" /> : <Record className="size-5" />}
+                            <span className="flex w-full items-center justify-center">
+                                {isRecording ? (
+                                    <Stop className="size-5" />
+                                ) : (
+                                    <Record
+                                        className="size-5"
+                                        style={{ color: 'var(--color-background-danger-solid)', fill: 'currentColor' }}
+                                    />
+                                )}
+                            </span>
                         </Button>
                     </span>
                 </Tooltip>
@@ -582,7 +602,10 @@ function App() {
                 <Tooltip content="Toggle simulation speed" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill size="lg" onClick={handleToggleSpeed}>
-                            <Bolt className="size-4" />
+                            <Bolt
+                                className="size-4"
+                                style={{ color: 'var(--color-background-caution-solid)', fill: 'currentColor' }}
+                            />
                             <span className="text-xs font-semibold">{timeScale}x</span>
                         </Button>
                     </span>
@@ -613,8 +636,11 @@ function App() {
 
                 <Tooltip content="Ask ChatGPT about the current simulation" contentClassName={TOOLTIP_CLASS}>
                     <span>
-                        <Button color="info" variant="soft" pill uniform onClick={handleInfoButtonClick}>
-                            <Lightbulb className="size-4" />
+                        <Button color="caution" variant="soft" pill uniform onClick={handleInfoButtonClick}>
+                            <Lightbulb
+                                className="size-4"
+                                style={{ color: 'var(--color-background-caution-solid)', fill: 'currentColor' }}
+                            />
                         </Button>
                     </span>
                 </Tooltip>
