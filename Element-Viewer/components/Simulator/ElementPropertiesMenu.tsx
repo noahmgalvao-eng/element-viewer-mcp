@@ -233,7 +233,10 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     : element.properties.boilingPointK;
   const hasActionMeltingPoint = Number.isFinite(actionMeltingPoint) && actionMeltingPoint > 0;
   const hasActionBoilingPoint = Number.isFinite(actionBoilingPoint) && actionBoilingPoint > actionMeltingPoint;
-  const actionMeltTarget = isLiquidLike ? Math.max(1, actionMeltingPoint - 25) : actionMeltingPoint + 25;
+  const liquidBandSpan = Math.max(2, actionBoilingPoint - actionMeltingPoint);
+  const actionMeltTarget = hasActionBoilingPoint
+    ? actionMeltingPoint + Math.max(1, liquidBandSpan * 0.35)
+    : actionMeltingPoint + 25;
   const actionBoilTarget = actionBoilingPoint + Math.max(5, actionBoilingPoint * 0.02);
   const pressureAboveTriple = triplePoint ? Math.max(triplePoint.pressurePa * 1.1, triplePoint.pressurePa + 500) : Math.max(physicsState.pressure, 101325);
   const pressureBelowCritical = criticalPoint ? Math.max(1, criticalPoint.pressurePa * 0.8) : Math.max(1, physicsState.pressure);
@@ -421,32 +424,6 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            {(isSolidState || isTripleState) && (
-              <Tooltip content="Configura para faixa líquida acima de Tmelt, abaixo de Tboil e com pressão acima do ponto triplo" contentClassName={TOOLTIP_CLASS}>
-                <span>
-                  <Button
-                    color="warning"
-                    variant="soft"
-                    block
-                    size="lg"
-                    className="min-h-16 whitespace-normal text-left leading-tight"
-                    disabled={!hasActionMeltingPoint || !hasActionBoilingPoint}
-                    onClick={() => {
-                      maybeLiftPressureAboveTriple();
-                      onSetTemperature(actionMeltTarget);
-                    }}
-                  >
-                    <ArrowUp className="size-4" />
-                    <span>
-                      Liquefy
-                      <br />
-                      <span className="text-xs text-secondary">Set near liquid range</span>
-                    </span>
-                  </Button>
-                </span>
-              </Tooltip>
-            )}
-
             {(isLiquidState || isGasState || isTripleState || isCriticalState) && (
               <Tooltip content="Configura para solidificação com temperatura abaixo de Tmelt e pressão acima do ponto triplo" contentClassName={TOOLTIP_CLASS}>
                 <span>
@@ -466,7 +443,35 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                     <span>
                       Solidify
                       <br />
-                      <span className="text-xs text-secondary">Cool below melting point</span>
+                      <span className="text-xs text-secondary">Set T &lt; {fmt(actionMeltingPoint, ' K')}</span>
+                    </span>
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+
+            {(isSolidState || isTripleState) && (
+              <Tooltip content="Configura para faixa líquida acima de Tmelt, abaixo de Tboil e com pressão acima do ponto triplo" contentClassName={TOOLTIP_CLASS}>
+                <span>
+                  <Button
+                    color="warning"
+                    variant="soft"
+                    block
+                    size="lg"
+                    className="min-h-16 whitespace-normal text-left leading-tight"
+                    disabled={!hasActionMeltingPoint || !hasActionBoilingPoint}
+                    onClick={() => {
+                      maybeLiftPressureAboveTriple();
+                      onSetTemperature(actionMeltTarget);
+                    }}
+                  >
+                    <ArrowUp className="size-4" />
+                    <span>
+                      Liquefy
+                      <br />
+                      <span className="text-xs text-secondary">
+                        Set {fmt(actionMeltingPoint, ' K')} &lt; T &lt; {fmt(actionBoilingPoint, ' K')}
+                      </span>
                     </span>
                   </Button>
                 </span>
@@ -496,7 +501,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                     <span>
                       Boil
                       <br />
-                      <span className="text-xs text-secondary">Heat above boiling point</span>
+                      <span className="text-xs text-secondary">Set T &gt; {fmt(actionBoilingPoint, ' K')}</span>
                     </span>
                   </Button>
                 </span>
@@ -547,7 +552,12 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   <ArrowUp className="size-4" />
                   <span>
                     Sublimação
-                    {hasTriplePoint && <><br />T {sublimationDirection} {fmt(sublimationTemp, ' K')} · P &lt; {fmt(triplePoint!.pressurePa / 1000, ' kPa')}</>}
+                    <br />
+                    <span className="text-xs text-secondary">
+                      {hasTriplePoint
+                        ? `Set T ${sublimationDirection} ${fmt(sublimationTemp, ' K')} · P < ${fmt(triplePoint!.pressurePa / 1000, ' kPa')}`
+                        : 'Requires triple-point data'}
+                    </span>
                   </span>
                 </Button>
               </span>
@@ -571,7 +581,12 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   <ArrowUp className="size-4" />
                   <span>
                     Ponto triplo
-                    {hasTriplePoint && <><br />T = {fmt(triplePoint!.tempK, ' K')} · P = {fmt(triplePoint!.pressurePa / 1000, ' kPa')}</>}
+                    <br />
+                    <span className="text-xs text-secondary">
+                      {hasTriplePoint
+                        ? `Set T = ${fmt(triplePoint!.tempK, ' K')} · P = ${fmt(triplePoint!.pressurePa / 1000, ' kPa')}`
+                        : 'Requires triple-point data'}
+                    </span>
                   </span>
                 </Button>
               </span>
@@ -591,7 +606,15 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   }}
                 >
                   <ArrowUp className="size-4" />
-                  Supercrítico {hasCriticalPoint ? `> ${fmt(criticalPoint!.tempK, ' K')} · > ${fmt(criticalPoint!.pressurePa / 1000, ' kPa')}` : ''}
+                  <span>
+                    Supercrítico
+                    <br />
+                    <span className="text-xs text-secondary">
+                      {hasCriticalPoint
+                        ? `Set T > ${fmt(criticalPoint!.tempK, ' K')} · P > ${fmt(criticalPoint!.pressurePa / 1000, ' kPa')}`
+                        : 'Requires critical-point data'}
+                    </span>
+                  </span>
                 </Button>
               </span>
             </Tooltip>

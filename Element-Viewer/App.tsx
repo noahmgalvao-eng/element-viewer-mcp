@@ -572,7 +572,7 @@ function App() {
                         <Button color="secondary" variant="soft" pill size="lg" onClick={handleToggleSpeed}>
                             <Bolt
                                 className="size-4"
-                                style={{ color: 'var(--color-background-caution-solid)', fill: 'currentColor' }}
+                                style={{ color: 'currentColor', fill: 'currentColor' }}
                             />
                             <span className="text-xs font-semibold">{timeScale}x</span>
                         </Button>
