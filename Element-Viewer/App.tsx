@@ -671,9 +671,12 @@ function App() {
                                     </p>
                                 </li>
                                 <li>
+                                    Dica: Utilize o chat no modo fullscreen para melhor experiência conversacional.
+                                </li>
+                                <li>
                                     Surpreenda-se com sugestões de combinações de elementos.
                                     <p className="italic text-secondary text-xs">
-                                        Ex: &quot;Me mostre uma combinação inusitada!&quot;
+                                        Ex: &quot;Coloque elementos interessantes de se ver juntos!&quot;
                                     </p>
                                 </li>
                                 <li>

@@ -14,6 +14,67 @@ interface Props {
     onInspect?: (e: React.MouseEvent, physics: PhysicsState) => void;
 }
 
+const clampChannel = (value: number) => Math.max(0, Math.min(255, Math.round(value)));
+
+const hexToRgb = (hexColor: string) => {
+    const normalized = hexColor.replace('#', '').trim();
+    const full = normalized.length === 3
+        ? normalized.split('').map((char) => `${char}${char}`).join('')
+        : normalized;
+
+    if (!/^[0-9a-fA-F]{6}$/.test(full)) {
+        return null;
+    }
+
+    return {
+        r: Number.parseInt(full.slice(0, 2), 16),
+        g: Number.parseInt(full.slice(2, 4), 16),
+        b: Number.parseInt(full.slice(4, 6), 16),
+    };
+};
+
+const mixColors = (sourceHex: string, targetHex: string, weight: number) => {
+    const source = hexToRgb(sourceHex);
+    const target = hexToRgb(targetHex);
+
+    if (!source || !target) return sourceHex;
+
+    const clampedWeight = Math.max(0, Math.min(1, weight));
+    const r = clampChannel(source.r + (target.r - source.r) * clampedWeight);
+    const g = clampChannel(source.g + (target.g - source.g) * clampedWeight);
+    const b = clampChannel(source.b + (target.b - source.b) * clampedWeight);
+
+    return `#${[r, g, b].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+};
+
+const getRelativeLuminance = (hexColor: string) => {
+    const rgb = hexToRgb(hexColor);
+    if (!rgb) return 0.5;
+
+    const toLinear = (channel: number) => {
+        const normalized = channel / 255;
+        return normalized <= 0.03928
+            ? normalized / 12.92
+            : Math.pow((normalized + 0.055) / 1.055, 2.4);
+    };
+
+    return (0.2126 * toLinear(rgb.r)) + (0.7152 * toLinear(rgb.g)) + (0.0722 * toLinear(rgb.b));
+};
+
+const tuneColorForTheme = (hexColor: string, isDarkTheme: boolean) => {
+    const luminance = getRelativeLuminance(hexColor);
+
+    if (isDarkTheme && luminance < 0.2) {
+        return mixColors(hexColor, '#cbd5e1', 0.4);
+    }
+
+    if (!isDarkTheme && luminance > 0.78) {
+        return mixColors(hexColor, '#334155', 0.45);
+    }
+
+    return hexColor;
+};
+
 const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, viewBounds, totalElements, onInspect }) => {
     const { pathProgress, state, particles, boilProgress, meltProgress, matterRect, gasBounds, scfOpacity, simTime, sublimationProgress } = physics;
 
@@ -34,6 +95,20 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
     // --- DNA Visual Properties (Dynamic from JSON) ---
     const { solid, liquid, gas } = element.visualDNA;
 
+    const isDarkTheme = useMemo(() => {
+        if (typeof window === 'undefined') return false;
+
+        const dataTheme = document.documentElement.getAttribute('data-theme');
+        if (dataTheme === 'dark') return true;
+        if (dataTheme === 'light') return false;
+
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }, []);
+
+    const adjustedSolidColor = useMemo(() => tuneColorForTheme(solid.color, isDarkTheme), [solid.color, isDarkTheme]);
+    const adjustedLiquidColor = useMemo(() => tuneColorForTheme(liquid.color, isDarkTheme), [liquid.color, isDarkTheme]);
+    const adjustedGasColor = useMemo(() => tuneColorForTheme(gas.color, isDarkTheme), [gas.color, isDarkTheme]);
+
     // --- Dynamic Color & Opacity Logic ---
     const bulkVisuals = useMemo(() => {
         // 1. Determine base Visual DNA based on state
@@ -49,18 +124,18 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
 
         // 2. Interpolate if Melting
         let finalOpacity = targetVisual.opacidade;
-        let finalFill = targetVisual.color;
+        let finalFill = targetVisual === liquid ? adjustedLiquidColor : targetVisual === gas ? adjustedGasColor : adjustedSolidColor;
 
         if (state === MatterState.MELTING || state === MatterState.EQUILIBRIUM_MELT) {
             finalOpacity = interpolateValue(solid.opacidade, liquid.opacidade, meltProgress);
-            finalFill = interpolateColor(solid.color, liquid.color, meltProgress);
+            finalFill = interpolateColor(adjustedSolidColor, adjustedLiquidColor, meltProgress);
         }
 
         // Triple Point interpolation
         if (state === MatterState.EQUILIBRIUM_TRIPLE) {
             const tProgress = Math.min(1, Math.max(0, meltProgress));
             finalOpacity = interpolateValue(solid.opacidade, liquid.opacidade, tProgress);
-            finalFill = interpolateColor(solid.color, liquid.color, tProgress);
+            finalFill = interpolateColor(adjustedSolidColor, adjustedLiquidColor, tProgress);
         }
 
         // X-Ray Mode Override
@@ -72,7 +147,7 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
             fill: finalFill,
             opacity: finalOpacity
         };
-    }, [state, meltProgress, solid, liquid, gas, showParticles]);
+    }, [state, meltProgress, solid, liquid, gas, adjustedSolidColor, adjustedLiquidColor, adjustedGasColor, showParticles]);
 
     // --- VISIBILITY LOGIC ---
     const hasTrappedParticles = useMemo(() => {
@@ -249,7 +324,7 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
                             y={gasBounds.minY - 20}
                             width={(gasBounds.maxX - gasBounds.minX) + 40}
                             height={(gasBounds.maxY - gasBounds.minY) + 40}
-                            fill={element.visualDNA.gas.color}
+                            fill={adjustedGasColor}
                             opacity={scfOpacity}
                             filter={`url(#scfNoise-${element.symbol})`}
                             className="transition-opacity duration-300"
@@ -285,7 +360,7 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
 
                     <path
                         d={currentPath}
-                        fill={gas.color}
+                        fill={adjustedGasColor}
                         filter={`url(#steamBlur-${element.symbol})`}
                         opacity={showSteamBlur && puddleOpacity > 0 ? 1 : 0}
                         className="transition-opacity duration-700"
@@ -337,25 +412,25 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
 
                         if (isHiddenStrict) return null;
 
-                        let fill = gas.color;
+                        let fill = adjustedGasColor;
                         let opacity = gas.opacidade;
                         let renderX = p.x;
                         let renderY = p.y;
 
                         if (p.state === ParticleState.RISING || p.state === ParticleState.CONDENSING) {
-                            fill = liquid.color;
+                            fill = adjustedLiquidColor;
                             opacity = liquid.opacidade;
                         }
 
                         if (state === MatterState.SUBLIMATION || state === MatterState.EQUILIBRIUM_SUB) {
                             if (p.state === ParticleState.RISING || p.state === ParticleState.CONDENSING) {
-                                fill = gas.color; // Sublimation creates gas directly, and condensation is gas -> solid
+                                fill = adjustedGasColor; // Sublimation creates gas directly, and condensation is gas -> solid
                                 opacity = gas.opacidade;
                             }
                         }
 
                         if (p.state === ParticleState.TRAPPED) {
-                            fill = state === MatterState.SOLID || state === MatterState.SUBLIMATION || state === MatterState.EQUILIBRIUM_SUB ? solid.color : liquid.color;
+                            fill = state === MatterState.SOLID || state === MatterState.SUBLIMATION || state === MatterState.EQUILIBRIUM_SUB ? adjustedSolidColor : adjustedLiquidColor;
                             opacity = 0.9;
 
                             const vibrationAmp = Math.sqrt(physics.temperature) * 0.15;
@@ -393,7 +468,7 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
                     {/* 1. Identity Sphere */}
                     <circle
                         r="30"
-                        fill={element.visualDNA.gas.color}
+                        fill={adjustedGasColor}
                         stroke="none"
                         strokeWidth="0"
                         opacity="1"
