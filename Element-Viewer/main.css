@@ -128,7 +128,7 @@
 }
 
 .periodic-preview-avatar {
-  background: var(--preview-avatar-color, var(--color-surface));
+  background: var(--preview-avatar-color, #dce2ea);
   border-color: color-mix(in oklab, var(--preview-avatar-color, #d0d0d0) 68%, #000000 12%);
   color: #111111;
 }

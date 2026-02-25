@@ -142,7 +142,7 @@ const formatElectronConfiguration = (config?: string) => {
   }
 };
 
-const PropertyCard: React.FC<{ item: PropertyItem }> = ({ item }) => {
+const PropertyCard: React.FC<{ item: PropertyItem; hideSourceId?: boolean; forceEstimated?: boolean }> = ({ item, hideSourceId = false, forceEstimated = false }) => {
   const isNA = item.value === 'N/A';
   const finalText = isNA ? 'N/A' : `${item.value}${item.unit ? ` ${item.unit}` : ''}`;
 
@@ -150,9 +150,9 @@ const PropertyCard: React.FC<{ item: PropertyItem }> = ({ item }) => {
     <div className="rounded-xl border border-subtle bg-surface-secondary p-2.5">
       <div className="flex items-start justify-between gap-2">
         <p className="break-words text-3xs uppercase tracking-wide text-secondary">{item.label}</p>
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 text-3xs text-tertiary">
-          {typeof item.sourceId === 'number' && <span>[{item.sourceId}]</span>}
-          {item.estimated && <span>*estimado</span>}
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 text-3xs">
+          {!hideSourceId && typeof item.sourceId === 'number' && <span className="text-tertiary">[{item.sourceId}]</span>}
+          {(forceEstimated || item.estimated) && <span className="font-semibold uppercase tracking-wide text-warning">*estimado</span>}
         </div>
       </div>
       <div className="mt-1 break-words text-xs font-mono leading-snug text-default">
@@ -165,6 +165,7 @@ const PropertyCard: React.FC<{ item: PropertyItem }> = ({ item }) => {
 const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperature, onSetPressure }) => {
   const { element, physicsState, x, y } = data;
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const isReactionProduct = element.category === 'reaction_product';
 
   const sourceInfo = SOURCE_DATA.elements.find((entry) => entry.symbol === element.symbol) as
     | Record<string, any>
@@ -284,7 +285,6 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   );
   const enthalpyFusionKjMol = parseDisplayValue(element.properties.enthalpyFusionKjMolDisplay, 'kJ/mol');
   const enthalpyVaporizationKjMol = parseDisplayValue(element.properties.enthalpyVaporizationKjMolDisplay, 'kJ/mol');
-  const electricalConductivity = parseDisplayValue(element.properties.electricalConductivityDisplay);
   const bulkModulus = parseDisplayValue(element.properties.bulkModulusDisplay, 'GPa');
 
   const atomicChemicalProperties: PropertyItem[] = [
@@ -313,7 +313,6 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     { label: 'enthalpyFusionKjMol', value: enthalpyFusionKjMol.value, unit: enthalpyFusionKjMol.na ? undefined : 'kJ/mol', sourceId: element.properties.enthalpyFusionSource, estimated: enthalpyFusionKjMol.estimated },
     { label: 'enthalpyVaporizationKjMol', value: enthalpyVaporizationKjMol.value, unit: enthalpyVaporizationKjMol.na ? undefined : 'kJ/mol', sourceId: element.properties.enthalpyVaporizationSource, estimated: enthalpyVaporizationKjMol.estimated },
     { label: 'bulkModulusGPA', value: bulkModulus.value, unit: bulkModulus.na ? undefined : 'GPa', sourceId: element.properties.bulkModulusSource, estimated: bulkModulus.estimated },
-    { label: 'Electrical conductivity', value: electricalConductivity.value, estimated: electricalConductivity.estimated },
   ];
 
   const references = useMemo<ReferenceItem[]>(
@@ -343,42 +342,46 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="space-y-4 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
+          <div className="sticky top-0 z-10 -mx-4 -mt-4 border-b border-subtle bg-surface/95 px-4 py-3 backdrop-blur">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
                 <CopyTooltip copyValue={element.symbol}>
                   <span>
                     <Badge color="info" variant="soft">{element.symbol}</Badge>
                   </span>
                 </CopyTooltip>
-                <Badge color="secondary" variant="outline">Atomic #{element.atomicNumber}</Badge>
+                {!isReactionProduct && <Badge color="secondary" variant="outline">#{element.atomicNumber}</Badge>}
+                </div>
+                <h3 className="heading-xs text-default">{element.name}</h3>
               </div>
-              <h3 className="heading-xs text-default">{element.name}</h3>
-              <p className="text-xs text-secondary">
-                {sourceInfo?.category || element.classification.groupName || 'Generated substance'}
-              </p>
-              <p className={`max-w-[20rem] text-xs leading-5 text-default ${showFullDescription ? 'whitespace-pre-wrap' : 'line-clamp-2-soft'}`}>
-                {summaryText}
-              </p>
-              {canExpandDescription && (
-                <Button
-                  color="secondary"
-                  variant="ghost"
-                  size="sm"
-                  className="w-fit px-0"
-                  onClick={() => setShowFullDescription((prev) => !prev)}
-                >
-                  {showFullDescription ? 'Ver menos' : 'Ver mais...'}
-                </Button>
-              )}
+              <Button color="secondary" variant="ghost" pill uniform onClick={onClose} aria-label="Close details">
+                <CloseBold className="size-4" />
+              </Button>
             </div>
-
-            <Button color="secondary" variant="ghost" pill uniform onClick={onClose} aria-label="Close details">
-              <CloseBold className="size-4" />
-            </Button>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="space-y-1">
+            <p className="text-xs text-secondary">
+              {sourceInfo?.category || element.classification.groupName || 'Generated substance'}
+            </p>
+            <p className={`max-w-[20rem] text-xs leading-5 text-default ${showFullDescription ? 'whitespace-pre-wrap' : 'line-clamp-2-soft'}`}>
+              {summaryText}
+            </p>
+            {canExpandDescription && (
+              <Button
+                color="secondary"
+                variant="ghost"
+                size="sm"
+                className="w-fit px-0"
+                onClick={() => setShowFullDescription((prev) => !prev)}
+              >
+                {showFullDescription ? 'Ver menos' : 'Ver mais...'}
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
             <Tooltip content="Set global temperature below or above the melting threshold" contentClassName={TOOLTIP_CLASS}>
               <span>
                 <Button color="warning" variant="soft" block onClick={() => onSetTemperature(actionMeltTarget)}>
@@ -404,13 +407,13 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
             </Tooltip>
 
             <Tooltip content="Set pressure below triple point and temperature around sublimation threshold" contentClassName={TOOLTIP_CLASS}>
-              <span className="sm:col-span-2">
+              <span>
                 <Button
                   color="secondary"
                   variant="soft"
                   block
                   size="lg"
-                  className="min-h-14 whitespace-normal text-left leading-tight"
+                  className="min-h-16 whitespace-normal text-left leading-tight"
                   disabled={!hasTriplePoint}
                   onClick={() => {
                     if (!triplePoint) return;
@@ -419,19 +422,22 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   }}
                 >
                   <ArrowUp className="size-4" />
-                  Sublimação {hasTriplePoint ? `· T ${sublimationDirection} ${fmt(sublimationTemp, ' K')} · P < ${fmt(triplePoint!.pressurePa / 1000, ' kPa')}` : ''}
+                  <span>
+                    Sublimação
+                    {hasTriplePoint && <><br />T {sublimationDirection} {fmt(sublimationTemp, ' K')} · P &lt; {fmt(triplePoint!.pressurePa / 1000, ' kPa')}</>}
+                  </span>
                 </Button>
               </span>
             </Tooltip>
 
             <Tooltip content="Set environment to triple point" contentClassName={TOOLTIP_CLASS}>
-              <span className="sm:col-span-2">
+              <span>
                 <Button
                   color="success"
                   variant="soft"
                   block
                   size="lg"
-                  className="min-h-14 whitespace-normal text-left leading-tight"
+                  className="min-h-16 whitespace-normal text-left leading-tight"
                   disabled={!hasTriplePoint}
                   onClick={() => {
                     if (!triplePoint) return;
@@ -440,13 +446,16 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   }}
                 >
                   <ArrowUp className="size-4" />
-                  Ponto triplo {hasTriplePoint ? `· T = ${fmt(triplePoint!.tempK, ' K')} · P = ${fmt(triplePoint!.pressurePa / 1000, ' kPa')}` : ''}
+                  <span>
+                    Ponto triplo
+                    {hasTriplePoint && <><br />T = {fmt(triplePoint!.tempK, ' K')} · P = {fmt(triplePoint!.pressurePa / 1000, ' kPa')}</>}
+                  </span>
                 </Button>
               </span>
             </Tooltip>
 
             <Tooltip content="Move to supercritical regime (T and P above critical values)" contentClassName={TOOLTIP_CLASS}>
-              <span className="sm:col-span-2">
+              <span className="col-span-2">
                 <Button
                   color="info"
                   variant="soft"
@@ -469,23 +478,23 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-default">Atomic & Chemical</p>
             </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2">
               {atomicChemicalProperties.map((item) => (
-                <PropertyCard key={item.label} item={item} />
+                <PropertyCard key={item.label} item={item} hideSourceId={isReactionProduct} forceEstimated={isReactionProduct} />
               ))}
             </div>
           </div>
 
           <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">
             <p className="text-sm font-semibold text-default">Physics</p>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2">
               {physicsProperties.map((item) => (
-                <PropertyCard key={item.label} item={item} />
+                <PropertyCard key={item.label} item={item} hideSourceId={isReactionProduct} forceEstimated={isReactionProduct} />
               ))}
             </div>
           </div>
 
-          <div className="space-y-2 rounded-2xl border border-subtle bg-surface p-3">
+          {!isReactionProduct && <div className="space-y-2 rounded-2xl border border-subtle bg-surface p-3">
             <Popover>
               <Popover.Trigger>
                 <Button color="secondary" variant="soft" block>
@@ -532,7 +541,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                 </div>
               </Popover.Content>
             </Popover>
-          </div>
+          </div>}
         </div>
       </div>
     </div>

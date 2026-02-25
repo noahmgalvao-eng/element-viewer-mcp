@@ -456,8 +456,6 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
       : bulkModulusOfficial.variation
         ? `${bulkModulusOfficial.str} GPa (Variação: ${bulkModulusOfficial.variation})`
         : `${bulkModulusOfficial.str} GPa`,
-    electricalConductivityDisplay: 'N/A', // Not currently in scientific data source, kept as fallback for UI if added later
-
     density: physicsDensity,
     electronegativity: source.electronegativity_pauling || 0,
     electronConfiguration: source.electron_configuration_semantic,
