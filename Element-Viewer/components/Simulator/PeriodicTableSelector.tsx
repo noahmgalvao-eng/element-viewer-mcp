@@ -291,7 +291,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
       >
         <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-all duration-100 ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
           <div
-            className="mx-auto mb-1 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
+            className="mx-auto mb-0.5 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
             onPointerDown={handleDragStart}
             onPointerMove={handleDragMove}
             onPointerUp={handleDragEnd}
@@ -301,8 +301,8 @@ const PeriodicTableSelector: React.FC<Props> = ({
           >
             <div className="h-1.5 w-14 rounded-full bg-border" />
           </div>
-          <div className="mb-0.5 flex justify-center">
-            <Button color="secondary" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+          <div className="mb-px flex justify-center pt-px">
+            <Button className="min-h-10 px-3" color="secondary" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
               <ChevronDown className="size-4" />
               Hide
             </Button>
