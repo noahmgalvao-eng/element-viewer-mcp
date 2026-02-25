@@ -137,16 +137,16 @@ const TONE_STYLES: Record<ElementTone, ToneStyle> = {
 };
 
 const LEGEND_ITEMS: Array<{ tone: ElementTone; label: string }> = [
-  { tone: 'ametais', label: 'Verde claro - Ametais' },
-  { tone: 'metaisAlcalinos', label: 'Laranja - Metais alcalinos' },
-  { tone: 'metaisAlcalinoTerrosos', label: 'Amarelo - Metais alcalino-terrosos' },
-  { tone: 'gasesNobres', label: 'Azul - Gases nobres' },
-  { tone: 'halogenios', label: 'Azul-claro - Halogenios' },
-  { tone: 'semimetais', label: 'Azul-ciano - Semimetais' },
-  { tone: 'outrosMetais', label: 'Cinza - Outros metais' },
-  { tone: 'lantanideos', label: 'Azul bebe - Lantanideos' },
-  { tone: 'actinidios', label: 'Roxo - Actinidios' },
-  { tone: 'metaisTransicao', label: 'Vermelho-claro - Metais de transicao' },
+  { tone: 'ametais', label: 'Ametais' },
+  { tone: 'metaisAlcalinos', label: 'Metais alcalinos' },
+  { tone: 'metaisAlcalinoTerrosos', label: 'Metais alcalino-terrosos' },
+  { tone: 'gasesNobres', label: 'Gases nobres' },
+  { tone: 'halogenios', label: 'Halogênios' },
+  { tone: 'semimetais', label: 'Semimetais' },
+  { tone: 'outrosMetais', label: 'Outros metais' },
+  { tone: 'lantanideos', label: 'Lantanídeos' },
+  { tone: 'actinidios', label: 'Actinídeos' },
+  { tone: 'metaisTransicao', label: 'Metais de transição' },
 ];
 
 type PeriodicCellStyle = React.CSSProperties & {
