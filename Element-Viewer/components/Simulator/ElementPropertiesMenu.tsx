@@ -151,8 +151,8 @@ const PropertyCard: React.FC<{ item: PropertyItem; hideSourceId?: boolean; force
       <div className="flex items-start justify-between gap-2">
         <p className="break-words text-3xs uppercase tracking-wide text-secondary">{item.label}</p>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 text-3xs">
-          {!hideSourceId && typeof item.sourceId === 'number' && <span className="text-tertiary">[{item.sourceId}]</span>}
           {(forceEstimated || item.estimated) && <span className="font-semibold uppercase tracking-wide text-warning">*estimado</span>}
+          {!hideSourceId && typeof item.sourceId === 'number' && <span className="text-tertiary">[{item.sourceId}]</span>}
         </div>
       </div>
       <div className="mt-1 break-words text-xs font-mono leading-snug text-default">
@@ -203,6 +203,27 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     MatterState.EQUILIBRIUM_SUB,
   ].includes(physicsState.state);
 
+  const isSolidState = [
+    MatterState.SOLID,
+    MatterState.MELTING,
+    MatterState.EQUILIBRIUM_MELT,
+  ].includes(physicsState.state);
+
+  const isLiquidState = [
+    MatterState.LIQUID,
+    MatterState.BOILING,
+    MatterState.EQUILIBRIUM_BOIL,
+  ].includes(physicsState.state);
+
+  const isGasState = [
+    MatterState.GAS,
+    MatterState.SUBLIMATION,
+    MatterState.EQUILIBRIUM_SUB,
+  ].includes(physicsState.state);
+
+  const isTripleState = physicsState.state === MatterState.EQUILIBRIUM_TRIPLE;
+  const isCriticalState = [MatterState.SUPERCRITICAL, MatterState.TRANSITION_SCF].includes(physicsState.state);
+
   const actionMeltingPoint = Number.isFinite(physicsState.meltingPointCurrent) && physicsState.meltingPointCurrent > 0
     ? physicsState.meltingPointCurrent
     : element.properties.meltingPointK;
@@ -211,6 +232,12 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     : element.properties.boilingPointK;
   const actionMeltTarget = isLiquidLike ? Math.max(1, actionMeltingPoint - 25) : actionMeltingPoint + 25;
   const actionBoilTarget = actionBoilingPoint + Math.max(5, actionBoilingPoint * 0.02);
+  const pressureAboveTriple = triplePoint ? Math.max(triplePoint.pressurePa * 1.1, triplePoint.pressurePa + 500) : Math.max(physicsState.pressure, 101325);
+  const pressureBelowCritical = criticalPoint ? Math.max(1, criticalPoint.pressurePa * 0.8) : Math.max(1, physicsState.pressure);
+  const condenseTargetTemp = Math.max(actionMeltingPoint + 2, Math.min(actionBoilingPoint - 2, actionMeltingPoint + (actionBoilingPoint - actionMeltingPoint) * 0.6));
+  const condenseCriticalTargetTemp = criticalPoint
+    ? Math.max(actionMeltingPoint + 2, Math.min(criticalPoint.tempK - 2, actionMeltingPoint + (criticalPoint.tempK - actionMeltingPoint) * 0.65))
+    : condenseTargetTemp;
   const sublimationTemp = Math.max(1, physicsState.sublimationPointCurrent || triplePoint?.tempK || actionMeltingPoint);
   const sublimationPressure = triplePoint ? Math.max(1, triplePoint.pressurePa * 0.8) : 1;
   const sublimationTargetTemp = isGasLike ? Math.max(1, sublimationTemp - 40) : sublimationTemp + 40;
@@ -382,29 +409,91 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Tooltip content="Set global temperature below or above the melting threshold" contentClassName={TOOLTIP_CLASS}>
-              <span>
-                <Button color="warning" variant="soft" block onClick={() => onSetTemperature(actionMeltTarget)}>
-                  <ArrowUp className="size-4" />
-                  {isLiquidLike ? 'Solidificar' : 'Fundir'} · T {isLiquidLike ? '<' : '>'} {fmt(actionMeltingPoint, ' K')}
-                </Button>
-              </span>
-            </Tooltip>
+            {(isSolidState || isTripleState) && (
+              <Tooltip content="Configura para faixa líquida acima de Tmelt, abaixo de Tboil e com pressão acima do ponto triplo" contentClassName={TOOLTIP_CLASS}>
+                <span>
+                  <Button
+                    color="warning"
+                    variant="soft"
+                    block
+                    disabled={!hasTriplePoint}
+                    onClick={() => {
+                      onSetPressure(pressureAboveTriple);
+                      onSetTemperature(actionMeltTarget);
+                    }}
+                  >
+                    <ArrowUp className="size-4" />
+                    Melt · T &gt; {fmt(actionMeltingPoint, ' K')} e &lt; {fmt(actionBoilingPoint, ' K')} · P &gt; {fmt((triplePoint?.pressurePa ?? 0) / 1000, ' kPa')}
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
 
-            <Tooltip content="Set global temperature above the pressure-adjusted boiling point" contentClassName={TOOLTIP_CLASS}>
-              <span>
-                <Button
-                  color="danger"
-                  variant="soft"
-                  block
-                  disabled={actionBoilingPoint >= 49000}
-                  onClick={() => onSetTemperature(actionBoilTarget)}
-                >
-                  <ArrowUp className="size-4" />
-                  Ebulição {actionBoilingPoint >= 49000 ? 'indefinida' : `· T > ${fmt(actionBoilingPoint, ' K')}`}
-                </Button>
-              </span>
-            </Tooltip>
+            {(isLiquidState || isGasState || isTripleState || isCriticalState) && (
+              <Tooltip content="Configura para solidificação com temperatura abaixo de Tmelt e pressão acima do ponto triplo" contentClassName={TOOLTIP_CLASS}>
+                <span>
+                  <Button
+                    color="warning"
+                    variant="soft"
+                    block
+                    disabled={!hasTriplePoint}
+                    onClick={() => {
+                      onSetPressure(pressureAboveTriple);
+                      onSetTemperature(Math.max(1, actionMeltingPoint - 25));
+                    }}
+                  >
+                    <ArrowUp className="size-4" />
+                    Solidify · T &lt; {fmt(actionMeltingPoint, ' K')} · P &gt; {fmt((triplePoint?.pressurePa ?? 0) / 1000, ' kPa')}
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+
+            {(isSolidState || isLiquidState || isTripleState || isCriticalState) && (
+              <Tooltip content="Configura para ebulição com temperatura acima de Tboil" contentClassName={TOOLTIP_CLASS}>
+                <span>
+                  <Button
+                    color="danger"
+                    variant="soft"
+                    block
+                    disabled={actionBoilingPoint >= 49000 || (!isCriticalState && !hasTriplePoint)}
+                    onClick={() => {
+                      if (isCriticalState && criticalPoint) {
+                        onSetPressure(pressureBelowCritical);
+                      } else {
+                        onSetPressure(pressureAboveTriple);
+                      }
+                      onSetTemperature(actionBoilTarget);
+                    }}
+                  >
+                    <ArrowUp className="size-4" />
+                    Boil {actionBoilingPoint >= 49000 ? 'indefinida' : isCriticalState && criticalPoint
+                      ? `· T > ${fmt(actionBoilingPoint, ' K')} · P < ${fmt(criticalPoint.pressurePa / 1000, ' kPa')}`
+                      : `· T > ${fmt(actionBoilingPoint, ' K')} · P > ${fmt((triplePoint?.pressurePa ?? 0) / 1000, ' kPa')}`}
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+
+            {(isGasState || isCriticalState) && (
+              <Tooltip content="Configura para condensação com temperatura intermediária e pressão acima do ponto triplo" contentClassName={TOOLTIP_CLASS}>
+                <span>
+                  <Button
+                    color="info"
+                    variant="soft"
+                    block
+                    disabled={!hasTriplePoint}
+                    onClick={() => {
+                      onSetPressure(pressureAboveTriple);
+                      onSetTemperature(isCriticalState ? condenseCriticalTargetTemp : condenseTargetTemp);
+                    }}
+                  >
+                    <ArrowUp className="size-4" />
+                    Condensar · T &gt; {fmt(actionMeltingPoint, ' K')} e &lt; {fmt(isCriticalState && criticalPoint ? criticalPoint.tempK : actionBoilingPoint, ' K')} · P &gt; {fmt((triplePoint?.pressurePa ?? 0) / 1000, ' kPa')}
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
 
             <Tooltip content="Set pressure below triple point and temperature around sublimation threshold" contentClassName={TOOLTIP_CLASS}>
               <span>
@@ -414,7 +503,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                   block
                   size="lg"
                   className="min-h-16 whitespace-normal text-left leading-tight"
-                  disabled={!hasTriplePoint}
+                  disabled={!hasTriplePoint || isLiquidState}
                   onClick={() => {
                     if (!triplePoint) return;
                     onSetPressure(sublimationPressure);
