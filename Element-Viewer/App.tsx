@@ -553,7 +553,7 @@ function App() {
             />
 
             <div
-                className="fixed z-50 flex flex-col gap-3"
+                className="fixed z-40 flex flex-col gap-3"
                 style={{ top: `${16 + insets.top}px`, left: `${16 + insets.left}px` }}
             >
                 <Tooltip content={isPaused ? 'Resume simulation' : 'Pause simulation'} contentClassName={TOOLTIP_CLASS}>
@@ -613,7 +613,7 @@ function App() {
             </div>
 
             <div
-                className="fixed z-30 grid grid-cols-2 gap-2"
+                className="fixed z-20 grid grid-cols-2 gap-2"
                 style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
             >
                 <Tooltip content="Picture-in-picture" contentClassName={TOOLTIP_CLASS}>
@@ -728,4 +728,3 @@ function App() {
 }
 
 export default App;
-
