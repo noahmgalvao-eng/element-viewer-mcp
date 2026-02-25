@@ -429,7 +429,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
                               className="periodic-legend-swatch"
                               style={{ '--legend-swatch-color': TONE_STYLES[item.tone].base } as LegendSwatchStyle}
                             />
-                            <p className="periodic-legend-label">{item.label}</p>
+                            <p className="periodic-legend-label text-xs text-secondary">{item.label}</p>
                           </li>
                         ))}
                       </ul>
