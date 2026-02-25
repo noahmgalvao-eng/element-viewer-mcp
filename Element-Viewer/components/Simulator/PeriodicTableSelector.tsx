@@ -273,7 +273,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
   return (
     <>
       {!isOpen && (
-        <div className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2">
+        <div className="fixed bottom-4 left-1/2 z-[120] -translate-x-1/2">
           <Button color="secondary" variant="soft" pill onClick={() => onOpenChange(true)}>
             <ChevronDown className="size-4 rotate-180" />
             Open periodic table
@@ -281,8 +281,10 @@ const PeriodicTableSelector: React.FC<Props> = ({
         </div>
       )}
 
+      {isOpen && <div className="fixed inset-0 z-[110] bg-black/30" onClick={() => onOpenChange(false)} aria-hidden="true" />}
+
       <section
-        className="fixed inset-x-0 bottom-0 z-40 px-0 pb-0"
+        className="fixed inset-x-0 bottom-0 z-[120] px-0 pb-0"
         style={{
           transform: `translateY(${isOpen ? dragOffset : 580}px)`,
           transition: isDraggingSheet ? 'none' : 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
@@ -400,7 +402,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
                     sideOffset={8}
                     minWidth={260}
                     maxWidth={320}
-                    className="periodic-legend-popover"
+                    className="periodic-legend-popover z-[130]"
                   >
                     <div className="p-3">
                       <ul className="periodic-legend-list">
