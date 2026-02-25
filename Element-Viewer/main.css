@@ -43,6 +43,12 @@
   background-color: var(--color-surface-elevated, #ffffff);
 }
 
+.periodic-sheet-interacting,
+.periodic-sheet-interacting .periodic-grid,
+.periodic-sheet-interacting .periodic-cell {
+  will-change: transform, opacity;
+}
+
 .periodic-grid {
   display: grid;
   width: 100%;
@@ -119,12 +125,6 @@
 
 .periodic-legend-label {
   margin: 0;
-}
-
-.periodic-legend-label {
-  font-size: 0.68rem;
-  line-height: 1.22;
-  color: var(--color-text-primary, #111111);
 }
 
 .periodic-preview-avatar {
