@@ -21,7 +21,6 @@ export interface ElementProperties {
   ionizationEnergyDisplay?: string;
   oxidationStatesDisplay?: string;
   thermalConductivityDisplay?: string;
-  electricalConductivityDisplay?: string;
   bulkModulusDisplay?: string;
   enthalpyFusionKjMolDisplay?: string;
   enthalpyVaporizationKjMolDisplay?: string;
@@ -73,7 +72,6 @@ export interface ElementProperties {
   atomicRadiusPm?: number;    // Picometers
   density?: number;           // g/cm³
   thermalConductivity?: number; // W/(m·K)
-  electricalConductivity?: number; // S/m (Siemens per meter)
   electronConfiguration?: string;
 
   // NEW SCIENTIFIC DATA

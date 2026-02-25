@@ -111,9 +111,9 @@ const TONE_STYLES: Record<ElementTone, ToneStyle> = {
     ring: '#0f5f6e',
   },
   outrosMetais: {
-    base: 'var(--gray-150)',
-    hover: 'var(--gray-200)',
-    active: 'var(--gray-250)',
+    base: '#d9d9d9',
+    hover: '#cfcfcf',
+    active: '#c5c5c5',
     ring: '#6d6d6d',
   },
   lantanideos: {
@@ -526,7 +526,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
                   const toneStyle = getToneStyleBySymbol(element.symbol);
                   const avatarStyle: PreviewAvatarStyle | undefined = toneStyle
                     ? { '--preview-avatar-color': toneStyle.base }
-                    : undefined;
+                    : element.category === 'reaction_product'
+                      ? { '--preview-avatar-color': element.visualDNA.solid.color }
+                      : undefined;
 
                   return (
                     <span
