@@ -182,6 +182,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const criticalPoint = element.properties.criticalPoint;
   const hasTriplePoint = Boolean(triplePoint && triplePoint.tempK > 0 && triplePoint.pressurePa > 0);
   const hasCriticalPoint = Boolean(criticalPoint && criticalPoint.tempK > 0 && criticalPoint.pressurePa > 0);
+  const isPressureBelowTriple = hasTriplePoint && physicsState.pressure < triplePoint!.pressurePa;
 
 
   const isLiquidLike = [
@@ -230,11 +231,16 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const actionBoilingPoint = Number.isFinite(physicsState.boilingPointCurrent) && physicsState.boilingPointCurrent > 0
     ? physicsState.boilingPointCurrent
     : element.properties.boilingPointK;
+  const hasActionMeltingPoint = Number.isFinite(actionMeltingPoint) && actionMeltingPoint > 0;
+  const hasActionBoilingPoint = Number.isFinite(actionBoilingPoint) && actionBoilingPoint > actionMeltingPoint;
   const actionMeltTarget = isLiquidLike ? Math.max(1, actionMeltingPoint - 25) : actionMeltingPoint + 25;
   const actionBoilTarget = actionBoilingPoint + Math.max(5, actionBoilingPoint * 0.02);
   const pressureAboveTriple = triplePoint ? Math.max(triplePoint.pressurePa * 1.1, triplePoint.pressurePa + 500) : Math.max(physicsState.pressure, 101325);
   const pressureBelowCritical = criticalPoint ? Math.max(1, criticalPoint.pressurePa * 0.8) : Math.max(1, physicsState.pressure);
-  const condenseTargetTemp = Math.max(actionMeltingPoint + 2, Math.min(actionBoilingPoint - 2, actionMeltingPoint + (actionBoilingPoint - actionMeltingPoint) * 0.6));
+  const condenseTargetTemp = Math.max(
+    actionMeltingPoint + 1,
+    Math.min(actionBoilingPoint - 1, actionMeltingPoint + (actionBoilingPoint - actionMeltingPoint) * 0.45),
+  );
   const condenseCriticalTargetTemp = criticalPoint
     ? Math.max(actionMeltingPoint + 2, Math.min(criticalPoint.tempK - 2, actionMeltingPoint + (criticalPoint.tempK - actionMeltingPoint) * 0.65))
     : condenseTargetTemp;
@@ -242,6 +248,12 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const sublimationPressure = triplePoint ? Math.max(1, triplePoint.pressurePa * 0.8) : 1;
   const sublimationTargetTemp = isGasLike ? Math.max(1, sublimationTemp - 40) : sublimationTemp + 40;
   const sublimationDirection = isGasLike ? "<" : ">";
+
+  const maybeLiftPressureAboveTriple = () => {
+    if (isPressureBelowTriple) {
+      onSetPressure(pressureAboveTriple);
+    }
+  };
 
   const atomicMass = parseDisplayValue(
     typeof sourceInfo?.atomic_mass === 'number' ? sourceInfo.atomic_mass : element.mass,
@@ -337,9 +349,9 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     { label: 'Specific heat (gas)', value: specificHeatGas.value, unit: specificHeatGas.na ? undefined : 'J/kgK', sourceId: element.properties.specificHeatGasSource, estimated: specificHeatGas.estimated },
     { label: 'Latent heat (fusion)', value: latentHeatFusion.value, unit: latentHeatFusion.na ? undefined : 'J/kg', sourceId: element.properties.latentHeatFusionSource, estimated: latentHeatFusion.estimated },
     { label: 'Latent heat (vaporization)', value: latentHeatVaporization.value, unit: latentHeatVaporization.na ? undefined : 'J/kg', sourceId: element.properties.latentHeatVaporizationSource, estimated: latentHeatVaporization.estimated },
-    { label: 'enthalpyFusionKjMol', value: enthalpyFusionKjMol.value, unit: enthalpyFusionKjMol.na ? undefined : 'kJ/mol', sourceId: element.properties.enthalpyFusionSource, estimated: enthalpyFusionKjMol.estimated },
-    { label: 'enthalpyVaporizationKjMol', value: enthalpyVaporizationKjMol.value, unit: enthalpyVaporizationKjMol.na ? undefined : 'kJ/mol', sourceId: element.properties.enthalpyVaporizationSource, estimated: enthalpyVaporizationKjMol.estimated },
-    { label: 'bulkModulusGPA', value: bulkModulus.value, unit: bulkModulus.na ? undefined : 'GPa', sourceId: element.properties.bulkModulusSource, estimated: bulkModulus.estimated },
+    { label: 'Enthalpy of fusion', value: enthalpyFusionKjMol.value, unit: enthalpyFusionKjMol.na ? undefined : 'kJ/mol', sourceId: element.properties.enthalpyFusionSource, estimated: enthalpyFusionKjMol.estimated },
+    { label: 'Enthalpy of vaporization', value: enthalpyVaporizationKjMol.value, unit: enthalpyVaporizationKjMol.na ? undefined : 'kJ/mol', sourceId: element.properties.enthalpyVaporizationSource, estimated: enthalpyVaporizationKjMol.estimated },
+    { label: 'Bulk modulus', value: bulkModulus.value, unit: bulkModulus.na ? undefined : 'GPa', sourceId: element.properties.bulkModulusSource, estimated: bulkModulus.estimated },
   ];
 
   const references = useMemo<ReferenceItem[]>(
@@ -416,14 +428,20 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                     color="warning"
                     variant="soft"
                     block
-                    disabled={!hasTriplePoint}
+                    size="lg"
+                    className="min-h-16 whitespace-normal text-left leading-tight"
+                    disabled={!hasActionMeltingPoint || !hasActionBoilingPoint}
                     onClick={() => {
-                      onSetPressure(pressureAboveTriple);
+                      maybeLiftPressureAboveTriple();
                       onSetTemperature(actionMeltTarget);
                     }}
                   >
                     <ArrowUp className="size-4" />
-                    Melt · T &gt; {fmt(actionMeltingPoint, ' K')} e &lt; {fmt(actionBoilingPoint, ' K')} · P &gt; {fmt((triplePoint?.pressurePa ?? 0) / 1000, ' kPa')}
+                    <span>
+                      Liquefy
+                      <br />
+                      <span className="text-xs text-secondary">Set near liquid range</span>
+                    </span>
                   </Button>
                 </span>
               </Tooltip>
@@ -436,14 +454,20 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                     color="warning"
                     variant="soft"
                     block
-                    disabled={!hasTriplePoint}
+                    size="lg"
+                    className="min-h-16 whitespace-normal text-left leading-tight"
+                    disabled={!hasActionMeltingPoint}
                     onClick={() => {
-                      onSetPressure(pressureAboveTriple);
+                      maybeLiftPressureAboveTriple();
                       onSetTemperature(Math.max(1, actionMeltingPoint - 25));
                     }}
                   >
                     <ArrowUp className="size-4" />
-                    Solidify · T &lt; {fmt(actionMeltingPoint, ' K')} · P &gt; {fmt((triplePoint?.pressurePa ?? 0) / 1000, ' kPa')}
+                    <span>
+                      Solidify
+                      <br />
+                      <span className="text-xs text-secondary">Cool below melting point</span>
+                    </span>
                   </Button>
                 </span>
               </Tooltip>
@@ -456,20 +480,24 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                     color="danger"
                     variant="soft"
                     block
-                    disabled={actionBoilingPoint >= 49000 || (!isCriticalState && !hasTriplePoint)}
+                    size="lg"
+                    className="min-h-16 whitespace-normal text-left leading-tight"
+                    disabled={actionBoilingPoint >= 49000 || !hasActionBoilingPoint}
                     onClick={() => {
                       if (isCriticalState && criticalPoint) {
                         onSetPressure(pressureBelowCritical);
                       } else {
-                        onSetPressure(pressureAboveTriple);
+                        maybeLiftPressureAboveTriple();
                       }
                       onSetTemperature(actionBoilTarget);
                     }}
                   >
                     <ArrowUp className="size-4" />
-                    Boil {actionBoilingPoint >= 49000 ? 'indefinida' : isCriticalState && criticalPoint
-                      ? `· T > ${fmt(actionBoilingPoint, ' K')} · P < ${fmt(criticalPoint.pressurePa / 1000, ' kPa')}`
-                      : `· T > ${fmt(actionBoilingPoint, ' K')} · P > ${fmt((triplePoint?.pressurePa ?? 0) / 1000, ' kPa')}`}
+                    <span>
+                      Boil
+                      <br />
+                      <span className="text-xs text-secondary">Heat above boiling point</span>
+                    </span>
                   </Button>
                 </span>
               </Tooltip>
@@ -482,14 +510,20 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                     color="info"
                     variant="soft"
                     block
-                    disabled={!hasTriplePoint}
+                    size="lg"
+                    className="min-h-16 whitespace-normal text-left leading-tight"
+                    disabled={!hasActionBoilingPoint || !hasActionMeltingPoint}
                     onClick={() => {
-                      onSetPressure(pressureAboveTriple);
+                      maybeLiftPressureAboveTriple();
                       onSetTemperature(isCriticalState ? condenseCriticalTargetTemp : condenseTargetTemp);
                     }}
                   >
                     <ArrowUp className="size-4" />
-                    Condensar · T &gt; {fmt(actionMeltingPoint, ' K')} e &lt; {fmt(isCriticalState && criticalPoint ? criticalPoint.tempK : actionBoilingPoint, ' K')} · P &gt; {fmt((triplePoint?.pressurePa ?? 0) / 1000, ' kPa')}
+                    <span>
+                      Condense
+                      <br />
+                      <span className="text-xs text-secondary">Cool into liquid zone</span>
+                    </span>
                   </Button>
                 </span>
               </Tooltip>

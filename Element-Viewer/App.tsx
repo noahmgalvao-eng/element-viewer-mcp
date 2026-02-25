@@ -1,5 +1,4 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { Alert } from '@openai/apps-sdk-ui/components/Alert';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
@@ -58,11 +57,9 @@ function App() {
     const [timeScale, setTimeScale] = useState<number>(1);
     const [isPaused, setIsPaused] = useState(false);
     const [contextMenu, setContextMenu] = useState<ContextMenuData | null>(null);
-    const [aiMessage, setAiMessage] = useState<string | null>(null);
 
     // Refs
     const simulationRegistry = useRef<Map<number, () => PhysicsState>>(new Map());
-    const aiMessageTimeoutRef = useRef<number | null>(null);
     const lastProcessedAiTimestampRef = useRef(0);
     const reactionAtomicNumberRef = useRef(900000);
     const syncStateToChatGPTRef = useRef<() => Promise<void>>(async () => { });
@@ -306,22 +303,6 @@ function App() {
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
-        const clearAiMessageTimeout = () => {
-            if (aiMessageTimeoutRef.current !== null) {
-                window.clearTimeout(aiMessageTimeoutRef.current);
-                aiMessageTimeoutRef.current = null;
-            }
-        };
-
-        const showAiMessage = (message: string) => {
-            setAiMessage(message);
-            clearAiMessageTimeout();
-            aiMessageTimeoutRef.current = window.setTimeout(() => {
-                setAiMessage(null);
-                aiMessageTimeoutRef.current = null;
-            }, 8000);
-        };
-
         const verificarAtualizacoesIA = () => {
             const rawContent = readOpenAiStructuredContent();
             if (!rawContent || typeof rawContent !== 'object') return;
@@ -338,13 +319,6 @@ function App() {
             }
 
             lastProcessedAiTimestampRef.current = timestamp_atualizacao;
-
-            if (
-                typeof configuracao_ia.interpretacao_do_modelo === 'string' &&
-                configuracao_ia.interpretacao_do_modelo.trim().length > 0
-            ) {
-                showAiMessage(configuracao_ia.interpretacao_do_modelo);
-            }
 
             if (typeof configuracao_ia.temperatura_K === 'number') {
                 setTemperature(Math.min(configuracao_ia.temperatura_K, 6000));
@@ -382,7 +356,6 @@ function App() {
 
         return () => {
             window.clearInterval(intervalId);
-            clearAiMessageTimeout();
         };
     }, []);
 
@@ -531,11 +504,6 @@ function App() {
                 height: isFullscreen && maxHeight ? maxHeight : undefined,
             }}
         >
-            {aiMessage && (
-                <div className="pointer-events-none absolute left-1/2 top-4 z-50 w-[min(92vw,34rem)] -translate-x-1/2">
-                    <Alert color="info" variant="soft" title="Model update" description={aiMessage} />
-                </div>
-            )}
 
             <PeriodicTableSelector
                 selectedElements={selectedElements}
@@ -671,9 +639,6 @@ function App() {
                                     </p>
                                 </li>
                                 <li>
-                                    Dica: Utilize o chat no modo fullscreen para melhor experiência conversacional.
-                                </li>
-                                <li>
                                     Surpreenda-se com sugestões de combinações de elementos.
                                     <p className="italic text-secondary text-xs">
                                         Ex: &quot;Coloque elementos interessantes de se ver juntos!&quot;
@@ -686,6 +651,9 @@ function App() {
                                     Solicitar uma explicação do que está sendo visto na tela da simulação.
                                 </li>
                             </ol>
+                            <p className="border-t border-subtle pt-2 text-xs italic text-secondary">
+                                Utilize o chat no modo fullscreen para melhor experiência conversacional.
+                            </p>
                         </div>
                     </Popover.Content>
                 </Popover>
