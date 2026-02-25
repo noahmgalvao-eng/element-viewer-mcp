@@ -43,6 +43,12 @@
   background-color: var(--color-surface-elevated, #ffffff);
 }
 
+.periodic-sheet-interacting,
+.periodic-sheet-interacting .periodic-grid,
+.periodic-sheet-interacting .periodic-cell {
+  will-change: transform, opacity;
+}
+
 .periodic-grid {
   display: grid;
   width: 100%;
