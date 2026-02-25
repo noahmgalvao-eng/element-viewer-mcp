@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
 import { ChevronDown } from '@openai/apps-sdk-ui/components/Icon';
@@ -257,18 +257,25 @@ const PeriodicTableSelector: React.FC<Props> = ({
   const displayedPressure = fromPascal(pressure, pressureUnit);
   const isSliderActive = activeSlider !== null;
 
+  const activateSlider = useCallback((slider: 'temperature' | 'pressure') => {
+    setActiveSlider((current) => (current === slider ? current : slider));
+  }, []);
+
+  const releaseActiveSlider = useCallback(() => {
+    setActiveSlider((current) => (current === null ? current : null));
+  }, []);
+
   useEffect(() => {
     if (!isSliderActive) return;
 
-    const releaseSlider = () => setActiveSlider(null);
-    window.addEventListener('pointerup', releaseSlider);
-    window.addEventListener('pointercancel', releaseSlider);
+    window.addEventListener('pointerup', releaseActiveSlider);
+    window.addEventListener('pointercancel', releaseActiveSlider);
 
     return () => {
-      window.removeEventListener('pointerup', releaseSlider);
-      window.removeEventListener('pointercancel', releaseSlider);
+      window.removeEventListener('pointerup', releaseActiveSlider);
+      window.removeEventListener('pointercancel', releaseActiveSlider);
     };
-  }, [isSliderActive]);
+  }, [isSliderActive, releaseActiveSlider]);
 
   return (
     <>
@@ -285,11 +292,12 @@ const PeriodicTableSelector: React.FC<Props> = ({
         className="fixed inset-x-0 bottom-0 z-40 px-0 pb-0"
         style={{
           transform: `translateY(${isOpen ? dragOffset : 580}px)`,
-          transition: isDraggingSheet ? 'none' : 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+          transition: isDraggingSheet ? 'none' : 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
           pointerEvents: isOpen ? 'auto' : 'none',
+          willChange: isDraggingSheet || isSliderActive ? 'transform, opacity' : undefined,
         }}
       >
-        <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-all duration-100 ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
+        <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-opacity duration-200 ease-out ${isDraggingSheet || isSliderActive ? 'periodic-sheet-interacting' : ''} ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
           <div
             className="mx-auto mb-1 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
             onPointerDown={handleDragStart}
@@ -308,11 +316,11 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </Button>
           </div>
 
-          <div className={`mb-1 flex justify-end transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <div className={`mb-1 flex justify-end transition-opacity duration-200 ease-out ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <Switch checked={showParticles} onCheckedChange={setShowParticles} label="X-Ray Vision" size="sm" />
           </div>
 
-          <div className={`mb-1 rounded-xl p-2 transition-all duration-100 ${isSliderActive ? 'border-transparent bg-transparent shadow-none' : 'border border-subtle bg-surface'}`}>
+          <div className={`mb-1 rounded-xl p-2 transition-opacity duration-200 ease-out ${isSliderActive ? 'border-transparent bg-transparent shadow-none' : 'border border-subtle bg-surface'}`}>
             <div className={`${isSliderActive && activeSlider !== 'temperature' ? 'opacity-0 pointer-events-none absolute' : ''}`}>
               <div className="mb-1 flex items-center justify-between gap-2">
                 <p className="text-2xs text-secondary">Temperature</p>
@@ -330,9 +338,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
                 </div>
               </div>
               <div
-                onPointerDown={() => setActiveSlider('temperature')}
-                onPointerUp={() => setActiveSlider(null)}
-                onPointerCancel={() => setActiveSlider(null)}
+                onPointerDown={() => activateSlider('temperature')}
+                onPointerUp={releaseActiveSlider}
+                onPointerCancel={releaseActiveSlider}
               >
                 <Slider
                   value={temperature}
@@ -367,9 +375,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
                 </div>
               </div>
               <div
-                onPointerDown={() => setActiveSlider('pressure')}
-                onPointerUp={() => setActiveSlider(null)}
-                onPointerCancel={() => setActiveSlider(null)}
+                onPointerDown={() => activateSlider('pressure')}
+                onPointerUp={releaseActiveSlider}
+                onPointerCancel={releaseActiveSlider}
               >
                 <Slider
                   value={pressureSliderValue}
@@ -385,7 +393,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className={`relative mb-1.5 flex items-center justify-between gap-2 transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <div className={`relative mb-1.5 flex items-center justify-between gap-2 transition-opacity duration-200 ease-out ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
               <div className="pointer-events-auto">
                 <Popover>
@@ -457,7 +465,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className={`${isSliderActive ? 'opacity-0' : 'opacity-100'} transition-opacity duration-100`}>
+          <div className={`${isSliderActive ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200 ease-out`}>
             <div className="periodic-grid">
               {visibleElements.map((el) => {
                 const position = POSITION_BY_SYMBOL.get(el.symbol);
