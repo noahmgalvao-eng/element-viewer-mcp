@@ -279,6 +279,14 @@ const PeriodicTableSelector: React.FC<Props> = ({
 
   return (
     <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/35"
+          onClick={() => onOpenChange(false)}
+          aria-hidden
+        />
+      )}
+
       {!isOpen && (
         <div className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2">
           <Button color="secondary" variant="soft" pill onClick={() => onOpenChange(true)}>
@@ -289,7 +297,8 @@ const PeriodicTableSelector: React.FC<Props> = ({
       )}
 
       <section
-        className="fixed inset-x-0 bottom-0 z-40 px-0 pb-0"
+        className="fixed inset-x-0 bottom-0 z-50 px-0 pb-0"
+        onClick={() => onOpenChange(false)}
         style={{
           transform: `translateY(${isOpen ? dragOffset : 580}px)`,
           transition: isDraggingSheet ? 'none' : 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
@@ -299,7 +308,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
       >
         <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-opacity duration-200 ease-out ${isDraggingSheet || isSliderActive ? 'periodic-sheet-interacting' : ''} ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
           <div
-            className="mx-auto mb-1 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
+            className="mx-auto mb-0.5 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
             onPointerDown={handleDragStart}
             onPointerMove={handleDragMove}
             onPointerUp={handleDragEnd}
@@ -309,8 +318,8 @@ const PeriodicTableSelector: React.FC<Props> = ({
           >
             <div className="h-1.5 w-14 rounded-full bg-border" />
           </div>
-          <div className="mb-0.5 flex justify-center">
-            <Button color="secondary" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+          <div className="mb-px flex justify-center pt-px">
+            <Button className="min-h-10 px-3" color="secondary" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
               <ChevronDown className="size-4" />
               Hide
             </Button>
@@ -356,7 +365,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
               </div>
             </div>
 
-            <div className={`mt-1.5 ${isSliderActive && activeSlider !== 'pressure' ? 'opacity-0 pointer-events-none absolute' : ''}`}>
+            <div
+              className={`mt-1.5 ${isSliderActive && activeSlider !== 'pressure' ? 'pointer-events-none opacity-0 invisible' : ''}`}
+            >
               <div className="mb-1 flex items-center justify-between gap-2">
                 <p className="text-2xs text-secondary">Pressure</p>
                 <div className="flex items-center gap-1">
@@ -430,6 +441,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
             <SegmentedControl
               aria-label="Selection mode"
               value={isMultiSelect ? 'compare' : 'single'}
+              size="sm"
               onChange={(next) => {
                 if ((next === 'compare') !== isMultiSelect) {
                   onToggleMultiSelect();
