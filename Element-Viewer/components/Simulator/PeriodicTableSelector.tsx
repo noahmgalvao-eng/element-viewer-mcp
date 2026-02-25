@@ -385,7 +385,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className={`relative mb-1.5 flex items-center justify-between gap-2 transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <div className={`relative mb-1.5 flex min-h-8 items-center justify-between gap-2 transition-opacity duration-100 ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
               <div className="pointer-events-auto">
                 <Popover>
@@ -422,6 +422,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
             <SegmentedControl
               aria-label="Selection mode"
               value={isMultiSelect ? 'compare' : 'single'}
+              size="sm"
               onChange={(next) => {
                 if ((next === 'compare') !== isMultiSelect) {
                   onToggleMultiSelect();
