@@ -272,6 +272,14 @@ const PeriodicTableSelector: React.FC<Props> = ({
 
   return (
     <>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/35"
+          onClick={() => onOpenChange(false)}
+          aria-hidden
+        />
+      )}
+
       {!isOpen && (
         <div className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2">
           <Button color="secondary" variant="soft" pill onClick={() => onOpenChange(true)}>
@@ -282,14 +290,18 @@ const PeriodicTableSelector: React.FC<Props> = ({
       )}
 
       <section
-        className="fixed inset-x-0 bottom-0 z-40 px-0 pb-0"
+        className="fixed inset-x-0 bottom-0 z-50 px-0 pb-0"
+        onClick={() => onOpenChange(false)}
         style={{
           transform: `translateY(${isOpen ? dragOffset : 580}px)`,
           transition: isDraggingSheet ? 'none' : 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)',
           pointerEvents: isOpen ? 'auto' : 'none',
         }}
       >
-        <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-all duration-100 ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
+        <div
+          className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-all duration-100 ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}
+          onClick={(e) => e.stopPropagation()}
+        >
           <div
             className="mx-auto mb-1 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
             onPointerDown={handleDragStart}
