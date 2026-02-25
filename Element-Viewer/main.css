@@ -121,12 +121,6 @@
   margin: 0;
 }
 
-.periodic-legend-label {
-  font-size: 0.68rem;
-  line-height: 1.22;
-  color: var(--color-text-primary, #111111);
-}
-
 .periodic-preview-avatar {
   background: var(--preview-avatar-color, var(--color-surface));
   border-color: color-mix(in oklab, var(--preview-avatar-color, #d0d0d0) 68%, #000000 12%);
