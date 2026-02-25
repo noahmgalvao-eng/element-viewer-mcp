@@ -209,47 +209,96 @@ const PeriodicTableSelector: React.FC<Props> = ({
   const [dragOffset, setDragOffset] = useState(0);
   const [isDraggingSheet, setIsDraggingSheet] = useState(false);
   const pointerStartY = useRef<number | null>(null);
+  const activePointerId = useRef<number | null>(null);
+  const dragHandleRef = useRef<HTMLDivElement | null>(null);
   const dragRafRef = useRef<number | null>(null);
   const pendingDragOffset = useRef(0);
+  const latestDragOffset = useRef(0);
 
   const visibleElements = useMemo(() => ELEMENTS, []);
 
   const selectedPreview = useMemo(() => selectedElements.slice(0, 6), [selectedElements]);
 
-  const flushDragOffset = () => {
-    setDragOffset(pendingDragOffset.current);
+  const flushDragOffset = useCallback(() => {
+    const nextOffset = pendingDragOffset.current;
+    latestDragOffset.current = nextOffset;
+    setDragOffset(nextOffset);
     dragRafRef.current = null;
-  };
+  }, []);
 
-  const handleDragStart = (event: React.PointerEvent<HTMLDivElement>) => {
-    pointerStartY.current = event.clientY;
-    setIsDraggingSheet(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const handleDragMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (pointerStartY.current === null) return;
-    const delta = event.clientY - pointerStartY.current;
-    pendingDragOffset.current = Math.max(0, delta);
+  const scheduleDragUpdate = useCallback(() => {
     if (!dragRafRef.current) {
       dragRafRef.current = requestAnimationFrame(flushDragOffset);
     }
-  };
+  }, [flushDragOffset]);
 
-  const handleDragEnd = () => {
-    const finalOffset = Math.max(dragOffset, pendingDragOffset.current);
-    if (finalOffset > 80) {
-      onOpenChange(false);
-    }
-    pointerStartY.current = null;
-    setDragOffset(0);
-    setIsDraggingSheet(false);
-    pendingDragOffset.current = 0;
+  const clearDragAnimation = useCallback(() => {
     if (dragRafRef.current) {
       cancelAnimationFrame(dragRafRef.current);
       dragRafRef.current = null;
     }
-  };
+  }, []);
+
+  const resetDragState = useCallback(() => {
+    const handleNode = dragHandleRef.current;
+    const pointerId = activePointerId.current;
+    if (handleNode?.releasePointerCapture && pointerId !== null) {
+      try {
+        if (handleNode.hasPointerCapture(pointerId)) {
+          handleNode.releasePointerCapture(pointerId);
+        }
+      } catch {
+        // Ignore unsupported release scenarios on mobile/legacy engines.
+      }
+    }
+
+    pointerStartY.current = null;
+    activePointerId.current = null;
+    pendingDragOffset.current = 0;
+    latestDragOffset.current = 0;
+    setDragOffset(0);
+    setIsDraggingSheet(false);
+    clearDragAnimation();
+  }, [clearDragAnimation]);
+
+  const finalizeDrag = useCallback(() => {
+    const finalOffset = Math.max(latestDragOffset.current, pendingDragOffset.current);
+    const closeThreshold = 96;
+
+    if (finalOffset >= closeThreshold) {
+      onOpenChange(false);
+    }
+
+    resetDragState();
+  }, [onOpenChange, resetDragState]);
+
+  const handleDragMoveWindow = useCallback((event: PointerEvent) => {
+    if (pointerStartY.current === null || activePointerId.current !== event.pointerId) return;
+    const delta = event.clientY - pointerStartY.current;
+    pendingDragOffset.current = Math.max(0, delta);
+    scheduleDragUpdate();
+  }, [scheduleDragUpdate]);
+
+  const handleDragEndWindow = useCallback((event: PointerEvent) => {
+    if (activePointerId.current !== event.pointerId) return;
+    finalizeDrag();
+  }, [finalizeDrag]);
+
+  const handleDragStart = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    pointerStartY.current = event.clientY;
+    activePointerId.current = event.pointerId;
+    setIsDraggingSheet(true);
+
+    const handleNode = dragHandleRef.current;
+    if (handleNode?.setPointerCapture) {
+      try {
+        handleNode.setPointerCapture(event.pointerId);
+      } catch {
+        // Some mobile browsers can throw here; window listeners cover drag continuity.
+      }
+    }
+  }, []);
 
   const pressureSliderValue = pressure <= 0.0001 ? -4 : Math.log10(pressure);
 
@@ -276,6 +325,26 @@ const PeriodicTableSelector: React.FC<Props> = ({
       window.removeEventListener('pointercancel', releaseActiveSlider);
     };
   }, [isSliderActive, releaseActiveSlider]);
+
+  useEffect(() => {
+    if (!isDraggingSheet) return;
+
+    window.addEventListener('pointermove', handleDragMoveWindow, { passive: true });
+    window.addEventListener('pointerup', handleDragEndWindow);
+    window.addEventListener('pointercancel', handleDragEndWindow);
+
+    return () => {
+      window.removeEventListener('pointermove', handleDragMoveWindow);
+      window.removeEventListener('pointerup', handleDragEndWindow);
+      window.removeEventListener('pointercancel', handleDragEndWindow);
+    };
+  }, [handleDragEndWindow, handleDragMoveWindow, isDraggingSheet]);
+
+  useEffect(() => {
+    return () => {
+      clearDragAnimation();
+    };
+  }, [clearDragAnimation]);
 
   return (
     <>
@@ -308,15 +377,14 @@ const PeriodicTableSelector: React.FC<Props> = ({
       >
         <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-opacity duration-200 ease-out ${isDraggingSheet || isSliderActive ? 'periodic-sheet-interacting' : ''} ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
           <div
-            className="mx-auto mb-0.5 flex w-full max-w-xl cursor-grab touch-none flex-col items-center"
-            onPointerDown={handleDragStart}
-            onPointerMove={handleDragMove}
-            onPointerUp={handleDragEnd}
-            onPointerCancel={handleDragEnd}
-            onPointerLeave={handleDragEnd}
-            style={{ touchAction: 'none' }}
+            className="mx-auto mb-1 flex w-full max-w-xl flex-col items-center"
           >
-            <div className="h-1.5 w-14 rounded-full bg-border" />
+            <div
+              ref={dragHandleRef}
+              className={`h-1.5 w-14 rounded-full bg-border ${isDraggingSheet ? 'cursor-grabbing' : 'cursor-grab'}`}
+              style={{ touchAction: 'none' }}
+              onPointerDown={handleDragStart}
+            />
           </div>
           <div className="mb-px flex justify-center pt-px">
             <Button className="min-h-10 px-3" color="secondary" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
