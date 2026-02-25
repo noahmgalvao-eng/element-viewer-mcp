@@ -92,6 +92,8 @@
 
 .periodic-legend-popover {
   z-index: 140;
+  width: fit-content;
+  max-width: min(78vw, 15.5rem);
   border: 1px solid var(--color-border-default, #dcdcdc);
   border-radius: 0.9rem;
   background: var(--color-surface-elevated, #ffffff);

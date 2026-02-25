@@ -486,8 +486,8 @@ const PeriodicTableSelector: React.FC<Props> = ({
                     side="top"
                     align="center"
                     sideOffset={8}
-                    minWidth={260}
-                    maxWidth={320}
+                    minWidth={210}
+                    maxWidth={248}
                     className="periodic-legend-popover z-[130]"
                   >
                     <div className="p-3">

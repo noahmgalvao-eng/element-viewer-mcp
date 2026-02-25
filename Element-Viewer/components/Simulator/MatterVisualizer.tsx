@@ -76,7 +76,7 @@ const tuneColorForTheme = (hexColor: string, isDarkTheme: boolean) => {
 };
 
 const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, viewBounds, totalElements, onInspect }) => {
-    const { pathProgress, state, particles, boilProgress, meltProgress, matterRect, gasBounds, scfOpacity, simTime, sublimationProgress } = physics;
+    const { pathProgress, state, particles, boilProgress, meltProgress, matterRect, gasBounds, scfOpacity, simTime, sublimationProgress, powerInput } = physics;
 
     // --- 1. SVG Path Interpolator (Puddle / Solid) ---
     const currentPath = useMemo(() => {
@@ -512,16 +512,25 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
                                                             state === MatterState.LIQUID ? '#38BDF8' : '#A78BFA'
                         }
                     >
-                        {state === MatterState.MELTING ? 'MELTING' :
-                            state === MatterState.BOILING ? 'BOILING' :
-                                state === MatterState.EQUILIBRIUM_MELT ? 'EQUILIBRIUM (SOLID + LIQUID)' :
-                                    state === MatterState.EQUILIBRIUM_BOIL ? 'EQUILIBRIUM (LIQUID + GAS)' :
-                                        state === MatterState.EQUILIBRIUM_TRIPLE ? 'THREE-PHASE SYSTEM (SOLID + LIQUID + GAS)' :
-                                            state === MatterState.SUPERCRITICAL ? 'SUPERCRITICAL FLUID' :
-                                                state === MatterState.TRANSITION_SCF ? 'SUPERCRITICAL FLUID (Transition)' :
-                                                    state === MatterState.SUBLIMATION ? 'SUBLIMATION (SOLID -> GAS)' :
-                                                        state === MatterState.EQUILIBRIUM_SUB ? 'SUBLIMATION EQUILIBRIUM' :
-                                                            `${state} PHASE`}
+                        {state === MatterState.MELTING
+                            ? (powerInput < 0 ? 'SOLIDIFYING' : 'MELTING')
+                            : state === MatterState.BOILING
+                                ? (powerInput < 0 ? 'CONDENSING' : 'BOILING')
+                                : state === MatterState.EQUILIBRIUM_MELT
+                                    ? 'EQUILIBRIUM (SOLID + LIQUID)'
+                                    : state === MatterState.EQUILIBRIUM_BOIL
+                                        ? 'EQUILIBRIUM (LIQUID + GAS)'
+                                        : state === MatterState.EQUILIBRIUM_TRIPLE
+                                            ? 'THREE-PHASE SYSTEM (SOLID + LIQUID + GAS)'
+                                            : state === MatterState.SUPERCRITICAL
+                                                ? 'SUPERCRITICAL FLUID'
+                                                : state === MatterState.TRANSITION_SCF
+                                                    ? 'SUPERCRITICAL FLUID (Transition)'
+                                                    : state === MatterState.SUBLIMATION
+                                                        ? (powerInput < 0 ? 'DEPOSITING (GAS -> SOLID)' : 'SUBLIMATION (SOLID -> GAS)')
+                                                        : state === MatterState.EQUILIBRIUM_SUB
+                                                            ? 'SUBLIMATION EQUILIBRIUM'
+                                                            : `${state} PHASE`}
                     </text>
                 </g>
 

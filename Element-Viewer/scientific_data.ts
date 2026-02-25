@@ -3,7 +3,7 @@
 export const SCIENTIFIC_DATA = {
   "H": {
     "mass": "1.008_2",
-    "color": "#E3F2FD",
+    "color": "#BDBDBD",
     "specificHeat": {
       "solid": "24742.06*",
       "liquid": "28453.37*",
