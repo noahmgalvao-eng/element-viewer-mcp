@@ -749,8 +749,8 @@ const PeriodicTableSelector: React.FC<Props> = ({
                     )}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <div className="periodic-grid">
               {visibleElements.map((el) => {
