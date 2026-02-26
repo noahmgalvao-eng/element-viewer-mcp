@@ -60,16 +60,17 @@
 }
 
 .periodic-reaction-cluster {
-  position: absolute;
-  top: 2px;
-  left: 16.6667%;
-  width: 50%;
+  grid-column: 3 / 13;
+  grid-row: 1 / 4;
+  align-self: start;
+  justify-self: stretch;
   z-index: 8;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.2rem;
+  gap: 0.24rem;
   pointer-events: none;
+  padding-top: 0.1rem;
 }
 
 .periodic-reaction-label {
@@ -84,8 +85,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.22rem;
-  max-height: 3.2rem;
+  gap: 0.3rem;
+  max-height: 3.25rem;
   overflow: hidden;
   pointer-events: auto;
 }
@@ -168,13 +169,87 @@
 }
 
 .periodic-reaction-pill {
-  border-radius: 9999px !important;
-  min-height: 1.42rem !important;
-  height: 1.42rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  min-height: auto !important;
+  height: auto !important;
   width: fit-content !important;
   min-width: fit-content !important;
-  padding-left: 0.42rem !important;
-  padding-right: 0.42rem !important;
+  padding: 0 !important;
+}
+
+.periodic-reaction-pill::before {
+  background: transparent !important;
+}
+
+.periodic-reaction-pill-cylinder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  min-height: 1.45rem;
+  padding: 0.12rem 0.52rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  border: 1px solid color-mix(in oklab, #111111 24%, transparent);
+  white-space: nowrap;
+}
+
+.periodic-reaction-pill-cylinder-selected {
+  box-shadow: 0 0 0 2px color-mix(in oklab, #ffffff 70%, transparent);
+}
+
+.periodic-reaction-overflow-trigger {
+  position: relative;
+  border-radius: 9999px !important;
+  min-height: 1.45rem !important;
+  height: 1.45rem !important;
+  min-width: 2.25rem !important;
+  padding: 0 0.55rem !important;
+  font-weight: 700;
+}
+
+.periodic-reaction-overflow-text {
+  line-height: 1;
+  font-size: 0.9rem;
+}
+
+.periodic-reaction-overflow-count {
+  position: absolute;
+  top: -0.42rem;
+  right: -0.35rem;
+  display: inline-flex;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  border: 1px solid #ffffff;
+}
+
+.periodic-reaction-popover {
+  border-radius: 0.85rem;
+  border: 1px solid var(--color-border-default, #dcdcdc);
+  background: var(--color-surface-elevated, #ffffff);
+}
+
+.periodic-reaction-popover-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.periodic-reaction-popover-list-scroll {
+  max-height: 11rem;
+  overflow-y: auto;
+  padding-right: 0.2rem;
 }
 
 @media (min-width: 640px) {

@@ -171,6 +171,8 @@ type PreviewAvatarStyle = React.CSSProperties & {
 
 const DEFAULT_TEMPERATURE_K = 298.15;
 const DEFAULT_PRESSURE_PA = 101325;
+const MAX_VISIBLE_REACTION_BUTTONS = 8;
+const POPOVER_SCROLL_THRESHOLD = 12;
 const TEMP_UNIT_SYMBOLS: Record<TempUnit, string> = {
   K: 'K',
   C: '°C',
@@ -363,6 +365,15 @@ const PeriodicTableSelector: React.FC<Props> = ({
     ? `${Number(displayedPressure.toPrecision(6)).toLocaleString()} ${pressureUnit}`
     : `0 ${pressureUnit}`;
   const isSliderActive = activeSlider !== null;
+  const visibleReactionProducts = useMemo(
+    () => reactionProducts.slice(0, MAX_VISIBLE_REACTION_BUTTONS),
+    [reactionProducts],
+  );
+  const hiddenReactionProducts = useMemo(
+    () => reactionProducts.slice(MAX_VISIBLE_REACTION_BUTTONS),
+    [reactionProducts],
+  );
+  const shouldUsePopoverScroll = reactionProducts.length > POPOVER_SCROLL_THRESHOLD;
 
   const activateSlider = useCallback((slider: 'temperature' | 'pressure') => {
     setActiveSlider((current) => (current === slider ? current : slider));
@@ -651,7 +662,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
                 <div className="periodic-reaction-cluster">
                   <p className="periodic-reaction-label">Substâncias</p>
                   <div className="periodic-reaction-list">
-                    {reactionProducts.map((reaction) => {
+                    {visibleReactionProducts.map((reaction) => {
                       const isSelected = selectedElements.some((selected) => selected.atomicNumber === reaction.atomicNumber);
                       const reactionColor = reaction.visualDNA?.solid?.color || '#d9d9d9';
                       const textColor = getReadableTextColor(reactionColor);
@@ -660,22 +671,82 @@ const PeriodicTableSelector: React.FC<Props> = ({
                         <Button
                           key={reaction.atomicNumber}
                           color="secondary"
-                          variant={isSelected ? 'solid' : 'outline'}
+                          variant="ghost"
                           size="sm"
                           onClick={() => onSelectReactionProduct(reaction)}
-                          className="periodic-reaction-pill z-[5] text-xs font-semibold"
-                          style={{
-                            backgroundColor: reactionColor,
-                            color: textColor,
-                            borderColor: 'color-mix(in oklab, #111111 24%, transparent)',
-                            boxShadow: isSelected ? '0 0 0 2px color-mix(in oklab, #ffffff 70%, transparent)' : undefined,
-                          }}
+                          className="periodic-reaction-pill z-[5]"
                           title={reaction.name}
                         >
-                          {reaction.symbol}
+                          <span
+                            className={`periodic-reaction-pill-cylinder ${isSelected ? 'periodic-reaction-pill-cylinder-selected' : ''}`}
+                            style={{
+                              backgroundColor: reactionColor,
+                              color: textColor,
+                            }}
+                          >
+                            {reaction.symbol}
+                          </span>
                         </Button>
                       );
                     })}
+
+                    {hiddenReactionProducts.length > 0 && (
+                      <Popover>
+                        <Popover.Trigger>
+                          <Button
+                            color="secondary"
+                            variant="outline"
+                            size="sm"
+                            className="periodic-reaction-overflow-trigger"
+                            aria-label={`Mostrar todas as ${reactionProducts.length} substâncias armazenadas`}
+                          >
+                            <span className="periodic-reaction-overflow-text">...</span>
+                            <span className="periodic-reaction-overflow-count">{reactionProducts.length}</span>
+                          </Button>
+                        </Popover.Trigger>
+                        <Popover.Content
+                          side="top"
+                          align="start"
+                          sideOffset={8}
+                          minWidth={260}
+                          maxWidth={340}
+                          className="periodic-reaction-popover"
+                        >
+                          <div className="space-y-2 p-2">
+                            <p className="text-xs font-semibold text-default">Substâncias armazenadas ({reactionProducts.length})</p>
+                            <div className={`periodic-reaction-popover-list ${shouldUsePopoverScroll ? 'periodic-reaction-popover-list-scroll' : ''}`}>
+                              {reactionProducts.map((reaction) => {
+                                const isSelected = selectedElements.some((selected) => selected.atomicNumber === reaction.atomicNumber);
+                                const reactionColor = reaction.visualDNA?.solid?.color || '#d9d9d9';
+                                const textColor = getReadableTextColor(reactionColor);
+
+                                return (
+                                  <Button
+                                    key={`popover-${reaction.atomicNumber}`}
+                                    color="secondary"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => onSelectReactionProduct(reaction)}
+                                    className="periodic-reaction-pill"
+                                    title={reaction.name}
+                                  >
+                                    <span
+                                      className={`periodic-reaction-pill-cylinder ${isSelected ? 'periodic-reaction-pill-cylinder-selected' : ''}`}
+                                      style={{
+                                        backgroundColor: reactionColor,
+                                        color: textColor,
+                                      }}
+                                    >
+                                      {reaction.symbol}
+                                    </span>
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </Popover.Content>
+                      </Popover>
+                    )}
                   </div>
                 </div>
               )}
