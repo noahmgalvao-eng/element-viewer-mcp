@@ -551,7 +551,7 @@ function App() {
                 ? Math.round(window.innerHeight * desktopBottomInset)
                 : 0);
     const periodicBottomDockOffset = isDesktopApp ? 0 : (16 + insets.bottom);
-    const iconScale = isDesktopApp ? 1.2 : 1.15;
+    const iconScale = isDesktopApp ? 1.0 : 1.0;
     const controlIconSizePx = `${(16 * iconScale).toFixed(2)}px`;
     const controlIconStyle = { width: controlIconSizePx, height: controlIconSizePx };
     const desktopUniformButtonClass = isDesktopApp ? 'h-6 w-6 min-h-6 min-w-6' : undefined;
