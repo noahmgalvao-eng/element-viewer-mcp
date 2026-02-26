@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
-import { ChevronDown, FileZip, SpeedometerLatencySpeed } from '@openai/apps-sdk-ui/components/Icon';
+import { ChevronDown, FileZip, Reload, SpeedometerLatencySpeed } from '@openai/apps-sdk-ui/components/Icon';
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import { SegmentedControl } from '@openai/apps-sdk-ui/components/SegmentedControl';
 import { Select } from '@openai/apps-sdk-ui/components/Select';
@@ -243,9 +243,11 @@ const PeriodicTableSelector: React.FC<Props> = ({
   const pointerStartY = useRef<number | null>(null);
   const activePointerId = useRef<number | null>(null);
   const dragHandleRef = useRef<HTMLDivElement | null>(null);
+  const sheetSurfaceRef = useRef<HTMLDivElement | null>(null);
   const dragRafRef = useRef<number | null>(null);
   const pendingDragOffset = useRef(0);
   const latestDragOffset = useRef(0);
+  const [closedTranslateY, setClosedTranslateY] = useState(720);
 
   const visibleElements = useMemo(() => ELEMENTS, []);
 
@@ -356,6 +358,10 @@ const PeriodicTableSelector: React.FC<Props> = ({
 
   const displayedTemperature = fromKelvin(temperature, tempUnit);
   const displayedPressure = fromPascal(pressure, pressureUnit);
+  const currentTemperatureLabel = `${Number(displayedTemperature.toFixed(tempUnit === 'K' ? 0 : 2)).toLocaleString()} ${tempUnit}`;
+  const currentPressureLabel = pressure > 0
+    ? `${Number(displayedPressure.toPrecision(6)).toLocaleString()} ${pressureUnit}`
+    : `0 ${pressureUnit}`;
   const isSliderActive = activeSlider !== null;
 
   const activateSlider = useCallback((slider: 'temperature' | 'pressure') => {
@@ -398,6 +404,27 @@ const PeriodicTableSelector: React.FC<Props> = ({
     };
   }, [clearDragAnimation]);
 
+  useEffect(() => {
+    const node = sheetSurfaceRef.current;
+    if (!node) return;
+
+    const measure = () => {
+      const next = Math.ceil(node.getBoundingClientRect().height + 32);
+      setClosedTranslateY((previous) => (Math.abs(previous - next) < 1 ? previous : next));
+    };
+
+    measure();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => measure());
+      observer.observe(node);
+      return () => observer.disconnect();
+    }
+
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+
   return (
     <>
       {isOpen && (
@@ -409,7 +436,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
       )}
 
       {!isOpen && (
-        <div className="fixed left-1/2 z-[120] -translate-x-1/2" style={{ bottom: `${bottomDockOffset}px` }}>
+        <div className="absolute left-1/2 z-[120] -translate-x-1/2" style={{ bottom: `${bottomDockOffset}px` }}>
           <Button color="secondary" variant="soft" pill onClick={() => onOpenChange(true)}>
             <ChevronDown className="size-4 rotate-180" />
             Open periodic table
@@ -420,16 +447,16 @@ const PeriodicTableSelector: React.FC<Props> = ({
       {isOpen && <div className="fixed inset-0 z-[110] bg-black/30" onClick={() => onOpenChange(false)} aria-hidden="true" />}
 
       <section
-        className="fixed inset-x-0 z-[120] px-0 pb-0"
+        className="absolute inset-x-0 z-[120] px-0 pb-0"
         style={{
           bottom: `${bottomDockOffset}px`,
-          transform: `translateY(${isOpen ? dragOffset : 580}px)`,
+          transform: `translateY(${isOpen ? dragOffset : closedTranslateY}px)`,
           transition: isDraggingSheet ? 'none' : 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
           pointerEvents: isOpen ? 'auto' : 'none',
           willChange: isDraggingSheet || isSliderActive ? 'transform, opacity' : undefined,
         }}
       >
-        <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-2 transition-opacity duration-200 ease-out ${isDraggingSheet || isSliderActive ? 'periodic-sheet-interacting' : ''} ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
+        <div ref={sheetSurfaceRef} className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-2 transition-opacity duration-200 ease-out ${isDraggingSheet || isSliderActive ? 'periodic-sheet-interacting' : ''} ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
           <div
             className="mx-auto mb-0 flex w-full max-w-xl flex-col items-center"
           >
@@ -458,19 +485,21 @@ const PeriodicTableSelector: React.FC<Props> = ({
                   <FileZip className="size-4" />
                   Temperature
                 </p>
-                <Button
-                  color="secondary"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 min-h-8 whitespace-nowrap px-2.5"
-                  onClick={() => setTemperature(DEFAULT_TEMPERATURE_K)}
-                >
-                  {defaultTemperatureLabel}
-                </Button>
+                <div className="inline-flex h-8 min-h-8 items-center justify-center rounded-full border border-default bg-surface-secondary px-3 text-sm font-semibold text-default">
+                  {currentTemperatureLabel}
+                </div>
                 <div className="flex items-center justify-end gap-1">
-                  <Badge color="secondary" variant="outline" size="sm">
-                    {Number(displayedTemperature.toFixed(tempUnit === 'K' ? 0 : 2)).toLocaleString()} {tempUnit}
-                  </Badge>
+                  <Button
+                    color="secondary"
+                    variant="outline"
+                    size="sm"
+                    uniform
+                    className="h-8 min-h-8 w-8 min-w-8 p-0"
+                    aria-label={`Reset temperature to ${defaultTemperatureLabel}`}
+                    onClick={() => setTemperature(DEFAULT_TEMPERATURE_K)}
+                  >
+                    <Reload className="size-4" />
+                  </Button>
                   <Select
                     options={TEMP_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
                     value={tempUnit}
@@ -507,21 +536,21 @@ const PeriodicTableSelector: React.FC<Props> = ({
                   <SpeedometerLatencySpeed className="size-4" />
                   Pressure
                 </p>
-                <Button
-                  color="secondary"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 min-h-8 whitespace-nowrap px-2.5"
-                  onClick={() => setPressure(DEFAULT_PRESSURE_PA)}
-                >
-                  {defaultPressureLabel}
-                </Button>
+                <div className="inline-flex h-8 min-h-8 items-center justify-center rounded-full border border-default bg-surface-secondary px-3 text-sm font-semibold text-default">
+                  {currentPressureLabel}
+                </div>
                 <div className="flex items-center justify-end gap-1">
-                  <Badge color="secondary" variant="outline" size="sm">
-                    {pressure > 0
-                      ? `${Number(displayedPressure.toPrecision(6)).toLocaleString()} ${pressureUnit}`
-                      : `0 ${pressureUnit}`}
-                  </Badge>
+                  <Button
+                    color="secondary"
+                    variant="outline"
+                    size="sm"
+                    uniform
+                    className="h-8 min-h-8 w-8 min-w-8 p-0"
+                    aria-label={`Reset pressure to ${defaultPressureLabel}`}
+                    onClick={() => setPressure(DEFAULT_PRESSURE_PA)}
+                  >
+                    <Reload className="size-4" />
+                  </Button>
                   <Select
                     options={PRESSURE_UNITS.map((unit) => ({ value: unit.value, label: unit.label }))}
                     value={pressureUnit}

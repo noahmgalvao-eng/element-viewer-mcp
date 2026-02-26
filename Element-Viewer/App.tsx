@@ -549,7 +549,7 @@ function App() {
             : (isDesktopApp && isFullscreen && typeof window !== 'undefined'
                 ? Math.round(window.innerHeight * desktopBottomInset)
                 : 0);
-    const periodicBottomDockOffset = (isDesktopApp ? 0 : 16) + insets.bottom + desktopBottomMarginPx;
+    const periodicBottomDockOffset = isDesktopApp ? 0 : (16 + insets.bottom);
 
     return (
         <div
