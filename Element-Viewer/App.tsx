@@ -3,12 +3,12 @@ import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import {
+    ChatTripleDots,
     Collapse,
     Expand,
-    Lightbulb,
+    LightbulbGlow,
     Pause,
     Play,
-    QuestionMarkCircle,
     Record,
     Speed,
     Stop,
@@ -532,7 +532,7 @@ function App() {
     const qualityScale = 1.0;
     const isDesktopViewport = typeof window !== 'undefined' ? window.innerWidth >= 1024 : false;
     const isDesktopApp = userAgent?.device?.type === 'desktop' || (!userAgent && isDesktopViewport) || (userAgent?.device?.type === 'unknown' && isDesktopViewport);
-    const desktopBottomInset = isDesktopApp && isFullscreen ? 0.12 : 0;
+    const desktopBottomInset = isDesktopApp && isFullscreen ? 0.15 : 0;
     const computedDesktopMarginBottom =
         isDesktopApp && isFullscreen
             ? (typeof maxHeight === 'number' ? Math.max(0, maxHeight * desktopBottomInset) : '12vh')
@@ -590,10 +590,9 @@ function App() {
                             variant="soft"
                             pill
                             uniform
-                            size="lg"
                             onClick={handleTogglePause}
                         >
-                            {isPaused ? <Play className="size-5" /> : <Pause className="size-5" />}
+                            {isPaused ? <Play className="size-4" /> : <Pause className="size-4" />}
                         </Button>
                     </span>
                 </Tooltip>
@@ -605,16 +604,12 @@ function App() {
                             variant={isRecording ? 'solid' : 'outline'}
                             pill
                             uniform
-                            size="lg"
                             onClick={handleToggleRecord}
                         >
                             {isRecording ? (
-                                <Stop className="size-5" />
+                                <Stop className="size-4" />
                             ) : (
-                                <Record
-                                    className="size-5"
-                                    style={{ color: 'var(--color-background-danger-solid)', fill: 'currentColor' }}
-                                />
+                                <Record className="size-4" />
                             )}
                         </Button>
                     </span>
@@ -645,10 +640,7 @@ function App() {
                 <Tooltip content="Ask ChatGPT about the current simulation" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="caution" variant="soft" pill uniform onClick={handleInfoButtonClick}>
-                            <Lightbulb
-                                className="size-4"
-                                style={{ color: 'var(--color-background-caution-solid)', fill: 'currentColor' }}
-                            />
+                            <ChatTripleDots className="size-4" />
                         </Button>
                     </span>
                 </Tooltip>
@@ -656,7 +648,7 @@ function App() {
                 <Popover>
                     <Popover.Trigger>
                         <Button color="secondary" variant="soft" pill uniform aria-label="O que posso pedir ao ChatGPT?">
-                            <QuestionMarkCircle className="size-4" />
+                            <LightbulbGlow className="size-4" />
                         </Button>
                     </Popover.Trigger>
                     <Popover.Content
