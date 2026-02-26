@@ -1,10 +1,7 @@
 import { ChemicalElement, MatterState } from '../../types';
 import { SimulationMutableState } from './types';
 import {
-    calculateMeltingPoint,
-    calculateBoilingPoint,
-    calculateSublimationPoint,
-    predictMatterState
+    calculatePhaseBoundaries
 } from './phaseCalculations';
 
 interface ThermodynamicsInput {
@@ -48,45 +45,26 @@ export const calculateThermodynamics = ({
         specificHeatSolid: C_SOLID,
         specificHeatLiquid: C_LIQUID,
         specificHeatGas: C_GAS,
-        meltingPointK: T_melt_base,
-        boilingPointK: T_boil_std,
-        enthalpyVapJmol,
         enthalpyFusionJmol,
         criticalPoint,
         triplePoint
     } = element.properties;
 
-    // --- CHECK FOR SUBLIMATION REGIME ---
-    // Pressure must be strictly below Triple Point Pressure
-    const isSublimationRegime = triplePoint && pressure < triplePoint.pressurePa;
-    const R = 8.314; // Ideal Gas Constant
+    const phaseBoundaries = calculatePhaseBoundaries(element, pressure);
+    const isSublimationRegime = phaseBoundaries.isSublimationRegime;
 
     let currentTemp = 0;
     let detectedPhase: MatterState = MatterState.SOLID;
     let meltProgress = 0;
     let boilProgress = 0;
     let sublimationProgress = 0;
-    let T_melt = 0;
-    let T_boil = 0;
-    let T_sub = 0;
+    let T_melt = phaseBoundaries.meltingPointCurrent;
+    let T_boil = phaseBoundaries.boilingPointCurrent;
+    let T_sub = phaseBoundaries.sublimationPointCurrent;
 
     // --- SUBLIMATION PATH ---
     if (isSublimationRegime && triplePoint && enthalpyFusionJmol) {
-        // 1. Calculate Sublimation Enthalpy (J/mol)
-        // If Vap Enthalpy missing, estimate from latent heat (J/kg) * Molar Mass (kg/mol)
-        const molarMassKg = element.mass / 1000;
-        const dH_vap_mol = enthalpyVapJmol || (L_VAPORIZATION * molarMassKg);
-        const dH_sub_mol = enthalpyFusionJmol + dH_vap_mol;
-
-        // 2. Clausius-Clapeyron for Sublimation
-        // 1/T_sub = 1/T_trip - (R * ln(P/P_trip) / dH_sub)
-        // FIX: Clamp pressure to avoid -Infinity at 0 Pa
-        const safePressure = Math.max(1e-9, pressure);
-        const logTerm = Math.log(safePressure / triplePoint.pressurePa);
-        const invTsub = (1 / triplePoint.tempK) - ((R * logTerm) / dH_sub_mol);
-        T_sub = 1 / invTsub;
-
-        // 3. Phase Energy Boundaries
+        // 1. Phase Energy Boundaries
         // Solid -> Gas (No Liquid)
         const L_SUB = L_FUSION + L_VAPORIZATION; // Approximation in J/kg for simulation energy bucket
 
@@ -117,12 +95,6 @@ export const calculateThermodynamics = ({
         T_boil = 0;
 
     } else {
-        // --- STANDARD SIMON-GLATZEL & CLAUSIUS PATH ---
-
-        // Use shared helper - exact same math
-        T_melt = calculateMeltingPoint(element, pressure);
-        T_boil = calculateBoilingPoint(element, pressure, T_melt);
-
         // --- PHASE DETECTION (Standard) ---
         const H_melt_start = SAMPLE_MASS * C_SOLID * T_melt;
         const H_melt_end = H_melt_start + (SAMPLE_MASS * L_FUSION);

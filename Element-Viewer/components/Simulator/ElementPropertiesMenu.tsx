@@ -11,6 +11,7 @@ import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import { CopyTooltip } from '@openai/apps-sdk-ui/components/Tooltip';
 import { ChemicalElement, MatterState, PhysicsState } from '../../types';
 import { SOURCE_DATA } from '../../data/periodic_table_source';
+import { calculatePhaseBoundaries } from '../../hooks/physics/phaseCalculations';
 
 interface Props {
   data: {
@@ -278,12 +279,13 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const isTripleState = physicsState.state === MatterState.EQUILIBRIUM_TRIPLE;
   const isCriticalState = [MatterState.SUPERCRITICAL, MatterState.TRANSITION_SCF].includes(physicsState.state);
 
-  const actionMeltingPoint = Number.isFinite(physicsState.meltingPointCurrent) && physicsState.meltingPointCurrent > 0
-    ? physicsState.meltingPointCurrent
-    : element.properties.meltingPointK;
-  const actionBoilingPoint = Number.isFinite(physicsState.boilingPointCurrent) && physicsState.boilingPointCurrent > 0
-    ? physicsState.boilingPointCurrent
-    : element.properties.boilingPointK;
+  const actionPhaseBoundaries = useMemo(
+    () => calculatePhaseBoundaries(element, physicsState.pressure),
+    [element, physicsState.pressure],
+  );
+  const actionMeltingPoint = actionPhaseBoundaries.meltingPointCurrent;
+  const actionBoilingPoint = actionPhaseBoundaries.boilingPointCurrent;
+  const actionSublimationPoint = actionPhaseBoundaries.sublimationPointCurrent;
   const hasActionMeltingPoint = Number.isFinite(actionMeltingPoint) && actionMeltingPoint > 0;
   const hasActionBoilingPoint = Number.isFinite(actionBoilingPoint) && actionBoilingPoint > actionMeltingPoint;
   const liquidBandSpan = Math.max(2, actionBoilingPoint - actionMeltingPoint);
@@ -302,7 +304,10 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     : condenseTargetTemp;
   const solidifyTargetTemp = Math.max(1, actionMeltingPoint - 25);
   const condenseActionTarget = isCriticalState ? condenseCriticalTargetTemp : condenseTargetTemp;
-  const sublimationTemp = Math.max(1, physicsState.sublimationPointCurrent || triplePoint?.tempK || actionMeltingPoint);
+  const sublimationTemp = Math.max(
+    1,
+    actionSublimationPoint || physicsState.sublimationPointCurrent || triplePoint?.tempK || actionMeltingPoint,
+  );
   const sublimationPressure = triplePoint ? Math.max(1, triplePoint.pressurePa * 0.8) : 1;
   const sublimationTargetTemp = isGasLike ? Math.max(1, sublimationTemp - 40) : sublimationTemp + 40;
   const supercriticalTargetTemp = criticalPoint ? criticalPoint.tempK + 25 : physicsState.temperature;
@@ -481,6 +486,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
             </p>
             <p className={`max-w-[20rem] text-xs leading-5 text-default ${showFullDescription ? 'whitespace-pre-wrap' : 'line-clamp-2-soft'}`}>
               {summaryText}
+              {!isReactionProduct && periodicSourceRef && <span className="ml-1 text-tertiary">[{periodicSourceRef}]</span>}
             </p>
             {canExpandDescription && (
               <Button

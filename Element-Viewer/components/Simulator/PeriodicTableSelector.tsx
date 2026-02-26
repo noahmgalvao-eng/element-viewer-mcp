@@ -418,9 +418,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
           willChange: isDraggingSheet || isSliderActive ? 'transform, opacity' : undefined,
         }}
       >
-        <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-3 transition-opacity duration-200 ease-out ${isDraggingSheet || isSliderActive ? 'periodic-sheet-interacting' : ''} ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
+        <div className={`periodic-sheet mx-auto w-full max-w-5xl rounded-t-3xl sm:p-2 transition-opacity duration-200 ease-out ${isDraggingSheet || isSliderActive ? 'periodic-sheet-interacting' : ''} ${isSliderActive ? "border-transparent bg-transparent shadow-none" : "periodic-sheet-surface border border-default shadow-2xl"}`}>
           <div
-            className="mx-auto mb-1 flex w-full max-w-xl flex-col items-center"
+            className="mx-auto mb-0 flex w-full max-w-xl flex-col items-center"
           >
             <div
               ref={dragHandleRef}
@@ -429,18 +429,18 @@ const PeriodicTableSelector: React.FC<Props> = ({
               onPointerDown={handleDragStart}
             />
           </div>
-          <div className="mb-px flex justify-center pt-px">
-            <Button className="min-h-10 px-3" color="secondary" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+          <div className="mb-0 flex justify-center pt-0">
+            <Button className="h-8 min-h-8 px-2.5" color="secondary" variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
               <ChevronDown className="size-4" />
               Hide
             </Button>
           </div>
 
-          <div className={`mb-1 flex justify-end transition-opacity duration-200 ease-out ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <div className={`mb-0.5 flex justify-end transition-opacity duration-200 ease-out ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <Switch checked={showParticles} onCheckedChange={setShowParticles} label="X-Ray Vision" size="sm" />
           </div>
 
-          <div className={`mb-1 rounded-xl p-2 transition-opacity duration-200 ease-out ${isSliderActive ? 'border-transparent bg-transparent shadow-none' : 'border border-subtle bg-surface'}`}>
+          <div className={`mb-0.5 rounded-xl p-1.5 transition-opacity duration-200 ease-out ${isSliderActive ? 'border-transparent bg-transparent shadow-none' : 'border border-subtle bg-surface'}`}>
             <div className={`${isSliderActive && activeSlider !== 'temperature' ? 'opacity-0 pointer-events-none absolute' : ''}`}>
               <div className="mb-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <p className="flex items-center gap-1 text-sm font-semibold text-default">
@@ -489,7 +489,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </div>
 
             <div
-              className={`mt-1.5 ${isSliderActive && activeSlider !== 'pressure' ? 'pointer-events-none opacity-0 invisible' : ''}`}
+              className={`mt-1 ${isSliderActive && activeSlider !== 'pressure' ? 'pointer-events-none opacity-0 invisible' : ''}`}
             >
               <div className="mb-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <p className="flex items-center gap-1 text-sm font-semibold text-default">
@@ -539,7 +539,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className={`relative mb-1.5 flex items-center justify-between gap-2 transition-opacity duration-200 ease-out ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <div className={`relative mb-0.5 flex items-center justify-between gap-2 transition-opacity duration-200 ease-out ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
             <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
               <div className="pointer-events-auto">
                 <Popover>

@@ -2,6 +2,18 @@ import { ChemicalElement, MatterState } from '../../types';
 
 const R = 8.314; // Ideal Gas Constant
 
+export interface PhaseBoundaries {
+    meltingPointCurrent: number;
+    boilingPointCurrent: number;
+    sublimationPointCurrent: number;
+    isSublimationRegime: boolean;
+}
+
+const normalizeBoundary = (value: number): number => {
+    if (!Number.isFinite(value)) return 0;
+    return Math.max(0, value);
+};
+
 /**
  * Calculates current melting point using Simon-Glatzel equation or specific exceptions
  */
@@ -89,6 +101,38 @@ export const calculateSublimationPoint = (element: ChemicalElement, pressure: nu
 };
 
 /**
+ * Calculates the phase boundaries used by the runtime thermodynamics engine.
+ * Keeping this centralized guarantees that UI actions and simulation stay synchronized.
+ */
+export const calculatePhaseBoundaries = (element: ChemicalElement, pressure: number): PhaseBoundaries => {
+    const triplePoint = element.properties.triplePoint;
+    const isSublimationRegime = Boolean(
+        triplePoint &&
+        pressure < triplePoint.pressurePa &&
+        element.properties.enthalpyFusionJmol
+    );
+
+    if (isSublimationRegime) {
+        return {
+            meltingPointCurrent: 0,
+            boilingPointCurrent: 0,
+            sublimationPointCurrent: normalizeBoundary(calculateSublimationPoint(element, pressure)),
+            isSublimationRegime: true,
+        };
+    }
+
+    const meltingPointCurrent = normalizeBoundary(calculateMeltingPoint(element, pressure));
+    const boilingPointCurrent = normalizeBoundary(calculateBoilingPoint(element, pressure, meltingPointCurrent));
+
+    return {
+        meltingPointCurrent,
+        boilingPointCurrent,
+        sublimationPointCurrent: 0,
+        isSublimationRegime: false,
+    };
+};
+
+/**
  * Predicts the state of matter for an element at a given Temperature and Pressure.
  * Used for both the Thermodynamics engine and the ChatGPT Context generation.
  */
@@ -100,9 +144,10 @@ export const predictMatterState = (
 
     const { properties } = element;
     const { criticalPoint, triplePoint } = properties;
+    const phaseBoundaries = calculatePhaseBoundaries(element, pressure);
 
     // 1. Check Sublimation Regime
-    const isSublimationRegime = !!triplePoint && pressure < triplePoint.pressurePa;
+    const isSublimationRegime = phaseBoundaries.isSublimationRegime;
 
     // 2. Critical Point Check
     let isSupercritical = false;
@@ -136,8 +181,8 @@ export const predictMatterState = (
     if (isSupercritical) {
         predicted = MatterState.SUPERCRITICAL;
         // Even if SC, calculate boundaries for reference
-        T_melt = calculateMeltingPoint(element, pressure);
-        T_boil = calculateBoilingPoint(element, pressure, T_melt);
+        T_melt = phaseBoundaries.meltingPointCurrent;
+        T_boil = phaseBoundaries.boilingPointCurrent;
     } else if (isTriplePoint) {
         predicted = MatterState.EQUILIBRIUM_TRIPLE;
         // At TP, all T's converge roughly
@@ -145,7 +190,7 @@ export const predictMatterState = (
         T_boil = triplePoint!.tempK;
         T_sub = triplePoint!.tempK;
     } else if (isSublimationRegime) {
-        T_sub = calculateSublimationPoint(element, pressure);
+        T_sub = phaseBoundaries.sublimationPointCurrent;
         const T_sub_round = Math.round(T_sub);
 
         if (T_target_round === T_sub_round) {
@@ -157,8 +202,8 @@ export const predictMatterState = (
         }
     } else {
         // Standard Regime
-        T_melt = calculateMeltingPoint(element, pressure);
-        T_boil = calculateBoilingPoint(element, pressure, T_melt);
+        T_melt = phaseBoundaries.meltingPointCurrent;
+        T_boil = phaseBoundaries.boilingPointCurrent;
 
         const T_melt_round = Math.round(T_melt);
         const T_boil_round = Math.round(T_boil);
