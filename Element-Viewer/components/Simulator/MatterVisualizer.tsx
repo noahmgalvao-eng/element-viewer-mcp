@@ -238,7 +238,7 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
     const viewBoxString = `${viewBounds.minX} ${viewBounds.minY} ${viewBounds.width} ${viewBounds.height}`;
 
     const isReactionProduct = element.category === 'reaction_product';
-    const identityLabel = isReactionProduct ? element.name : element.symbol;
+    const identityLabel = element.symbol;
     const identityVisual = useMemo(() => {
         if (!isReactionProduct) {
             return {

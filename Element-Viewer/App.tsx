@@ -7,7 +7,6 @@ import {
     Expand,
     Lightbulb,
     Pause,
-    PictureInPicture,
     Play,
     QuestionMarkCircle,
     Record,
@@ -210,7 +209,6 @@ function App() {
 
 
     const {
-        handleTogglePiP,
         handleToggleFullscreen,
         handleInfoButtonClick,
     } = useAppChatControls({
@@ -545,9 +543,14 @@ function App() {
                 ? Math.max(0, maxHeight - (typeof computedDesktopMarginBottom === 'number' ? computedDesktopMarginBottom : 0))
                 : (isDesktopApp ? '88vh' : undefined))
             : undefined;
+    const desktopBottomMarginPx =
+        typeof computedDesktopMarginBottom === 'number'
+            ? computedDesktopMarginBottom
+            : (isDesktopApp && isFullscreen && typeof window !== 'undefined'
+                ? Math.round(window.innerHeight * desktopBottomInset)
+                : 0);
+    const periodicOpenButtonBottomOffset = 16 + insets.bottom + desktopBottomMarginPx;
 
-    // --- PIP HANDLER ---
-    // --- FULLSCREEN HANDLER ---
     return (
         <div
             className={`relative w-screen overflow-hidden bg-surface text-default ${isFullscreen ? 'h-screen' : 'h-[600px]'}`}
@@ -563,6 +566,7 @@ function App() {
                 onSelect={handleElementSelect}
                 reactionProducts={reactionProductsCache}
                 onSelectReactionProduct={handleReactionProductSelect}
+                openButtonBottomOffset={periodicOpenButtonBottomOffset}
                 isMultiSelect={isMultiSelect}
                 onToggleMultiSelect={handleToggleMultiSelect}
                 isOpen={isSidebarOpen}
@@ -633,17 +637,9 @@ function App() {
             </div>
 
             <div
-                className="fixed z-20 grid grid-cols-2 gap-2"
+                className="fixed z-20 flex flex-col gap-2"
                 style={{ top: `${16 + insets.top}px`, right: `${16 + insets.right}px` }}
             >
-                <Tooltip content="Picture-in-picture" contentClassName={TOOLTIP_CLASS}>
-                    <span>
-                        <Button color="secondary" variant="soft" pill uniform onClick={handleTogglePiP}>
-                            <PictureInPicture className="size-4" />
-                        </Button>
-                    </span>
-                </Tooltip>
-
                 <Tooltip content={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill uniform onClick={handleToggleFullscreen}>
@@ -651,8 +647,6 @@ function App() {
                         </Button>
                     </span>
                 </Tooltip>
-
-                <span />
 
                 <Tooltip content="Ask ChatGPT about the current simulation" contentClassName={TOOLTIP_CLASS}>
                     <span>
@@ -664,8 +658,6 @@ function App() {
                         </Button>
                     </span>
                 </Tooltip>
-
-                <span />
 
                 <Popover>
                     <Popover.Trigger>

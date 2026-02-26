@@ -15,15 +15,6 @@ export function useAppChatControls({
   syncStateToChatGPT,
   handleInfoClick,
 }: UseAppChatControlsProps) {
-  const handleTogglePiP = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      await requestDisplayMode('pip');
-    } catch (error) {
-      console.error('Failed to enter PiP mode:', error);
-    }
-  }, [requestDisplayMode]);
-
   const handleToggleFullscreen = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
     const targetMode = isFullscreen ? 'inline' : 'fullscreen';
@@ -42,7 +33,6 @@ export function useAppChatControls({
   }, [syncStateToChatGPT, handleInfoClick]);
 
   return {
-    handleTogglePiP,
     handleToggleFullscreen,
     handleInfoButtonClick,
   };

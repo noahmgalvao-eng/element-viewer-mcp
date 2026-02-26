@@ -592,7 +592,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
               label="Fluido supercritico"
               color="danger"
               variant="solid"
-              colSpanTwo={!isTripleState}
+              colSpanTwo={!(isTripleState || isCriticalState)}
               disabled={!hasCriticalPoint}
               heatsUp={supercriticalTargetTemp >= physicsState.temperature}
               onClick={() => {

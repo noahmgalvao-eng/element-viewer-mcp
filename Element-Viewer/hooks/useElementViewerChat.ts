@@ -46,7 +46,6 @@ export function useElementViewerChat({
         maxHeight,
         safeArea,
         isFullscreen,
-        isPiP: displayMode === 'pip',
         requestDisplayMode,
         handleInfoClick
     };

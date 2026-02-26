@@ -135,6 +135,14 @@
   color: #111111;
 }
 
+.periodic-reaction-pill {
+  border-radius: 9999px !important;
+  min-height: 1.6rem !important;
+  height: 1.6rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
 .control-icon-center [class*='ButtonInner'] {
   justify-content: center !important;
   align-items: center !important;
