@@ -50,12 +50,44 @@
 }
 
 .periodic-grid {
+  position: relative;
   display: grid;
   width: 100%;
   box-sizing: border-box;
   grid-template-columns: repeat(18, minmax(0, 1fr));
   grid-template-rows: repeat(10, minmax(0, auto));
   gap: 1px;
+}
+
+.periodic-reaction-cluster {
+  position: absolute;
+  top: 2px;
+  left: 16.6667%;
+  width: 50%;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  pointer-events: none;
+}
+
+.periodic-reaction-label {
+  margin: 0;
+  font-size: 0.65rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--color-text-secondary, #6b7280);
+}
+
+.periodic-reaction-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.22rem;
+  max-height: 3.2rem;
+  overflow: hidden;
+  pointer-events: auto;
 }
 
 .periodic-cell {
@@ -137,10 +169,12 @@
 
 .periodic-reaction-pill {
   border-radius: 9999px !important;
-  min-height: 1.6rem !important;
-  height: 1.6rem !important;
-  width: 100% !important;
-  min-width: 0 !important;
+  min-height: 1.42rem !important;
+  height: 1.42rem !important;
+  width: fit-content !important;
+  min-width: fit-content !important;
+  padding-left: 0.42rem !important;
+  padding-right: 0.42rem !important;
 }
 
 .control-icon-center [class*='ButtonInner'] {

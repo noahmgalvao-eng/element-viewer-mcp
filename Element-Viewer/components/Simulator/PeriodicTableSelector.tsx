@@ -24,7 +24,7 @@ interface Props {
   onSelect: (el: ChemicalElement) => void;
   reactionProducts: ChemicalElement[];
   onSelectReactionProduct: (el: ChemicalElement) => void;
-  openButtonBottomOffset?: number;
+  bottomDockOffset?: number;
   isMultiSelect: boolean;
   onToggleMultiSelect: () => void;
   isOpen: boolean;
@@ -171,9 +171,12 @@ type PreviewAvatarStyle = React.CSSProperties & {
 
 const DEFAULT_TEMPERATURE_K = 298.15;
 const DEFAULT_PRESSURE_PA = 101325;
-const REACTION_AREA_START_COL = 4;
-const REACTION_AREA_END_COL = 12;
-const REACTION_AREA_MAX_ROW = 2;
+const TEMP_UNIT_SYMBOLS: Record<TempUnit, string> = {
+  K: 'K',
+  C: '°C',
+  F: '°F',
+  Ra: '°Ra',
+};
 
 const getElementTone = (symbol: string, position: { xpos: number; ypos: number }): ElementTone => {
   if (AMETAIS.has(symbol)) return 'ametais';
@@ -198,12 +201,29 @@ const getToneStyleBySymbol = (symbol: string): ToneStyle | null => {
   return TONE_STYLES[getElementTone(symbol, position)];
 };
 
+const getReadableTextColor = (hexColor: string): string => {
+  const normalized = hexColor.replace('#', '').trim();
+  const fullHex = normalized.length === 3
+    ? normalized.split('').map((char) => `${char}${char}`).join('')
+    : normalized;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(fullHex)) {
+    return '#111111';
+  }
+
+  const r = Number.parseInt(fullHex.slice(0, 2), 16);
+  const g = Number.parseInt(fullHex.slice(2, 4), 16);
+  const b = Number.parseInt(fullHex.slice(4, 6), 16);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.63 ? '#111111' : '#ffffff';
+};
+
 const PeriodicTableSelector: React.FC<Props> = ({
   selectedElements,
   onSelect,
   reactionProducts,
   onSelectReactionProduct,
-  openButtonBottomOffset = 16,
+  bottomDockOffset = 16,
   isMultiSelect,
   onToggleMultiSelect,
   isOpen,
@@ -237,29 +257,19 @@ const PeriodicTableSelector: React.FC<Props> = ({
 
     return element.symbol.length > 2 ? `${element.symbol.slice(0, 2)}...` : element.symbol;
   }, []);
-  const reactionPlacements = useMemo(() => {
-    const placements: Array<{ reaction: ChemicalElement; row: number; col: number; span: number }> = [];
-    let row = 1;
-    let col = REACTION_AREA_START_COL;
 
-    for (const reaction of reactionProducts) {
-      const span = Math.min(4, Math.max(2, Math.ceil((reaction.symbol.length + 1) / 2)));
+  const defaultTemperatureLabel = useMemo(() => {
+    const valueInCurrentUnit = fromKelvin(DEFAULT_TEMPERATURE_K, tempUnit);
+    const decimals = tempUnit === 'K' ? 0 : 2;
+    const formatted = Number(valueInCurrentUnit.toFixed(decimals)).toLocaleString();
+    return `${formatted} ${TEMP_UNIT_SYMBOLS[tempUnit]}`;
+  }, [tempUnit]);
 
-      if (col + span - 1 > REACTION_AREA_END_COL) {
-        row += 1;
-        col = REACTION_AREA_START_COL;
-      }
-
-      if (row > REACTION_AREA_MAX_ROW) {
-        break;
-      }
-
-      placements.push({ reaction, row, col, span });
-      col += span;
-    }
-
-    return placements;
-  }, [reactionProducts]);
+  const defaultPressureLabel = useMemo(() => {
+    const valueInCurrentUnit = fromPascal(DEFAULT_PRESSURE_PA, pressureUnit);
+    const formatted = Number(valueInCurrentUnit.toPrecision(6)).toLocaleString();
+    return `${formatted} ${pressureUnit}`;
+  }, [pressureUnit]);
 
   const flushDragOffset = useCallback(() => {
     const nextOffset = pendingDragOffset.current;
@@ -399,7 +409,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
       )}
 
       {!isOpen && (
-        <div className="fixed left-1/2 z-[120] -translate-x-1/2" style={{ bottom: `${openButtonBottomOffset}px` }}>
+        <div className="fixed left-1/2 z-[120] -translate-x-1/2" style={{ bottom: `${bottomDockOffset}px` }}>
           <Button color="secondary" variant="soft" pill onClick={() => onOpenChange(true)}>
             <ChevronDown className="size-4 rotate-180" />
             Open periodic table
@@ -410,8 +420,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
       {isOpen && <div className="fixed inset-0 z-[110] bg-black/30" onClick={() => onOpenChange(false)} aria-hidden="true" />}
 
       <section
-        className="fixed inset-x-0 bottom-0 z-[120] px-0 pb-0"
+        className="fixed inset-x-0 z-[120] px-0 pb-0"
         style={{
+          bottom: `${bottomDockOffset}px`,
           transform: `translateY(${isOpen ? dragOffset : 580}px)`,
           transition: isDraggingSheet ? 'none' : 'transform 200ms cubic-bezier(0.22, 1, 0.36, 1)',
           pointerEvents: isOpen ? 'auto' : 'none',
@@ -451,10 +462,10 @@ const PeriodicTableSelector: React.FC<Props> = ({
                   color="secondary"
                   variant="outline"
                   size="sm"
-                  className="h-8 min-h-8 px-3"
+                  className="h-8 min-h-8 whitespace-nowrap px-2.5"
                   onClick={() => setTemperature(DEFAULT_TEMPERATURE_K)}
                 >
-                  Default
+                  {defaultTemperatureLabel}
                 </Button>
                 <div className="flex items-center justify-end gap-1">
                   <Badge color="secondary" variant="outline" size="sm">
@@ -500,10 +511,10 @@ const PeriodicTableSelector: React.FC<Props> = ({
                   color="secondary"
                   variant="outline"
                   size="sm"
-                  className="h-8 min-h-8 px-3"
+                  className="h-8 min-h-8 whitespace-nowrap px-2.5"
                   onClick={() => setPressure(DEFAULT_PRESSURE_PA)}
                 >
-                  Default
+                  {defaultPressureLabel}
                 </Button>
                 <div className="flex items-center justify-end gap-1">
                   <Badge color="secondary" variant="outline" size="sm">
@@ -616,27 +627,38 @@ const PeriodicTableSelector: React.FC<Props> = ({
 
           <div className={`${isSliderActive ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200 ease-out`}>
             <div className="periodic-grid">
-              {reactionPlacements.map(({ reaction, row, col, span }) => {
-                const isSelected = selectedElements.some((selected) => selected.atomicNumber === reaction.atomicNumber);
+              {reactionProducts.length > 0 && (
+                <div className="periodic-reaction-cluster">
+                  <p className="periodic-reaction-label">Substâncias</p>
+                  <div className="periodic-reaction-list">
+                    {reactionProducts.map((reaction) => {
+                      const isSelected = selectedElements.some((selected) => selected.atomicNumber === reaction.atomicNumber);
+                      const reactionColor = reaction.visualDNA?.solid?.color || '#d9d9d9';
+                      const textColor = getReadableTextColor(reactionColor);
 
-                return (
-                  <Button
-                    key={reaction.atomicNumber}
-                    color={isSelected ? 'info' : 'secondary'}
-                    variant={isSelected ? 'solid' : 'outline'}
-                    size="sm"
-                    onClick={() => onSelectReactionProduct(reaction)}
-                    className="periodic-reaction-pill z-[5] self-center justify-self-start px-3 text-xs font-semibold"
-                    style={{
-                      gridColumn: `${col} / span ${span}`,
-                      gridRow: row,
-                    }}
-                    title={reaction.name}
-                  >
-                    {reaction.symbol}
-                  </Button>
-                );
-              })}
+                      return (
+                        <Button
+                          key={reaction.atomicNumber}
+                          color="secondary"
+                          variant={isSelected ? 'solid' : 'outline'}
+                          size="sm"
+                          onClick={() => onSelectReactionProduct(reaction)}
+                          className="periodic-reaction-pill z-[5] text-xs font-semibold"
+                          style={{
+                            backgroundColor: reactionColor,
+                            color: textColor,
+                            borderColor: 'color-mix(in oklab, #111111 24%, transparent)',
+                            boxShadow: isSelected ? '0 0 0 2px color-mix(in oklab, #ffffff 70%, transparent)' : undefined,
+                          }}
+                          title={reaction.name}
+                        >
+                          {reaction.symbol}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {visibleElements.map((el) => {
                 const position = POSITION_BY_SYMBOL.get(el.symbol);

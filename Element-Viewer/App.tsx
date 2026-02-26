@@ -549,7 +549,7 @@ function App() {
             : (isDesktopApp && isFullscreen && typeof window !== 'undefined'
                 ? Math.round(window.innerHeight * desktopBottomInset)
                 : 0);
-    const periodicOpenButtonBottomOffset = 16 + insets.bottom + desktopBottomMarginPx;
+    const periodicBottomDockOffset = (isDesktopApp ? 0 : 16) + insets.bottom + desktopBottomMarginPx;
 
     return (
         <div
@@ -566,7 +566,7 @@ function App() {
                 onSelect={handleElementSelect}
                 reactionProducts={reactionProductsCache}
                 onSelectReactionProduct={handleReactionProductSelect}
-                openButtonBottomOffset={periodicOpenButtonBottomOffset}
+                bottomDockOffset={periodicBottomDockOffset}
                 isMultiSelect={isMultiSelect}
                 onToggleMultiSelect={handleToggleMultiSelect}
                 isOpen={isSidebarOpen}
