@@ -55,6 +55,10 @@ function App() {
     // UI States
     const [showParticles, setShowParticles] = useState(false);
     const [isSidebarOpen, setSidebarOpen] = useState(true);
+    const [hasClickedPeriodicTableButton, setHasClickedPeriodicTableButton] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return window.sessionStorage.getItem('hasClickedPeriodicTableButton') === 'true';
+    });
     const [timeScale, setTimeScale] = useState<number>(1);
     const [isPaused, setIsPaused] = useState(false);
     const [contextMenu, setContextMenu] = useState<ContextMenuData | null>(null);
@@ -464,6 +468,15 @@ function App() {
         setIsPaused(!isPaused);
     };
 
+    const handleTogglePeriodicTable = () => {
+        setSidebarOpen((open) => !open);
+
+        if (hasClickedPeriodicTableButton || typeof window === 'undefined') return;
+
+        setHasClickedPeriodicTableButton(true);
+        window.sessionStorage.setItem('hasClickedPeriodicTableButton', 'true');
+    };
+
     // --- RECORDING LOGIC ---
     const registerSimulationUnit = (id: number, getter: () => PhysicsState) => {
         simulationRegistry.current.set(id, getter);
@@ -637,11 +650,11 @@ function App() {
                             color="secondary"
                             variant="soft"
                             pill
-                            uniform={count >= 5}
-                            onClick={() => setSidebarOpen((open) => !open)}
+                            uniform={hasClickedPeriodicTableButton}
+                            onClick={handleTogglePeriodicTable}
                         >
                             <SettingsSlider />
-                            {count < 5 && <span className="text-xs font-semibold">Open Periodic Table</span>}
+                            {!hasClickedPeriodicTableButton && <span className="text-xs font-semibold">Open Periodic Table</span>}
                         </Button>
                     </span>
                 </Tooltip>
