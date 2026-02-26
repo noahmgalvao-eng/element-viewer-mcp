@@ -251,9 +251,9 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
             };
         }
 
-        const maxWidth = 320;
-        const minWidth = 120;
-        const horizontalPadding = 24;
+        const maxWidth = 220;
+        const minWidth = 56;
+        const horizontalPadding = 18;
         let fontSize = 14;
         let measuredWidth = identityLabel.length * (fontSize * 0.62);
 
@@ -280,10 +280,10 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
         return {
             shape: 'capsule' as const,
             width: capsuleWidth,
-            height: 42,
+            height: 34,
             fontSize,
             textY: 1,
-            statusY: 38,
+            statusY: 34,
         };
     }, [identityLabel, isReactionProduct]);
 

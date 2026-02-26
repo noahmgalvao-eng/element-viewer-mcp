@@ -585,21 +585,6 @@ function App() {
                 className="fixed z-40 flex flex-col gap-3"
                 style={{ top: `${leftControlTop}px`, left: `${16 + insets.left}px` }}
             >
-                <Tooltip content={isSidebarOpen ? 'Hide periodic table' : 'Open periodic table'} contentClassName={TOOLTIP_CLASS}>
-                    <span>
-                        <Button
-                            color="secondary"
-                            variant="soft"
-                            pill
-                            uniform={count >= 5}
-                            onClick={() => setSidebarOpen((open) => !open)}
-                        >
-                            <SettingsSlider />
-                            {count < 5 && <span className="text-xs font-semibold">Open Periodic Table</span>}
-                        </Button>
-                    </span>
-                </Tooltip>
-
                 <Tooltip content="Toggle simulation speed" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill size="lg" onClick={handleToggleSpeed}>
@@ -645,6 +630,22 @@ function App() {
                         </Button>
                     </span>
                 </Tooltip>
+
+                <Tooltip content={isSidebarOpen ? 'Hide periodic table' : 'Open periodic table'} contentClassName={TOOLTIP_CLASS}>
+                    <span>
+                        <Button
+                            color="secondary"
+                            variant="soft"
+                            pill
+                            uniform={count >= 5}
+                            onClick={() => setSidebarOpen((open) => !open)}
+                        >
+                            <SettingsSlider />
+                            {count < 5 && <span className="text-xs font-semibold">Open Periodic Table</span>}
+                        </Button>
+                    </span>
+                </Tooltip>
+
             </div>
 
             <div
