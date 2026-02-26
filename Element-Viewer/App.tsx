@@ -591,12 +591,9 @@ function App() {
                             pill
                             uniform
                             size="lg"
-                            className="control-icon-center"
                             onClick={handleTogglePause}
                         >
-                            <span className="flex h-full w-full items-center justify-center leading-none">
-                                {isPaused ? <Play className="block size-5" /> : <Pause className="block size-5" />}
-                            </span>
+                            {isPaused ? <Play className="size-5" /> : <Pause className="size-5" />}
                         </Button>
                     </span>
                 </Tooltip>
@@ -609,19 +606,16 @@ function App() {
                             pill
                             uniform
                             size="lg"
-                            className="control-icon-center"
                             onClick={handleToggleRecord}
                         >
-                            <span className="flex h-full w-full items-center justify-center leading-none">
-                                {isRecording ? (
-                                    <Stop className="block size-5" />
-                                ) : (
-                                    <Record
-                                        className="block size-5"
-                                        style={{ color: 'var(--color-background-danger-solid)', fill: 'currentColor' }}
-                                    />
-                                )}
-                            </span>
+                            {isRecording ? (
+                                <Stop className="size-5" />
+                            ) : (
+                                <Record
+                                    className="size-5"
+                                    style={{ color: 'var(--color-background-danger-solid)', fill: 'currentColor' }}
+                                />
+                            )}
                         </Button>
                     </span>
                 </Tooltip>

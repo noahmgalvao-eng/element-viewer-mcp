@@ -177,11 +177,6 @@
   padding-right: 0.42rem !important;
 }
 
-.control-icon-center [class*='ButtonInner'] {
-  justify-content: center !important;
-  align-items: center !important;
-}
-
 @media (min-width: 640px) {
   .periodic-sheet {
     padding: 0.25rem;

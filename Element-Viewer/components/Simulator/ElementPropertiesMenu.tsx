@@ -11,7 +11,7 @@ import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import { CopyTooltip } from '@openai/apps-sdk-ui/components/Tooltip';
 import { ChemicalElement, MatterState, PhysicsState } from '../../types';
 import { SOURCE_DATA } from '../../data/periodic_table_source';
-import { calculatePhaseBoundaries } from '../../hooks/physics/phaseCalculations';
+import { calculatePhaseBoundaries, predictMatterState } from '../../hooks/physics/phaseCalculations';
 
 interface Props {
   data: {
@@ -75,6 +75,7 @@ const SUPERSCRIPT_MAP: Record<string, string> = {
 };
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const clampActionTemperature = (value: number) => clamp(value, 1, 6000);
 
 const formatNumber = (value: number, maxFractionDigits = 4) =>
   value.toLocaleString(undefined, { maximumFractionDigits: maxFractionDigits });
@@ -289,12 +290,14 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const hasActionMeltingPoint = Number.isFinite(actionMeltingPoint) && actionMeltingPoint > 0;
   const hasActionBoilingPoint = Number.isFinite(actionBoilingPoint) && actionBoilingPoint > actionMeltingPoint;
   const liquidBandSpan = Math.max(2, actionBoilingPoint - actionMeltingPoint);
-  const actionMeltTarget = hasActionBoilingPoint
-    ? actionMeltingPoint + Math.max(1, liquidBandSpan * 0.35)
-    : actionMeltingPoint + 25;
-  const actionBoilTarget = actionBoilingPoint + Math.max(5, actionBoilingPoint * 0.02);
   const pressureAboveTriple = triplePoint ? Math.max(triplePoint.pressurePa * 1.1, triplePoint.pressurePa + 500) : Math.max(physicsState.pressure, 101325);
   const pressureBelowCritical = criticalPoint ? Math.max(1, criticalPoint.pressurePa * 0.8) : Math.max(1, physicsState.pressure);
+  const solidifyPressureTarget = isPressureBelowTriple ? pressureAboveTriple : physicsState.pressure;
+  const liquefyPressureTarget = isPressureBelowTriple ? pressureAboveTriple : physicsState.pressure;
+  const boilPressureTarget = (isCriticalState && criticalPoint)
+    ? pressureBelowCritical
+    : (isPressureBelowTriple ? pressureAboveTriple : physicsState.pressure);
+  const condensePressureTarget = isPressureBelowTriple ? pressureAboveTriple : physicsState.pressure;
   const condenseTargetTemp = Math.max(
     actionMeltingPoint + 1,
     Math.min(actionBoilingPoint - 1, actionMeltingPoint + (actionBoilingPoint - actionMeltingPoint) * 0.45),
@@ -302,14 +305,13 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const condenseCriticalTargetTemp = criticalPoint
     ? Math.max(actionMeltingPoint + 2, Math.min(criticalPoint.tempK - 2, actionMeltingPoint + (criticalPoint.tempK - actionMeltingPoint) * 0.65))
     : condenseTargetTemp;
-  const solidifyTargetTemp = Math.max(1, actionMeltingPoint - 25);
-  const condenseActionTarget = isCriticalState ? condenseCriticalTargetTemp : condenseTargetTemp;
+  const rawSolidifyTargetTemp = Math.max(1, actionMeltingPoint - 25);
   const sublimationTemp = Math.max(
     1,
     actionSublimationPoint || physicsState.sublimationPointCurrent || triplePoint?.tempK || actionMeltingPoint,
   );
   const sublimationPressure = triplePoint ? Math.max(1, triplePoint.pressurePa * 0.8) : 1;
-  const sublimationTargetTemp = isGasLike ? Math.max(1, sublimationTemp - 40) : sublimationTemp + 40;
+  const rawSublimationTargetTemp = isGasLike ? Math.max(1, sublimationTemp - 40) : sublimationTemp + 40;
   const supercriticalTargetTemp = criticalPoint ? criticalPoint.tempK + 25 : physicsState.temperature;
   const tripleTargetTemp = triplePoint?.tempK ?? physicsState.temperature;
   const triplePressureLabel = hasTriplePoint
@@ -329,11 +331,87 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const sublimationTemperatureCondition = isGasLike ? 'abaixo' : 'acima';
   const liquefyExplanation = `A fase liquida a partir da solida ocorre quando a temperatura do sistema esta acima da temperatura de fusao (${fmt(actionMeltingPoint, ' K')}), abaixo da temperatura de ebulicao (${fmt(actionBoilingPoint, ' K')}) e acima da pressao de ponto triplo (${triplePressureLabel}).`;
 
-  const maybeLiftPressureAboveTriple = () => {
-    if (isPressureBelowTriple) {
-      onSetPressure(pressureAboveTriple);
-    }
+  const isSolidLikePrediction = (state: MatterState) =>
+    [MatterState.SOLID, MatterState.EQUILIBRIUM_MELT].includes(state);
+  const isLiquidLikePrediction = (state: MatterState) =>
+    [MatterState.LIQUID, MatterState.EQUILIBRIUM_MELT, MatterState.EQUILIBRIUM_BOIL].includes(state);
+  const isGasLikePrediction = (state: MatterState) =>
+    [MatterState.GAS, MatterState.EQUILIBRIUM_BOIL, MatterState.EQUILIBRIUM_SUB].includes(state);
+  const isSublimationSolidSidePrediction = (state: MatterState) =>
+    [MatterState.SOLID, MatterState.EQUILIBRIUM_SUB].includes(state);
+  const isSublimationGasSidePrediction = (state: MatterState) =>
+    [MatterState.GAS, MatterState.EQUILIBRIUM_SUB].includes(state);
+
+  const resolveActionTemperature = (
+    pressureTarget: number,
+    seedTemperature: number,
+    direction: 'up' | 'down',
+    matcher: (state: MatterState) => boolean,
+  ): number => {
+    const boundedPressure = Math.max(1e-9, pressureTarget);
+    const start = clampActionTemperature(seedTemperature);
+
+    const isMatch = (temp: number) => matcher(predictMatterState(element, temp, boundedPressure).state);
+    if (isMatch(start)) return start;
+
+    const stepBase = Math.max(1, Math.abs(start) * 0.015);
+    const forward = direction === 'up' ? 1 : -1;
+
+    const runSearch = (dirFactor: number) => {
+      let candidate = start;
+      let step = stepBase;
+
+      for (let i = 0; i < 120; i += 1) {
+        candidate = clampActionTemperature(candidate + (dirFactor * step));
+        if (isMatch(candidate)) return candidate;
+
+        if (candidate <= 1 || candidate >= 6000) {
+          break;
+        }
+
+        if ((i + 1) % 20 === 0) {
+          step *= 1.35;
+        }
+      }
+
+      return null;
+    };
+
+    return runSearch(forward) ?? runSearch(-forward) ?? start;
   };
+
+  const solidifyTargetTemp = resolveActionTemperature(
+    solidifyPressureTarget,
+    rawSolidifyTargetTemp,
+    'down',
+    isSolidLikePrediction,
+  );
+  const actionMeltTarget = resolveActionTemperature(
+    liquefyPressureTarget,
+    hasActionBoilingPoint
+      ? actionMeltingPoint + Math.max(1, liquidBandSpan * 0.35)
+      : actionMeltingPoint + 25,
+    'up',
+    isLiquidLikePrediction,
+  );
+  const actionBoilTarget = resolveActionTemperature(
+    boilPressureTarget,
+    actionBoilingPoint + Math.max(5, actionBoilingPoint * 0.02),
+    'up',
+    isGasLikePrediction,
+  );
+  const condenseActionTarget = resolveActionTemperature(
+    condensePressureTarget,
+    isCriticalState ? condenseCriticalTargetTemp : condenseTargetTemp,
+    'down',
+    isLiquidLikePrediction,
+  );
+  const sublimationTargetTemp = resolveActionTemperature(
+    sublimationPressure,
+    rawSublimationTargetTemp,
+    isGasLike ? 'down' : 'up',
+    isGasLike ? isSublimationSolidSidePrediction : isSublimationGasSidePrediction,
+  );
 
   const atomicMass = parseDisplayValue(
     typeof sourceInfo?.atomic_mass === 'number' ? sourceInfo.atomic_mass : element.mass,
@@ -510,7 +588,9 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                 disabled={!hasActionMeltingPoint}
                 heatsUp={solidifyTargetTemp >= physicsState.temperature}
                 onClick={() => {
-                  maybeLiftPressureAboveTriple();
+                  if (Math.abs(solidifyPressureTarget - physicsState.pressure) > 1e-9) {
+                    onSetPressure(solidifyPressureTarget);
+                  }
                   onSetTemperature(solidifyTargetTemp);
                 }}
                 helpText={`A fase solida a partir da liquida ocorre quando a temperatura do sistema esta abaixo da temperatura de fusao (${fmt(actionMeltingPoint, ' K')}) e acima da pressao de ponto triplo (${triplePressureLabel}).`}
@@ -525,7 +605,9 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                 disabled={!hasActionMeltingPoint || !hasActionBoilingPoint}
                 heatsUp={actionMeltTarget >= physicsState.temperature}
                 onClick={() => {
-                  maybeLiftPressureAboveTriple();
+                  if (Math.abs(liquefyPressureTarget - physicsState.pressure) > 1e-9) {
+                    onSetPressure(liquefyPressureTarget);
+                  }
                   onSetTemperature(actionMeltTarget);
                 }}
                 helpText={liquefyExplanation}
@@ -540,10 +622,8 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                 disabled={actionBoilingPoint >= 49000 || !hasActionBoilingPoint}
                 heatsUp={actionBoilTarget >= physicsState.temperature}
                 onClick={() => {
-                  if (isCriticalState && criticalPoint) {
-                    onSetPressure(pressureBelowCritical);
-                  } else {
-                    maybeLiftPressureAboveTriple();
+                  if (Math.abs(boilPressureTarget - physicsState.pressure) > 1e-9) {
+                    onSetPressure(boilPressureTarget);
                   }
                   onSetTemperature(actionBoilTarget);
                 }}
@@ -559,7 +639,9 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
                 disabled={!hasActionBoilingPoint || !hasActionMeltingPoint}
                 heatsUp={condenseActionTarget >= physicsState.temperature}
                 onClick={() => {
-                  maybeLiftPressureAboveTriple();
+                  if (Math.abs(condensePressureTarget - physicsState.pressure) > 1e-9) {
+                    onSetPressure(condensePressureTarget);
+                  }
                   onSetTemperature(condenseActionTarget);
                 }}
                 helpText={liquefyExplanation}
