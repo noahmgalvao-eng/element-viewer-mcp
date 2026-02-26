@@ -551,11 +551,6 @@ function App() {
                 ? Math.round(window.innerHeight * desktopBottomInset)
                 : 0);
     const periodicBottomDockOffset = isDesktopApp ? 0 : (16 + insets.bottom);
-    const iconScale = isDesktopApp ? 1.0 : 1.0;
-    const controlIconSizePx = `${(16 * iconScale).toFixed(2)}px`;
-    const controlIconStyle = { width: controlIconSizePx, height: controlIconSizePx };
-    const desktopUniformButtonClass = isDesktopApp ? 'h-6 w-6 min-h-6 min-w-6' : undefined;
-    const desktopLabelButtonClass = isDesktopApp ? 'h-6 min-h-6 px-2 text-[10px]' : undefined;
     const leftControlTop = Math.max(0, (16 + insets.top) - (!isDesktopApp && isFullscreen ? 56 : 0));
 
     return (
@@ -597,10 +592,9 @@ function App() {
                             variant="soft"
                             pill
                             uniform={count >= 5}
-                            className={count >= 5 ? desktopUniformButtonClass : desktopLabelButtonClass}
                             onClick={() => setSidebarOpen((open) => !open)}
                         >
-                            <SettingsSlider style={controlIconStyle} />
+                            <SettingsSlider />
                             {count < 5 && <span className="text-xs font-semibold">Open Periodic Table</span>}
                         </Button>
                     </span>
@@ -608,8 +602,8 @@ function App() {
 
                 <Tooltip content="Toggle simulation speed" contentClassName={TOOLTIP_CLASS}>
                     <span>
-                        <Button color="secondary" variant="soft" pill size="lg" className={desktopLabelButtonClass} onClick={handleToggleSpeed}>
-                            <Speed style={controlIconStyle} />
+                        <Button color="secondary" variant="soft" pill size="lg" onClick={handleToggleSpeed}>
+                            <Speed />
                             <span className="text-xs font-semibold">{timeScale}x</span>
                         </Button>
                     </span>
@@ -622,10 +616,9 @@ function App() {
                             variant="soft"
                             pill
                             uniform
-                            className={desktopUniformButtonClass}
                             onClick={handleTogglePause}
                         >
-                            {isPaused ? <Play style={controlIconStyle} /> : <Pause style={controlIconStyle} />}
+                            {isPaused ? <Play /> : <Pause />}
                         </Button>
                     </span>
                 </Tooltip>
@@ -637,15 +630,13 @@ function App() {
                             variant={isRecording ? 'solid' : 'outline'}
                             pill
                             uniform
-                            className={desktopUniformButtonClass}
                             onClick={handleToggleRecord}
                         >
                             {isRecording ? (
-                                <Stop style={controlIconStyle} />
+                                <Stop />
                             ) : (
                                 <Record
                                     style={{
-                                        ...controlIconStyle,
                                         color: 'var(--color-background-danger-solid)',
                                         fill: 'currentColor',
                                     }}
@@ -662,18 +653,17 @@ function App() {
             >
                 <Tooltip content={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} contentClassName={TOOLTIP_CLASS}>
                     <span>
-                        <Button color="secondary" variant="soft" pill uniform className={desktopUniformButtonClass} onClick={handleToggleFullscreen}>
-                            {isFullscreen ? <Collapse style={controlIconStyle} /> : <Expand style={controlIconStyle} />}
+                        <Button color="secondary" variant="soft" pill uniform onClick={handleToggleFullscreen}>
+                            {isFullscreen ? <Collapse /> : <Expand />}
                         </Button>
                     </span>
                 </Tooltip>
 
                 <Tooltip content="Ask ChatGPT about the current simulation" contentClassName={TOOLTIP_CLASS}>
                     <span>
-                        <Button color="info" variant="soft" pill uniform className={desktopUniformButtonClass} onClick={handleInfoButtonClick}>
+                        <Button color="info" variant="soft" pill uniform onClick={handleInfoButtonClick}>
                             <ChatTripleDots
                                 style={{
-                                    ...controlIconStyle,
                                     color: 'var(--color-background-info-solid)',
                                     fill: 'currentColor',
                                 }}
@@ -684,10 +674,9 @@ function App() {
 
                 <Popover>
                     <Popover.Trigger>
-                        <Button color="secondary" variant="soft" pill uniform className={desktopUniformButtonClass} aria-label="O que posso pedir ao ChatGPT?">
+                        <Button color="secondary" variant="soft" pill uniform aria-label="O que posso pedir ao ChatGPT?">
                             <LightbulbGlow
                                 style={{
-                                    ...controlIconStyle,
                                     color: 'var(--color-background-caution-solid)',
                                     fill: 'currentColor',
                                 }}
