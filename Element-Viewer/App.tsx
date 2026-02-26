@@ -67,6 +67,7 @@ function App() {
     // ChatGPT Integration Hook
     const {
         theme,
+        userAgent,
         maxHeight,
         safeArea,
         isFullscreen,
@@ -493,6 +494,19 @@ function App() {
 
     // Fixed quality scale as requested (Always 50 particles)
     const qualityScale = 1.0;
+    const isDesktopViewport = typeof window !== 'undefined' ? window.innerWidth >= 1024 : false;
+    const isDesktopApp = userAgent?.device?.type === 'desktop' || (!userAgent && isDesktopViewport) || (userAgent?.device?.type === 'unknown' && isDesktopViewport);
+    const desktopBottomInset = isDesktopApp && isFullscreen ? 0.12 : 0;
+    const computedDesktopMarginBottom =
+        isDesktopApp && isFullscreen
+            ? (typeof maxHeight === 'number' ? Math.max(0, maxHeight * desktopBottomInset) : '12vh')
+            : undefined;
+    const computedFullscreenHeight =
+        isFullscreen
+            ? (typeof maxHeight === 'number'
+                ? Math.max(0, maxHeight - (typeof computedDesktopMarginBottom === 'number' ? computedDesktopMarginBottom : 0))
+                : (isDesktopApp ? '88vh' : undefined))
+            : undefined;
 
     // --- PIP HANDLER ---
     // --- FULLSCREEN HANDLER ---
@@ -500,8 +514,9 @@ function App() {
         <div
             className={`relative w-screen overflow-hidden bg-surface text-default ${isFullscreen ? 'h-screen' : 'h-[600px]'}`}
             style={{
-                maxHeight: isFullscreen && maxHeight ? maxHeight : undefined,
-                height: isFullscreen && maxHeight ? maxHeight : undefined,
+                maxHeight: isFullscreen ? computedFullscreenHeight : undefined,
+                height: isFullscreen ? computedFullscreenHeight : undefined,
+                marginBottom: computedDesktopMarginBottom,
             }}
         >
 

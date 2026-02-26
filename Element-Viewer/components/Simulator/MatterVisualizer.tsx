@@ -241,6 +241,55 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
     const displaySymbol = useMemo(() => {
         return getMolecularSymbol(element, physics.temperature);
     }, [element, physics.temperature]);
+    const isReactionProduct = element.category === 'reaction_product';
+    const identityLabel = isReactionProduct ? element.name : displaySymbol;
+    const identityVisual = useMemo(() => {
+        if (!isReactionProduct) {
+            return {
+                shape: 'circle' as const,
+                width: 60,
+                height: 60,
+                fontSize: 22,
+                textY: 2,
+                statusY: 45,
+            };
+        }
+
+        const maxWidth = 320;
+        const minWidth = 120;
+        const horizontalPadding = 24;
+        let fontSize = 14;
+        let measuredWidth = identityLabel.length * (fontSize * 0.62);
+
+        if (typeof document !== 'undefined') {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                while (fontSize > 10) {
+                    ctx.font = `900 ${fontSize}px sans-serif`;
+                    measuredWidth = ctx.measureText(identityLabel).width;
+                    if (measuredWidth + horizontalPadding <= maxWidth) {
+                        break;
+                    }
+                    fontSize -= 1;
+                }
+            }
+        }
+
+        const capsuleWidth = Math.min(
+            maxWidth,
+            Math.max(minWidth, Math.ceil(measuredWidth + horizontalPadding)),
+        );
+
+        return {
+            shape: 'capsule' as const,
+            width: capsuleWidth,
+            height: 42,
+            fontSize,
+            textY: 1,
+            statusY: 38,
+        };
+    }, [identityLabel, isReactionProduct]);
 
     const handleInteraction = (e: React.MouseEvent) => {
         if (onInspect) {
@@ -465,35 +514,51 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
                     onClick={handleInteraction}
                 >
 
-                    {/* 1. Identity Sphere */}
-                    <circle
-                        r="30"
-                        fill={adjustedGasColor}
-                        stroke="none"
-                        strokeWidth="0"
-                        opacity="1"
-                        className="drop-shadow-xl"
-                    />
+                    {/* 1. Identity Shape */}
+                    {identityVisual.shape === 'capsule' ? (
+                        <rect
+                            x={-identityVisual.width / 2}
+                            y={-identityVisual.height / 2}
+                            width={identityVisual.width}
+                            height={identityVisual.height}
+                            rx={identityVisual.height / 2}
+                            ry={identityVisual.height / 2}
+                            fill={adjustedGasColor}
+                            stroke="none"
+                            strokeWidth="0"
+                            opacity="1"
+                            className="drop-shadow-xl"
+                        />
+                    ) : (
+                        <circle
+                            r="30"
+                            fill={adjustedGasColor}
+                            stroke="none"
+                            strokeWidth="0"
+                            opacity="1"
+                            className="drop-shadow-xl"
+                        />
+                    )}
 
-                    {/* 2. Molecular Symbol */}
+                    {/* 2. Identity Label */}
                     <text
-                        y="2"
+                        y={identityVisual.textY}
                         textAnchor="middle"
                         dominantBaseline="central"
                         fontFamily="sans-serif"
                         fontWeight="900"
-                        fontSize="22"
+                        fontSize={identityVisual.fontSize}
                         fill="white"
                         stroke="black"
                         strokeWidth="1.2px"
                         style={{ paintOrder: 'stroke', userSelect: 'none' }}
                     >
-                        {displaySymbol}
+                        {identityLabel}
                     </text>
 
                     {/* 3. Phase Status */}
                     <text
-                        y="45"
+                        y={identityVisual.statusY}
                         textAnchor="middle"
                         fontFamily="monospace"
                         fontWeight="bold"

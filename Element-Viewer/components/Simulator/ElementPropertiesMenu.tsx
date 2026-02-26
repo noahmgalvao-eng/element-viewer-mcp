@@ -2,12 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button, ButtonLink } from '@openai/apps-sdk-ui/components/Button';
 import {
+  ArrowDown,
   ArrowUp,
   CloseBold,
   ExternalLink,
 } from '@openai/apps-sdk-ui/components/Icon';
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
-import { CopyTooltip, Tooltip } from '@openai/apps-sdk-ui/components/Tooltip';
+import { CopyTooltip } from '@openai/apps-sdk-ui/components/Tooltip';
 import { ChemicalElement, MatterState, PhysicsState } from '../../types';
 import { SOURCE_DATA } from '../../data/periodic_table_source';
 
@@ -37,8 +38,6 @@ interface ReferenceItem {
   text: string;
   href?: string;
 }
-
-const TOOLTIP_CLASS = 'tooltip-solid';
 
 const FIXED_REFERENCES: ReferenceItem[] = [
   { id: 2, text: 'L. M. Mentel, mendeleev - A Python resource for properties of chemical elements, ions and isotopes.', href: 'https://github.com/lmmentel/mendeleev' },
@@ -162,6 +161,70 @@ const PropertyCard: React.FC<{ item: PropertyItem; hideSourceId?: boolean; force
   );
 };
 
+interface PhaseActionButtonProps {
+  label: string;
+  helpText: string;
+  onClick: () => void;
+  disabled?: boolean;
+  heatsUp: boolean;
+  color: React.ComponentProps<typeof Button>['color'];
+  variant?: React.ComponentProps<typeof Button>['variant'];
+  colSpanTwo?: boolean;
+}
+
+const PhaseActionButton: React.FC<PhaseActionButtonProps> = ({
+  label,
+  helpText,
+  onClick,
+  disabled,
+  heatsUp,
+  color,
+  variant = 'soft',
+  colSpanTwo = false,
+}) => (
+  <div className={`relative ${colSpanTwo ? 'col-span-2' : ''}`}>
+    <Button
+      color={color}
+      variant={variant}
+      block
+      size="sm"
+      className="h-8 min-h-8 whitespace-nowrap px-2 pr-8 text-xs font-semibold"
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {heatsUp ? <ArrowUp className="size-3.5" /> : <ArrowDown className="size-3.5" />}
+      <span>{label}</span>
+    </Button>
+
+    <Popover>
+      <Popover.Trigger>
+        <Button
+          color="secondary"
+          variant="soft"
+          size="2xs"
+          uniform
+          pill
+          className="absolute right-1 top-1 z-20 h-5 min-h-5 w-5 min-w-5 p-0 text-[10px] font-bold"
+          aria-label={`Help: ${label}`}
+          onClick={(event) => event.stopPropagation()}
+        >
+          ?
+        </Button>
+      </Popover.Trigger>
+      <Popover.Content
+        side="top"
+        align="end"
+        sideOffset={6}
+        minWidth={260}
+        maxWidth={360}
+        className="z-[130] rounded-2xl border border-default bg-surface shadow-lg"
+      >
+        <p className="p-3 text-xs leading-relaxed text-default">{helpText}</p>
+      </Popover.Content>
+    </Popover>
+  </div>
+);
+
 const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperature, onSetPressure }) => {
   const { element, physicsState, x, y } = data;
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -183,16 +246,6 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const hasTriplePoint = Boolean(triplePoint && triplePoint.tempK > 0 && triplePoint.pressurePa > 0);
   const hasCriticalPoint = Boolean(criticalPoint && criticalPoint.tempK > 0 && criticalPoint.pressurePa > 0);
   const isPressureBelowTriple = hasTriplePoint && physicsState.pressure < triplePoint!.pressurePa;
-
-
-  const isLiquidLike = [
-    MatterState.LIQUID,
-    MatterState.MELTING,
-    MatterState.BOILING,
-    MatterState.EQUILIBRIUM_MELT,
-    MatterState.EQUILIBRIUM_BOIL,
-    MatterState.EQUILIBRIUM_TRIPLE,
-  ].includes(physicsState.state);
 
   const isGasLike = [
     MatterState.GAS,
@@ -247,10 +300,29 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const condenseCriticalTargetTemp = criticalPoint
     ? Math.max(actionMeltingPoint + 2, Math.min(criticalPoint.tempK - 2, actionMeltingPoint + (criticalPoint.tempK - actionMeltingPoint) * 0.65))
     : condenseTargetTemp;
+  const solidifyTargetTemp = Math.max(1, actionMeltingPoint - 25);
+  const condenseActionTarget = isCriticalState ? condenseCriticalTargetTemp : condenseTargetTemp;
   const sublimationTemp = Math.max(1, physicsState.sublimationPointCurrent || triplePoint?.tempK || actionMeltingPoint);
   const sublimationPressure = triplePoint ? Math.max(1, triplePoint.pressurePa * 0.8) : 1;
   const sublimationTargetTemp = isGasLike ? Math.max(1, sublimationTemp - 40) : sublimationTemp + 40;
-  const sublimationDirection = isGasLike ? "<" : ">";
+  const supercriticalTargetTemp = criticalPoint ? criticalPoint.tempK + 25 : physicsState.temperature;
+  const tripleTargetTemp = triplePoint?.tempK ?? physicsState.temperature;
+  const triplePressureLabel = hasTriplePoint
+    ? fmt(triplePoint!.pressurePa / 1000, ' kPa')
+    : 'N/A';
+  const tripleTempLabel = hasTriplePoint
+    ? fmt(triplePoint!.tempK, ' K')
+    : 'N/A';
+  const criticalTempLabel = hasCriticalPoint
+    ? fmt(criticalPoint!.tempK, ' K')
+    : 'N/A';
+  const criticalPressureLabel = hasCriticalPoint
+    ? fmt(criticalPoint!.pressurePa / 1000, ' kPa')
+    : 'N/A';
+  const sublimationPhaseFrom = isGasLike ? 'gasosa' : 'solida';
+  const sublimationPhaseTo = isGasLike ? 'solida' : 'gasosa';
+  const sublimationTemperatureCondition = isGasLike ? 'abaixo' : 'acima';
+  const liquefyExplanation = `A fase liquida a partir da solida ocorre quando a temperatura do sistema esta acima da temperatura de fusao (${fmt(actionMeltingPoint, ' K')}), abaixo da temperatura de ebulicao (${fmt(actionBoilingPoint, ' K')}) e acima da pressao de ponto triplo (${triplePressureLabel}).`;
 
   const maybeLiftPressureAboveTriple = () => {
     if (isPressureBelowTriple) {
@@ -425,199 +497,111 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
 
           <div className="grid grid-cols-2 gap-2">
             {(isLiquidState || isGasState || isTripleState || isCriticalState) && (
-              <Tooltip content="Configura para solidificação com temperatura abaixo de Tmelt e pressão acima do ponto triplo" contentClassName={TOOLTIP_CLASS}>
-                <span>
-                  <Button
-                    color="warning"
-                    variant="soft"
-                    block
-                    size="lg"
-                    className="min-h-16 whitespace-normal text-left leading-tight"
-                    disabled={!hasActionMeltingPoint}
-                    onClick={() => {
-                      maybeLiftPressureAboveTriple();
-                      onSetTemperature(Math.max(1, actionMeltingPoint - 25));
-                    }}
-                  >
-                    <ArrowUp className="size-4" />
-                    <span>
-                      Solidify
-                      <br />
-                      <span className="text-xs text-secondary">Set T &lt; {fmt(actionMeltingPoint, ' K')}</span>
-                    </span>
-                  </Button>
-                </span>
-              </Tooltip>
+              <PhaseActionButton
+                label="Solidify"
+                color="info"
+                variant="soft"
+                disabled={!hasActionMeltingPoint}
+                heatsUp={solidifyTargetTemp >= physicsState.temperature}
+                onClick={() => {
+                  maybeLiftPressureAboveTriple();
+                  onSetTemperature(solidifyTargetTemp);
+                }}
+                helpText={`A fase solida a partir da liquida ocorre quando a temperatura do sistema esta abaixo da temperatura de fusao (${fmt(actionMeltingPoint, ' K')}) e acima da pressao de ponto triplo (${triplePressureLabel}).`}
+              />
             )}
 
             {(isSolidState || isTripleState) && (
-              <Tooltip content="Configura para faixa líquida acima de Tmelt, abaixo de Tboil e com pressão acima do ponto triplo" contentClassName={TOOLTIP_CLASS}>
-                <span>
-                  <Button
-                    color="warning"
-                    variant="soft"
-                    block
-                    size="lg"
-                    className="min-h-16 whitespace-normal text-left leading-tight"
-                    disabled={!hasActionMeltingPoint || !hasActionBoilingPoint}
-                    onClick={() => {
-                      maybeLiftPressureAboveTriple();
-                      onSetTemperature(actionMeltTarget);
-                    }}
-                  >
-                    <ArrowUp className="size-4" />
-                    <span>
-                      Liquefy
-                      <br />
-                      <span className="text-xs text-secondary">
-                        Set {fmt(actionMeltingPoint, ' K')} &lt; T &lt; {fmt(actionBoilingPoint, ' K')}
-                      </span>
-                    </span>
-                  </Button>
-                </span>
-              </Tooltip>
+              <PhaseActionButton
+                label="Liquefy"
+                color="warning"
+                variant="soft"
+                disabled={!hasActionMeltingPoint || !hasActionBoilingPoint}
+                heatsUp={actionMeltTarget >= physicsState.temperature}
+                onClick={() => {
+                  maybeLiftPressureAboveTriple();
+                  onSetTemperature(actionMeltTarget);
+                }}
+                helpText={liquefyExplanation}
+              />
             )}
 
             {(isSolidState || isLiquidState || isTripleState || isCriticalState) && (
-              <Tooltip content="Configura para ebulição com temperatura acima de Tboil" contentClassName={TOOLTIP_CLASS}>
-                <span>
-                  <Button
-                    color="danger"
-                    variant="soft"
-                    block
-                    size="lg"
-                    className="min-h-16 whitespace-normal text-left leading-tight"
-                    disabled={actionBoilingPoint >= 49000 || !hasActionBoilingPoint}
-                    onClick={() => {
-                      if (isCriticalState && criticalPoint) {
-                        onSetPressure(pressureBelowCritical);
-                      } else {
-                        maybeLiftPressureAboveTriple();
-                      }
-                      onSetTemperature(actionBoilTarget);
-                    }}
-                  >
-                    <ArrowUp className="size-4" />
-                    <span>
-                      Boil
-                      <br />
-                      <span className="text-xs text-secondary">Set T &gt; {fmt(actionBoilingPoint, ' K')}</span>
-                    </span>
-                  </Button>
-                </span>
-              </Tooltip>
+              <PhaseActionButton
+                label="Boil"
+                color="danger"
+                variant="soft"
+                disabled={actionBoilingPoint >= 49000 || !hasActionBoilingPoint}
+                heatsUp={actionBoilTarget >= physicsState.temperature}
+                onClick={() => {
+                  if (isCriticalState && criticalPoint) {
+                    onSetPressure(pressureBelowCritical);
+                  } else {
+                    maybeLiftPressureAboveTriple();
+                  }
+                  onSetTemperature(actionBoilTarget);
+                }}
+                helpText={`A fase gasosa a partir da liquida ocorre quando a temperatura do sistema esta acima da temperatura de ebulicao (${fmt(actionBoilingPoint, ' K')}) e acima da pressao de ponto triplo (${triplePressureLabel}).`}
+              />
             )}
 
             {(isGasState || isCriticalState) && (
-              <Tooltip content="Configura para condensação com temperatura intermediária e pressão acima do ponto triplo" contentClassName={TOOLTIP_CLASS}>
-                <span>
-                  <Button
-                    color="info"
-                    variant="soft"
-                    block
-                    size="lg"
-                    className="min-h-16 whitespace-normal text-left leading-tight"
-                    disabled={!hasActionBoilingPoint || !hasActionMeltingPoint}
-                    onClick={() => {
-                      maybeLiftPressureAboveTriple();
-                      onSetTemperature(isCriticalState ? condenseCriticalTargetTemp : condenseTargetTemp);
-                    }}
-                  >
-                    <ArrowUp className="size-4" />
-                    <span>
-                      Condense
-                      <br />
-                      <span className="text-xs text-secondary">Cool into liquid zone</span>
-                    </span>
-                  </Button>
-                </span>
-              </Tooltip>
+              <PhaseActionButton
+                label="Condense"
+                color="warning"
+                variant="soft"
+                disabled={!hasActionBoilingPoint || !hasActionMeltingPoint}
+                heatsUp={condenseActionTarget >= physicsState.temperature}
+                onClick={() => {
+                  maybeLiftPressureAboveTriple();
+                  onSetTemperature(condenseActionTarget);
+                }}
+                helpText={liquefyExplanation}
+              />
             )}
 
-            <Tooltip content="Set pressure below triple point and temperature around sublimation threshold" contentClassName={TOOLTIP_CLASS}>
-              <span>
-                <Button
-                  color="secondary"
-                  variant="soft"
-                  block
-                  size="lg"
-                  className="min-h-16 whitespace-normal text-left leading-tight"
-                  disabled={!hasTriplePoint || isLiquidState}
-                  onClick={() => {
-                    if (!triplePoint) return;
-                    onSetPressure(sublimationPressure);
-                    onSetTemperature(sublimationTargetTemp);
-                  }}
-                >
-                  <ArrowUp className="size-4" />
-                  <span>
-                    Sublimação
-                    <br />
-                    <span className="text-xs text-secondary">
-                      {hasTriplePoint
-                        ? `Set T ${sublimationDirection} ${fmt(sublimationTemp, ' K')} · P < ${fmt(triplePoint!.pressurePa / 1000, ' kPa')}`
-                        : 'Requires triple-point data'}
-                    </span>
-                  </span>
-                </Button>
-              </span>
-            </Tooltip>
+            <PhaseActionButton
+              label="Sublimacao"
+              color="secondary"
+              variant="soft"
+              disabled={!hasTriplePoint || isLiquidState}
+              heatsUp={sublimationTargetTemp >= physicsState.temperature}
+              onClick={() => {
+                if (!triplePoint) return;
+                onSetPressure(sublimationPressure);
+                onSetTemperature(sublimationTargetTemp);
+              }}
+              helpText={`A fase ${sublimationPhaseTo} a partir da ${sublimationPhaseFrom} ocorre quando a temperatura do sistema esta ${sublimationTemperatureCondition} da temperatura de sublimacao (${fmt(sublimationTemp, ' K')}) e abaixo da pressao de ponto triplo (${triplePressureLabel}).`}
+            />
 
-            <Tooltip content="Set environment to triple point" contentClassName={TOOLTIP_CLASS}>
-              <span>
-                <Button
-                  color="success"
-                  variant="soft"
-                  block
-                  size="lg"
-                  className="min-h-16 whitespace-normal text-left leading-tight"
-                  disabled={!hasTriplePoint}
-                  onClick={() => {
-                    if (!triplePoint) return;
-                    onSetTemperature(triplePoint.tempK);
-                    onSetPressure(triplePoint.pressurePa);
-                  }}
-                >
-                  <ArrowUp className="size-4" />
-                  <span>
-                    Ponto triplo
-                    <br />
-                    <span className="text-xs text-secondary">
-                      {hasTriplePoint
-                        ? `Set T = ${fmt(triplePoint!.tempK, ' K')} · P = ${fmt(triplePoint!.pressurePa / 1000, ' kPa')}`
-                        : 'Requires triple-point data'}
-                    </span>
-                  </span>
-                </Button>
-              </span>
-            </Tooltip>
+            <PhaseActionButton
+              label="Ponto triplo"
+              color="success"
+              variant="soft"
+              disabled={!hasTriplePoint}
+              heatsUp={tripleTargetTemp >= physicsState.temperature}
+              onClick={() => {
+                if (!triplePoint) return;
+                onSetTemperature(triplePoint.tempK);
+                onSetPressure(triplePoint.pressurePa);
+              }}
+              helpText={`O equilibrio trifasico ocorre quando a temperatura do sistema e igual a temperatura do ponto triplo (${tripleTempLabel}) e a pressao e igual a pressao do ponto triplo (${triplePressureLabel}).`}
+            />
 
-            <Tooltip content="Move to supercritical regime (T and P above critical values)" contentClassName={TOOLTIP_CLASS}>
-              <span className="col-span-2">
-                <Button
-                  color="info"
-                  variant="soft"
-                  block
-                  disabled={!hasCriticalPoint}
-                  onClick={() => {
-                    if (!criticalPoint) return;
-                    onSetTemperature(criticalPoint.tempK + 25);
-                    onSetPressure(criticalPoint.pressurePa + 1000);
-                  }}
-                >
-                  <ArrowUp className="size-4" />
-                  <span>
-                    Supercrítico
-                    <br />
-                    <span className="text-xs text-secondary">
-                      {hasCriticalPoint
-                        ? `Set T > ${fmt(criticalPoint!.tempK, ' K')} · P > ${fmt(criticalPoint!.pressurePa / 1000, ' kPa')}`
-                        : 'Requires critical-point data'}
-                    </span>
-                  </span>
-                </Button>
-              </span>
-            </Tooltip>
+            <PhaseActionButton
+              label="Fluido supercritico"
+              color="danger"
+              variant="solid"
+              colSpanTwo={!isTripleState}
+              disabled={!hasCriticalPoint}
+              heatsUp={supercriticalTargetTemp >= physicsState.temperature}
+              onClick={() => {
+                if (!criticalPoint) return;
+                onSetTemperature(supercriticalTargetTemp);
+                onSetPressure(criticalPoint.pressurePa + 1000);
+              }}
+              helpText={`A fase de fluido supercritico ocorre quando a temperatura do sistema esta acima da temperatura do ponto critico (${criticalTempLabel}) e a pressao esta acima da pressao do ponto critico (${criticalPressureLabel}).`}
+            />
           </div>
 
           <div className="space-y-3 rounded-2xl border border-subtle bg-surface p-3">

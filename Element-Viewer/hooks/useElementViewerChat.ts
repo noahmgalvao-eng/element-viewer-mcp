@@ -16,6 +16,7 @@ export function useElementViewerChat({
     const {
         displayMode,
         theme,
+        userAgent,
         maxHeight,
         safeArea,
         isFullscreen,
@@ -41,6 +42,7 @@ export function useElementViewerChat({
     return {
         displayMode,
         theme,
+        userAgent,
         maxHeight,
         safeArea,
         isFullscreen,
