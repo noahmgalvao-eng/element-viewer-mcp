@@ -435,15 +435,6 @@ const PeriodicTableSelector: React.FC<Props> = ({
         />
       )}
 
-      {!isOpen && (
-        <div className="absolute left-1/2 z-[120] -translate-x-1/2" style={{ bottom: `${bottomDockOffset}px` }}>
-          <Button color="secondary" variant="soft" pill onClick={() => onOpenChange(true)}>
-            <ChevronDown className="size-4 rotate-180" />
-            Open periodic table
-          </Button>
-        </div>
-      )}
-
       {isOpen && <div className="fixed inset-0 z-[110] bg-black/30" onClick={() => onOpenChange(false)} aria-hidden="true" />}
 
       <section

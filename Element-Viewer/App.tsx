@@ -10,6 +10,7 @@ import {
     Pause,
     Play,
     Record,
+    SettingsSlider,
     Speed,
     Stop,
 } from '@openai/apps-sdk-ui/components/Icon';
@@ -550,6 +551,9 @@ function App() {
                 ? Math.round(window.innerHeight * desktopBottomInset)
                 : 0);
     const periodicBottomDockOffset = isDesktopApp ? 0 : (16 + insets.bottom);
+    const iconScale = isDesktopApp ? 1.1 : 1.05;
+    const controlIconSizePx = `${(16 * iconScale).toFixed(2)}px`;
+    const controlIconStyle = { width: controlIconSizePx, height: controlIconSizePx };
 
     return (
         <div
@@ -583,6 +587,20 @@ function App() {
                 className="fixed z-40 flex flex-col gap-3"
                 style={{ top: `${16 + insets.top}px`, left: `${16 + insets.left}px` }}
             >
+                <Tooltip content={isSidebarOpen ? 'Hide periodic table' : 'Open periodic table'} contentClassName={TOOLTIP_CLASS}>
+                    <span>
+                        <Button
+                            color="secondary"
+                            variant="soft"
+                            pill
+                            onClick={() => setSidebarOpen((open) => !open)}
+                        >
+                            <SettingsSlider style={controlIconStyle} />
+                            {count < 5 && <span className="text-xs font-semibold">Open Periodic Table</span>}
+                        </Button>
+                    </span>
+                </Tooltip>
+
                 <Tooltip content={isPaused ? 'Resume simulation' : 'Pause simulation'} contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button
@@ -592,7 +610,7 @@ function App() {
                             uniform
                             onClick={handleTogglePause}
                         >
-                            {isPaused ? <Play className="size-4" /> : <Pause className="size-4" />}
+                            {isPaused ? <Play style={controlIconStyle} /> : <Pause style={controlIconStyle} />}
                         </Button>
                     </span>
                 </Tooltip>
@@ -607,9 +625,15 @@ function App() {
                             onClick={handleToggleRecord}
                         >
                             {isRecording ? (
-                                <Stop className="size-4" />
+                                <Stop style={controlIconStyle} />
                             ) : (
-                                <Record className="size-4" />
+                                <Record
+                                    style={{
+                                        ...controlIconStyle,
+                                        color: 'var(--color-background-danger-solid)',
+                                        fill: 'currentColor',
+                                    }}
+                                />
                             )}
                         </Button>
                     </span>
@@ -618,7 +642,7 @@ function App() {
                 <Tooltip content="Toggle simulation speed" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill size="lg" onClick={handleToggleSpeed}>
-                            <Speed className="size-4" />
+                            <Speed style={controlIconStyle} />
                             <span className="text-xs font-semibold">{timeScale}x</span>
                         </Button>
                     </span>
@@ -632,15 +656,21 @@ function App() {
                 <Tooltip content={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill uniform onClick={handleToggleFullscreen}>
-                            {isFullscreen ? <Collapse className="size-4" /> : <Expand className="size-4" />}
+                            {isFullscreen ? <Collapse style={controlIconStyle} /> : <Expand style={controlIconStyle} />}
                         </Button>
                     </span>
                 </Tooltip>
 
                 <Tooltip content="Ask ChatGPT about the current simulation" contentClassName={TOOLTIP_CLASS}>
                     <span>
-                        <Button color="caution" variant="soft" pill uniform onClick={handleInfoButtonClick}>
-                            <ChatTripleDots className="size-4" />
+                        <Button color="info" variant="soft" pill uniform onClick={handleInfoButtonClick}>
+                            <ChatTripleDots
+                                style={{
+                                    ...controlIconStyle,
+                                    color: 'var(--color-background-info-solid)',
+                                    fill: 'currentColor',
+                                }}
+                            />
                         </Button>
                     </span>
                 </Tooltip>
@@ -648,7 +678,13 @@ function App() {
                 <Popover>
                     <Popover.Trigger>
                         <Button color="secondary" variant="soft" pill uniform aria-label="O que posso pedir ao ChatGPT?">
-                            <LightbulbGlow className="size-4" />
+                            <LightbulbGlow
+                                style={{
+                                    ...controlIconStyle,
+                                    color: 'var(--color-background-caution-solid)',
+                                    fill: 'currentColor',
+                                }}
+                            />
                         </Button>
                     </Popover.Trigger>
                     <Popover.Content
