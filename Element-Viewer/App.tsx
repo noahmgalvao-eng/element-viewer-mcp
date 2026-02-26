@@ -535,8 +535,8 @@ function App() {
                             className="control-icon-center"
                             onClick={handleTogglePause}
                         >
-                            <span className="flex w-full items-center justify-center">
-                                {isPaused ? <Play className="size-5" /> : <Pause className="size-5" />}
+                            <span className="flex h-full w-full items-center justify-center leading-none">
+                                {isPaused ? <Play className="block size-5" /> : <Pause className="block size-5" />}
                             </span>
                         </Button>
                     </span>
@@ -553,12 +553,12 @@ function App() {
                             className="control-icon-center"
                             onClick={handleToggleRecord}
                         >
-                            <span className="flex w-full items-center justify-center">
+                            <span className="flex h-full w-full items-center justify-center leading-none">
                                 {isRecording ? (
-                                    <Stop className="size-5" />
+                                    <Stop className="block size-5" />
                                 ) : (
                                     <Record
-                                        className="size-5"
+                                        className="block size-5"
                                         style={{ color: 'var(--color-background-danger-solid)', fill: 'currentColor' }}
                                     />
                                 )}
@@ -572,7 +572,11 @@ function App() {
                         <Button color="secondary" variant="soft" pill size="lg" onClick={handleToggleSpeed}>
                             <Bolt
                                 className="size-4"
-                                style={{ color: 'currentColor', fill: 'currentColor' }}
+                                style={{
+                                    color: 'var(--color-background-caution-solid)',
+                                    fill: 'var(--color-background-caution-solid)',
+                                    stroke: 'var(--color-background-caution-solid)'
+                                }}
                             />
                             <span className="text-xs font-semibold">{timeScale}x</span>
                         </Button>
@@ -652,7 +656,7 @@ function App() {
                                 </li>
                             </ol>
                             <p className="border-t border-subtle pt-2 text-xs italic text-secondary">
-                                Utilize o chat no modo fullscreen para melhor experiência conversacional.
+                                Utilize o app no modo fullscreen para melhor experiência conversacional.
                             </p>
                         </div>
                     </Popover.Content>
