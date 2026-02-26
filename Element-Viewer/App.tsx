@@ -551,9 +551,11 @@ function App() {
                 ? Math.round(window.innerHeight * desktopBottomInset)
                 : 0);
     const periodicBottomDockOffset = isDesktopApp ? 0 : (16 + insets.bottom);
-    const iconScale = isDesktopApp ? 1.1 : 1.05;
+    const iconScale = isDesktopApp ? 2.2 : 1.05;
     const controlIconSizePx = `${(16 * iconScale).toFixed(2)}px`;
     const controlIconStyle = { width: controlIconSizePx, height: controlIconSizePx };
+    const desktopUniformButtonClass = isDesktopApp ? 'h-20 w-20 min-h-20 min-w-20' : undefined;
+    const desktopLabelButtonClass = isDesktopApp ? 'h-20 min-h-20 px-6 text-base' : undefined;
 
     return (
         <div
@@ -593,6 +595,8 @@ function App() {
                             color="secondary"
                             variant="soft"
                             pill
+                            uniform={count >= 5}
+                            className={count >= 5 ? desktopUniformButtonClass : desktopLabelButtonClass}
                             onClick={() => setSidebarOpen((open) => !open)}
                         >
                             <SettingsSlider style={controlIconStyle} />
@@ -608,6 +612,7 @@ function App() {
                             variant="soft"
                             pill
                             uniform
+                            className={desktopUniformButtonClass}
                             onClick={handleTogglePause}
                         >
                             {isPaused ? <Play style={controlIconStyle} /> : <Pause style={controlIconStyle} />}
@@ -622,6 +627,7 @@ function App() {
                             variant={isRecording ? 'solid' : 'outline'}
                             pill
                             uniform
+                            className={desktopUniformButtonClass}
                             onClick={handleToggleRecord}
                         >
                             {isRecording ? (
@@ -641,7 +647,7 @@ function App() {
 
                 <Tooltip content="Toggle simulation speed" contentClassName={TOOLTIP_CLASS}>
                     <span>
-                        <Button color="secondary" variant="soft" pill size="lg" onClick={handleToggleSpeed}>
+                        <Button color="secondary" variant="soft" pill size="lg" className={desktopLabelButtonClass} onClick={handleToggleSpeed}>
                             <Speed style={controlIconStyle} />
                             <span className="text-xs font-semibold">{timeScale}x</span>
                         </Button>
@@ -655,7 +661,7 @@ function App() {
             >
                 <Tooltip content={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'} contentClassName={TOOLTIP_CLASS}>
                     <span>
-                        <Button color="secondary" variant="soft" pill uniform onClick={handleToggleFullscreen}>
+                        <Button color="secondary" variant="soft" pill uniform className={desktopUniformButtonClass} onClick={handleToggleFullscreen}>
                             {isFullscreen ? <Collapse style={controlIconStyle} /> : <Expand style={controlIconStyle} />}
                         </Button>
                     </span>
@@ -663,7 +669,7 @@ function App() {
 
                 <Tooltip content="Ask ChatGPT about the current simulation" contentClassName={TOOLTIP_CLASS}>
                     <span>
-                        <Button color="info" variant="soft" pill uniform onClick={handleInfoButtonClick}>
+                        <Button color="info" variant="soft" pill uniform className={desktopUniformButtonClass} onClick={handleInfoButtonClick}>
                             <ChatTripleDots
                                 style={{
                                     ...controlIconStyle,
@@ -677,7 +683,7 @@ function App() {
 
                 <Popover>
                     <Popover.Trigger>
-                        <Button color="secondary" variant="soft" pill uniform aria-label="O que posso pedir ao ChatGPT?">
+                        <Button color="secondary" variant="soft" pill uniform className={desktopUniformButtonClass} aria-label="O que posso pedir ao ChatGPT?">
                             <LightbulbGlow
                                 style={{
                                     ...controlIconStyle,

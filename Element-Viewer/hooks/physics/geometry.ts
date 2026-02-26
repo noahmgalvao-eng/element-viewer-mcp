@@ -118,6 +118,12 @@ export const calculateGeometry = ({
          gasBounds.maxX = (baseGasRect.x + baseGasRect.w) + (rightDist * expansionFactor);
          gasBounds.minY = baseGasRect.y - (topDist * expansionFactor);
          gasBounds.maxY = (baseGasRect.y + baseGasRect.h) + (bottomDist * expansionFactor);
+
+         // Keep gas domain inside the camera bounds so particles never start outside the visible area.
+         gasBounds.minX = Math.max(viewBounds.minX, gasBounds.minX);
+         gasBounds.maxX = Math.min(viewBounds.maxX, gasBounds.maxX);
+         gasBounds.minY = Math.max(viewBounds.minY, gasBounds.minY);
+         gasBounds.maxY = Math.min(viewBounds.maxY, gasBounds.maxY);
     }
 
     // --- SCF OPACITY ---
