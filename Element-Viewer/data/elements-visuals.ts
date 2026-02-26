@@ -1,5 +1,5 @@
 
-import { ChemicalElement, ElementProperties, SpecialBehavior, MolecularState } from "../types";
+import { ElementProperties, SpecialBehavior } from "../types";
 
 // Define the shape of our proprietary overrides (Partial of the full ChemicalElement)
 // REMOVED: visualDNA (Now sourced from Scientific Layer)
@@ -10,7 +10,6 @@ export interface ElementCustomData {
   };
   properties?: Partial<ElementProperties>;
   specialBehavior?: SpecialBehavior;
-  molecularForms?: MolecularState[];
   category?: string;
 }
 
@@ -80,7 +79,7 @@ export const CUSTOM_DATA: Record<string, ElementCustomData> = {
   },
   "H": {
     name: "Hidrogênio",
-    classification: { groupName: "Não-Metais (Diatômico)" },
+    classification: { groupName: "Não-Metais" },
     category: 'non-metal',
     properties: {
       enthalpyVapJmol: 904,
@@ -98,8 +97,7 @@ export const CUSTOM_DATA: Record<string, ElementCustomData> = {
       simonA_Pa: 20000000,
       simonC: 1.5,
       enthalpyFusionJmol: 117
-    },
-    molecularForms: [{ symbol: "H₂", maxTempK: 3000 }]
+    }
   },
   "Li": {
     name: "Lítio",

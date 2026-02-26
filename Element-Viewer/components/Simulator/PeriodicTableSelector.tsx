@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
-import { ChevronDown } from '@openai/apps-sdk-ui/components/Icon';
+import { ChevronDown, FileZip, SpeedometerLatencySpeed } from '@openai/apps-sdk-ui/components/Icon';
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import { SegmentedControl } from '@openai/apps-sdk-ui/components/SegmentedControl';
 import { Select } from '@openai/apps-sdk-ui/components/Select';
@@ -22,6 +22,8 @@ import {
 interface Props {
   selectedElements: ChemicalElement[];
   onSelect: (el: ChemicalElement) => void;
+  reactionProducts: ChemicalElement[];
+  onSelectReactionProduct: (el: ChemicalElement) => void;
   isMultiSelect: boolean;
   onToggleMultiSelect: () => void;
   isOpen: boolean;
@@ -166,6 +168,11 @@ type PreviewAvatarStyle = React.CSSProperties & {
   '--preview-avatar-color'?: string;
 };
 
+const DEFAULT_TEMPERATURE_K = 298.15;
+const DEFAULT_PRESSURE_PA = 101325;
+const TEMPERATURE_DEFAULT_POSITION_PERCENT = (DEFAULT_TEMPERATURE_K / 6000) * 100;
+const PRESSURE_DEFAULT_POSITION_PERCENT = ((Math.log10(DEFAULT_PRESSURE_PA) + 4) / 15) * 100;
+
 const getElementTone = (symbol: string, position: { xpos: number; ypos: number }): ElementTone => {
   if (AMETAIS.has(symbol)) return 'ametais';
   if (METAIS_ALCALINOS.has(symbol)) return 'metaisAlcalinos';
@@ -192,6 +199,8 @@ const getToneStyleBySymbol = (symbol: string): ToneStyle | null => {
 const PeriodicTableSelector: React.FC<Props> = ({
   selectedElements,
   onSelect,
+  reactionProducts,
+  onSelectReactionProduct,
   isMultiSelect,
   onToggleMultiSelect,
   isOpen,
@@ -218,6 +227,13 @@ const PeriodicTableSelector: React.FC<Props> = ({
   const visibleElements = useMemo(() => ELEMENTS, []);
 
   const selectedPreview = useMemo(() => selectedElements.slice(0, 6), [selectedElements]);
+  const getAvatarLabel = useCallback((element: ChemicalElement) => {
+    if (element.category !== 'reaction_product') {
+      return element.symbol;
+    }
+
+    return element.symbol.length > 2 ? `${element.symbol.slice(0, 2)}...` : element.symbol;
+  }, []);
 
   const flushDragOffset = useCallback(() => {
     const nextOffset = pendingDragOffset.current;
@@ -401,7 +417,10 @@ const PeriodicTableSelector: React.FC<Props> = ({
           <div className={`mb-1 rounded-xl p-2 transition-opacity duration-200 ease-out ${isSliderActive ? 'border-transparent bg-transparent shadow-none' : 'border border-subtle bg-surface'}`}>
             <div className={`${isSliderActive && activeSlider !== 'temperature' ? 'opacity-0 pointer-events-none absolute' : ''}`}>
               <div className="mb-1 flex items-center justify-between gap-2">
-                <p className="text-2xs text-secondary">Temperature</p>
+                <p className="flex items-center gap-1 text-sm font-semibold text-default">
+                  <FileZip className="size-4" />
+                  Temperature
+                </p>
                 <div className="flex items-center gap-1">
                   <Badge color="secondary" variant="outline" size="sm">
                     {Number(displayedTemperature.toFixed(tempUnit === 'K' ? 0 : 2)).toLocaleString()} {tempUnit}
@@ -419,7 +438,18 @@ const PeriodicTableSelector: React.FC<Props> = ({
                 onPointerDown={() => activateSlider('temperature')}
                 onPointerUp={releaseActiveSlider}
                 onPointerCancel={releaseActiveSlider}
+                className="relative pt-6"
               >
+                <Button
+                  color="secondary"
+                  variant="outline"
+                  size="xs"
+                  className="absolute -top-0.5 -translate-x-1/2"
+                  style={{ left: `${TEMPERATURE_DEFAULT_POSITION_PERCENT}%` }}
+                  onClick={() => setTemperature(DEFAULT_TEMPERATURE_K)}
+                >
+                  Default
+                </Button>
                 <Slider
                   value={temperature}
                   min={0}
@@ -438,7 +468,10 @@ const PeriodicTableSelector: React.FC<Props> = ({
               className={`mt-1.5 ${isSliderActive && activeSlider !== 'pressure' ? 'pointer-events-none opacity-0 invisible' : ''}`}
             >
               <div className="mb-1 flex items-center justify-between gap-2">
-                <p className="text-2xs text-secondary">Pressure</p>
+                <p className="flex items-center gap-1 text-sm font-semibold text-default">
+                  <SpeedometerLatencySpeed className="size-4" />
+                  Pressure
+                </p>
                 <div className="flex items-center gap-1">
                   <Badge color="secondary" variant="outline" size="sm">
                     {pressure > 0
@@ -458,7 +491,18 @@ const PeriodicTableSelector: React.FC<Props> = ({
                 onPointerDown={() => activateSlider('pressure')}
                 onPointerUp={releaseActiveSlider}
                 onPointerCancel={releaseActiveSlider}
+                className="relative pt-6"
               >
+                <Button
+                  color="secondary"
+                  variant="outline"
+                  size="xs"
+                  className="absolute -top-0.5 -translate-x-1/2"
+                  style={{ left: `${PRESSURE_DEFAULT_POSITION_PERCENT}%` }}
+                  onClick={() => setPressure(DEFAULT_PRESSURE_PA)}
+                >
+                  Default
+                </Button>
                 <Slider
                   value={pressureSliderValue}
                   min={-4}
@@ -537,7 +581,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
                       style={avatarStyle}
                       title={element.name}
                     >
-                      {element.symbol}
+                      {getAvatarLabel(element)}
                     </span>
                   );
                 })}
@@ -545,6 +589,40 @@ const PeriodicTableSelector: React.FC<Props> = ({
               <Badge color={isMultiSelect ? 'info' : 'secondary'} variant="soft">
                 {selectedElements.length}/6
               </Badge>
+            </div>
+          </div>
+
+          <div className={`mb-1 transition-opacity duration-200 ease-out ${isSliderActive ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div className="rounded-lg border border-subtle bg-surface p-1.5">
+              <div className="mb-1 flex items-center justify-between">
+                <p className="text-2xs text-secondary">Reaction substances</p>
+                <Badge color="secondary" variant="outline" size="sm">
+                  {reactionProducts.length}
+                </Badge>
+              </div>
+              {reactionProducts.length === 0 ? (
+                <p className="px-1 pb-0.5 text-2xs text-secondary">Waiting for ChatGPT reaction output...</p>
+              ) : (
+                <div className="flex gap-1 overflow-x-auto pb-0.5">
+                  {reactionProducts.map((reaction) => {
+                    const isSelected = selectedElements.some((selected) => selected.atomicNumber === reaction.atomicNumber);
+
+                    return (
+                      <Button
+                        key={reaction.atomicNumber}
+                        color={isSelected ? 'info' : 'secondary'}
+                        variant={isSelected ? 'solid' : 'outline'}
+                        size="sm"
+                        onClick={() => onSelectReactionProduct(reaction)}
+                        className="shrink-0"
+                        title={reaction.name}
+                      >
+                        {reaction.symbol}
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 

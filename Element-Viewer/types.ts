@@ -104,10 +104,6 @@ export interface SpecialBehavior {
   cantFreezeBelowPa?: number;
 }
 
-export interface MolecularState {
-  symbol: string;   // e.g., "S₈", "Cl₂"
-  maxTempK: number; // The threshold temp where this bond breaks
-}
 
 export interface ChemicalElement {
   atomicNumber: number;
@@ -126,7 +122,6 @@ export interface ChemicalElement {
   properties: ElementProperties;
   visualDNA: VisualDNA;
   specialBehavior?: SpecialBehavior;
-  molecularForms?: MolecularState[]; // Ordered from lowest energy (largest molecule) to highest
   category: string;
 }
 

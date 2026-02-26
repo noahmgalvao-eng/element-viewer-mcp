@@ -3,7 +3,6 @@ import React, { useMemo } from 'react';
 import { PhysicsState, ChemicalElement, MatterState, ParticleState, ViewBoxDimensions } from '../../types';
 import { MATTER_PATH_FRAMES } from '../../data/elements';
 import { interpolatePath, interpolateColor, interpolateValue } from '../../utils/interpolator';
-import { getMolecularSymbol } from '../../utils/physicsUtils';
 
 interface Props {
     physics: PhysicsState;
@@ -238,11 +237,8 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
     const isMetallic = ['metal', 'metalloid'].includes(element.category);
     const viewBoxString = `${viewBounds.minX} ${viewBounds.minY} ${viewBounds.width} ${viewBounds.height}`;
 
-    const displaySymbol = useMemo(() => {
-        return getMolecularSymbol(element, physics.temperature);
-    }, [element, physics.temperature]);
     const isReactionProduct = element.category === 'reaction_product';
-    const identityLabel = isReactionProduct ? element.name : displaySymbol;
+    const identityLabel = isReactionProduct ? element.name : element.symbol;
     const identityVisual = useMemo(() => {
         if (!isReactionProduct) {
             return {

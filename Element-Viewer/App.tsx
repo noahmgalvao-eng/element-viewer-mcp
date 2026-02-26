@@ -3,7 +3,6 @@ import { Badge } from '@openai/apps-sdk-ui/components/Badge';
 import { Button } from '@openai/apps-sdk-ui/components/Button';
 import { Popover } from '@openai/apps-sdk-ui/components/Popover';
 import {
-    Bolt,
     Collapse,
     Expand,
     Lightbulb,
@@ -12,6 +11,7 @@ import {
     Play,
     QuestionMarkCircle,
     Record,
+    Speed,
     Stop,
 } from '@openai/apps-sdk-ui/components/Icon';
 import { Tooltip } from '@openai/apps-sdk-ui/components/Tooltip';
@@ -45,6 +45,7 @@ const TOOLTIP_CLASS = 'tooltip-solid';
 function App() {
     // State for Selection (Array for Multi-Element)
     const [selectedElements, setSelectedElements] = useState<ChemicalElement[]>([ELEMENTS[0]]);
+    const [reactionProductsCache, setReactionProductsCache] = useState<ChemicalElement[]>([]);
     const [isMultiSelect, setIsMultiSelect] = useState(false);
 
     // Default Physics State (STP) - Shared Global Environment
@@ -62,6 +63,7 @@ function App() {
     const simulationRegistry = useRef<Map<number, () => PhysicsState>>(new Map());
     const lastProcessedAiTimestampRef = useRef(0);
     const reactionAtomicNumberRef = useRef(900000);
+    const reactionProductsCacheRef = useRef<ChemicalElement[]>([]);
     const syncStateToChatGPTRef = useRef<() => Promise<void>>(async () => { });
 
     // ChatGPT Integration Hook
@@ -102,6 +104,10 @@ function App() {
         mediaQuery.addEventListener('change', listener);
         return () => mediaQuery.removeEventListener('change', listener);
     }, [theme]);
+
+    useEffect(() => {
+        reactionProductsCacheRef.current = reactionProductsCache;
+    }, [reactionProductsCache]);
 
     // Recording State
     const [isRecording, setIsRecording] = useState(false);
@@ -269,6 +275,14 @@ function App() {
         };
     };
 
+    const buildReactionCacheKey = (formula: string, name: string): string => {
+        return `${normalizeElementLookup(formula)}::${normalizeElementLookup(name)}`;
+    };
+
+    const getReactionElementKey = (element: ChemicalElement): string => {
+        return buildReactionCacheKey(element.symbol, element.name);
+    };
+
     useEffect(() => {
         let cancelled = false;
         let raf1 = 0;
@@ -346,8 +360,20 @@ function App() {
             }
 
             if (content.substancia_reacao) {
-                const novaSubstancia = buildReactionElement(content.substancia_reacao);
-                setSelectedElements([novaSubstancia]);
+                const reactionKey = buildReactionCacheKey(
+                    content.substancia_reacao.formula,
+                    content.substancia_reacao.substanceName
+                );
+                const cachedReaction = reactionProductsCacheRef.current.find(
+                    (candidate) => getReactionElementKey(candidate) === reactionKey
+                );
+                const targetReaction = cachedReaction ?? buildReactionElement(content.substancia_reacao);
+
+                if (!cachedReaction) {
+                    setReactionProductsCache((previous) => [targetReaction, ...previous]);
+                }
+
+                setSelectedElements([targetReaction]);
                 setIsMultiSelect(false);
             }
         };
@@ -361,18 +387,22 @@ function App() {
     }, []);
 
     // --- SELECTION LOGIC ---
-    const handleElementSelect = (el: ChemicalElement) => {
+    const handleElementSelectInternal = (el: ChemicalElement, allowSingleDeselect: boolean) => {
         if (isRecording) return; // Prevent changing elements while recording
         let didChangeSelection = false;
+        const exists = selectedElements.some((item) => item.atomicNumber === el.atomicNumber);
 
         if (!isMultiSelect) {
-            // Single Mode: Replace
-            setSelectedElements([el]);
-            didChangeSelection = true;
+            if (allowSingleDeselect && exists && selectedElements.length === 1) {
+                setSelectedElements([ELEMENTS[0]]);
+                didChangeSelection = true;
+            } else if (!exists || selectedElements.length > 1) {
+                // Single Mode: Replace
+                setSelectedElements([el]);
+                didChangeSelection = true;
+            }
         } else {
             // Multi Mode: Toggle / FIFO
-            const exists = selectedElements.find(e => e.atomicNumber === el.atomicNumber);
-
             if (exists) {
                 // Remove if exists
                 const filtered = selectedElements.filter(e => e.atomicNumber !== el.atomicNumber);
@@ -398,6 +428,14 @@ function App() {
 
         // Close menu if switching elements
         setContextMenu(null);
+    };
+
+    const handleElementSelect = (el: ChemicalElement) => {
+        handleElementSelectInternal(el, false);
+    };
+
+    const handleReactionProductSelect = (el: ChemicalElement) => {
+        handleElementSelectInternal(el, true);
     };
 
     const handleToggleMultiSelect = () => {
@@ -523,6 +561,8 @@ function App() {
             <PeriodicTableSelector
                 selectedElements={selectedElements}
                 onSelect={handleElementSelect}
+                reactionProducts={reactionProductsCache}
+                onSelectReactionProduct={handleReactionProductSelect}
                 isMultiSelect={isMultiSelect}
                 onToggleMultiSelect={handleToggleMultiSelect}
                 isOpen={isSidebarOpen}
@@ -585,14 +625,7 @@ function App() {
                 <Tooltip content="Toggle simulation speed" contentClassName={TOOLTIP_CLASS}>
                     <span>
                         <Button color="secondary" variant="soft" pill size="lg" onClick={handleToggleSpeed}>
-                            <Bolt
-                                className="size-4"
-                                style={{
-                                    color: 'var(--color-background-caution-solid)',
-                                    fill: 'var(--color-background-caution-solid)',
-                                    stroke: 'var(--color-background-caution-solid)'
-                                }}
-                            />
+                            <Speed className="size-4" />
                             <span className="text-xs font-semibold">{timeScale}x</span>
                         </Button>
                     </span>

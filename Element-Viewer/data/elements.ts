@@ -551,7 +551,6 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
 
     properties,
     visualDNA: generatedVisualDNA,
-    specialBehavior: customData.specialBehavior || SODIUM_FALLBACK.specialBehavior,
-    molecularForms: customData.molecularForms || SODIUM_FALLBACK.molecularForms
+    specialBehavior: customData.specialBehavior || SODIUM_FALLBACK.specialBehavior
   };
 });
