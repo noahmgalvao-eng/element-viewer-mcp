@@ -551,11 +551,12 @@ function App() {
                 ? Math.round(window.innerHeight * desktopBottomInset)
                 : 0);
     const periodicBottomDockOffset = isDesktopApp ? 0 : (16 + insets.bottom);
-    const iconScale = isDesktopApp ? 2.2 : 1.05;
+    const iconScale = isDesktopApp ? 0.66 : 1.05;
     const controlIconSizePx = `${(16 * iconScale).toFixed(2)}px`;
     const controlIconStyle = { width: controlIconSizePx, height: controlIconSizePx };
-    const desktopUniformButtonClass = isDesktopApp ? 'h-20 w-20 min-h-20 min-w-20' : undefined;
-    const desktopLabelButtonClass = isDesktopApp ? 'h-20 min-h-20 px-6 text-base' : undefined;
+    const desktopUniformButtonClass = isDesktopApp ? 'h-6 w-6 min-h-6 min-w-6' : undefined;
+    const desktopLabelButtonClass = isDesktopApp ? 'h-6 min-h-6 px-2 text-[10px]' : undefined;
+    const leftControlTop = Math.max(0, (16 + insets.top) - (!isDesktopApp && isFullscreen ? 56 : 0));
 
     return (
         <div
@@ -587,7 +588,7 @@ function App() {
 
             <div
                 className="fixed z-40 flex flex-col gap-3"
-                style={{ top: `${16 + insets.top}px`, left: `${16 + insets.left}px` }}
+                style={{ top: `${leftControlTop}px`, left: `${16 + insets.left}px` }}
             >
                 <Tooltip content={isSidebarOpen ? 'Hide periodic table' : 'Open periodic table'} contentClassName={TOOLTIP_CLASS}>
                     <span>
@@ -601,6 +602,15 @@ function App() {
                         >
                             <SettingsSlider style={controlIconStyle} />
                             {count < 5 && <span className="text-xs font-semibold">Open Periodic Table</span>}
+                        </Button>
+                    </span>
+                </Tooltip>
+
+                <Tooltip content="Toggle simulation speed" contentClassName={TOOLTIP_CLASS}>
+                    <span>
+                        <Button color="secondary" variant="soft" pill size="lg" className={desktopLabelButtonClass} onClick={handleToggleSpeed}>
+                            <Speed style={controlIconStyle} />
+                            <span className="text-xs font-semibold">{timeScale}x</span>
                         </Button>
                     </span>
                 </Tooltip>
@@ -641,15 +651,6 @@ function App() {
                                     }}
                                 />
                             )}
-                        </Button>
-                    </span>
-                </Tooltip>
-
-                <Tooltip content="Toggle simulation speed" contentClassName={TOOLTIP_CLASS}>
-                    <span>
-                        <Button color="secondary" variant="soft" pill size="lg" className={desktopLabelButtonClass} onClick={handleToggleSpeed}>
-                            <Speed style={controlIconStyle} />
-                            <span className="text-xs font-semibold">{timeScale}x</span>
                         </Button>
                     </span>
                 </Tooltip>
