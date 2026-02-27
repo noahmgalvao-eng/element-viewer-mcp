@@ -80,10 +80,25 @@
   color: var(--color-text-default, #111111);
 }
 
+:root[data-theme='light'] .periodic-reaction-title {
+  color: #111111;
+}
+
+:root[data-theme='dark'] .periodic-reaction-title {
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .periodic-reaction-title {
+    color: #ffffff;
+  }
+}
+
 .periodic-reaction-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.2rem;
+  margin-top: 0.12rem;
   align-content: flex-start;
   width: 100%;
   min-height: 3rem;
