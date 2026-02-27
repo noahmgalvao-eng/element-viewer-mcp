@@ -688,6 +688,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
             <div className="periodic-grid">
               {reactionProducts.length > 0 && (
                 <div className="periodic-reaction-cluster">
+                  <p className="periodic-reaction-title">Substâncias</p>
                   <div className="periodic-reaction-list">
                     {visibleReactionProducts.map((reaction) => {
                       const isSelected = selectedElements.some((selected) => selected.atomicNumber === reaction.atomicNumber);
