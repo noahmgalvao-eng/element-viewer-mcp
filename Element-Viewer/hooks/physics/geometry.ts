@@ -103,27 +103,40 @@ export const calculateGeometry = ({
                         phase === MatterState.EQUILIBRIUM_SUB;
 
     if (hasGasPhase) {
-         const tempFactor = Math.max(0, currentTemp) / 6000; 
-         const pRatioV = Math.max(0.001, pressure) / 101325; 
-         const logPV = Math.log10(pRatioV);
-         const pressureFactor = 1 - ((logPV + 4) / 10); 
-         const expansionFactor = tempFactor * Math.max(0.1, Math.min(1, pressureFactor));
-         const baseGasW = 134; const baseGasH = 134;
+         // --- NOVO CÓDIGO DA CAIXA DE GÁS ---
+         // 1. Normalização Termodinâmica
+         const tNorm = Math.max(1, currentTemp) / 300; // 300K = 1
+         const pAtm = Math.max(1e-5, pressure) / 101325; // 1 atm = 1
+
+         // 2. Proporção Volumétrica Ideal (T / P^0.4)
+         // O expoente 0.4 amacia a imensa escala de 100 GPa para que a UI continue responsiva
+         const vProp = tNorm / Math.pow(pAtm, 0.4);
+
+         // 3. Mapeamento Assintótico (0 a 1)
+         // C é a constante de "half-max". Se vProp == 1.5, a expansão é 0.5 (50%).
+         const C = 1.5;
+         const expansionFactor = vProp / (vProp + C);
+
+         // 4. Geometria Base e Distâncias 
+         const baseGasW = 134; 
+         const baseGasH = 134;
          const baseGasRect = { x: 200 - (baseGasW / 2), y: 300 - baseGasH, w: baseGasW, h: baseGasH };
          const leftDist = baseGasRect.x - viewBounds.minX;
          const rightDist = viewBounds.maxX - (baseGasRect.x + baseGasRect.w);
          const topDist = baseGasRect.y - viewBounds.minY;
          const bottomDist = viewBounds.maxY - (baseGasRect.y + baseGasRect.h);
+
          gasBounds.minX = baseGasRect.x - (leftDist * expansionFactor);
          gasBounds.maxX = (baseGasRect.x + baseGasRect.w) + (rightDist * expansionFactor);
          gasBounds.minY = baseGasRect.y - (topDist * expansionFactor);
          gasBounds.maxY = (baseGasRect.y + baseGasRect.h) + (bottomDist * expansionFactor);
 
-         // Keep gas domain inside the camera bounds so particles never start outside the visible area.
+         // Keep gas domain inside the camera bounds
          gasBounds.minX = Math.max(viewBounds.minX, gasBounds.minX);
          gasBounds.maxX = Math.min(viewBounds.maxX, gasBounds.maxX);
          gasBounds.minY = Math.max(viewBounds.minY, gasBounds.minY);
          gasBounds.maxY = Math.min(viewBounds.maxY, gasBounds.maxY);
+         // --- FIM DO NOVO CÓDIGO ---
     }
 
     // --- SCF OPACITY ---
