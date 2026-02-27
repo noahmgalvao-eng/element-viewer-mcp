@@ -60,34 +60,25 @@
 }
 
 .periodic-reaction-cluster {
-  grid-column: 3 / 13;
-  grid-row: 1 / 4;
-  align-self: start;
+  grid-column: 4 / 11;
+  grid-row: 1 / 3;
+  align-self: stretch;
   justify-self: stretch;
   z-index: 8;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.24rem;
   pointer-events: none;
-  padding-top: 0.1rem;
-}
-
-.periodic-reaction-label {
-  margin: 0;
-  font-size: 0.65rem;
-  line-height: 1;
-  font-weight: 700;
-  color: var(--color-text-secondary, #6b7280);
+  overflow: visible;
 }
 
 .periodic-reaction-list {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.3rem;
-  max-height: 3.25rem;
-  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(1.45rem, auto));
+  gap: 1px;
+  align-content: start;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
   pointer-events: auto;
 }
 
@@ -169,13 +160,15 @@
 }
 
 .periodic-reaction-pill {
+  position: relative !important;
+  overflow: visible !important;
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  min-height: auto !important;
-  height: auto !important;
-  width: fit-content !important;
-  min-width: fit-content !important;
+  min-height: 1.45rem !important;
+  height: 1.45rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
   padding: 0 !important;
 }
 
@@ -185,20 +178,32 @@
 
 .periodic-reaction-pill-cylinder {
   display: inline-flex;
+  width: 100%;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
   min-height: 1.45rem;
-  padding: 0.12rem 0.52rem;
-  font-size: 0.72rem;
+  padding: 0.06rem 0.16rem;
+  font-size: 0.58rem;
   font-weight: 700;
   line-height: 1;
   border: 1px solid color-mix(in oklab, #111111 24%, transparent);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.periodic-reaction-pill-cylinder-selected {
-  box-shadow: 0 0 0 2px color-mix(in oklab, #ffffff 70%, transparent);
+.periodic-reaction-pill-selection-ring {
+  pointer-events: none;
+  position: absolute;
+  inset: -1px;
+  z-index: 2;
+  border-radius: 9999px;
+  border: 3px solid var(--reaction-ring-color, #111111);
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 5px color-mix(in oklab, var(--reaction-ring-color, #111111) 42%, transparent),
+    0 8px 14px color-mix(in oklab, var(--reaction-ring-color, #111111) 30%, transparent);
 }
 
 .periodic-reaction-overflow-trigger {
@@ -206,8 +211,9 @@
   border-radius: 9999px !important;
   min-height: 1.45rem !important;
   height: 1.45rem !important;
-  min-width: 2.25rem !important;
-  padding: 0 0.55rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 0 0.26rem !important;
   font-weight: 700;
 }
 

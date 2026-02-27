@@ -169,9 +169,15 @@ type PreviewAvatarStyle = React.CSSProperties & {
   '--preview-avatar-color'?: string;
 };
 
+type ReactionPillStyle = React.CSSProperties & {
+  '--reaction-ring-color'?: string;
+};
+
 const DEFAULT_TEMPERATURE_K = 298.15;
 const DEFAULT_PRESSURE_PA = 101325;
-const MAX_VISIBLE_REACTION_BUTTONS = 8;
+const MAX_REACTION_COLUMNS = 7;
+const MAX_REACTION_ROWS = 2;
+const MAX_VISIBLE_REACTION_SLOTS = MAX_REACTION_COLUMNS * MAX_REACTION_ROWS;
 const POPOVER_SCROLL_THRESHOLD = 12;
 const TEMP_UNIT_SYMBOLS: Record<TempUnit, string> = {
   K: 'K',
@@ -201,6 +207,24 @@ const getToneStyleBySymbol = (symbol: string): ToneStyle | null => {
   const position = POSITION_BY_SYMBOL.get(symbol);
   if (!position) return null;
   return TONE_STYLES[getElementTone(symbol, position)];
+};
+
+const getReactionRingColor = (hexColor: string): string => {
+  const normalized = hexColor.replace('#', '').trim();
+  const fullHex = normalized.length === 3
+    ? normalized.split('').map((char) => `${char}${char}`).join('')
+    : normalized;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(fullHex)) {
+    return '#111111';
+  }
+
+  const shade = (channel: string) => Math.max(0, Math.round(Number.parseInt(channel, 16) * 0.58));
+  const r = shade(fullHex.slice(0, 2)).toString(16).padStart(2, '0');
+  const g = shade(fullHex.slice(2, 4)).toString(16).padStart(2, '0');
+  const b = shade(fullHex.slice(4, 6)).toString(16).padStart(2, '0');
+
+  return `#${r}${g}${b}`;
 };
 
 const getReadableTextColor = (hexColor: string): string => {
@@ -365,13 +389,17 @@ const PeriodicTableSelector: React.FC<Props> = ({
     ? `${Number(displayedPressure.toPrecision(6)).toLocaleString()} ${pressureUnit}`
     : `0 ${pressureUnit}`;
   const isSliderActive = activeSlider !== null;
+  const hasHiddenReactionProducts = reactionProducts.length > MAX_VISIBLE_REACTION_SLOTS;
+  const visibleReactionButtonsCount = hasHiddenReactionProducts
+    ? MAX_VISIBLE_REACTION_SLOTS - 1
+    : MAX_VISIBLE_REACTION_SLOTS;
   const visibleReactionProducts = useMemo(
-    () => reactionProducts.slice(0, MAX_VISIBLE_REACTION_BUTTONS),
-    [reactionProducts],
+    () => reactionProducts.slice(0, visibleReactionButtonsCount),
+    [reactionProducts, visibleReactionButtonsCount],
   );
   const hiddenReactionProducts = useMemo(
-    () => reactionProducts.slice(MAX_VISIBLE_REACTION_BUTTONS),
-    [reactionProducts],
+    () => reactionProducts.slice(visibleReactionButtonsCount),
+    [reactionProducts, visibleReactionButtonsCount],
   );
   const shouldUsePopoverScroll = reactionProducts.length > POPOVER_SCROLL_THRESHOLD;
 
@@ -660,12 +688,14 @@ const PeriodicTableSelector: React.FC<Props> = ({
             <div className="periodic-grid">
               {reactionProducts.length > 0 && (
                 <div className="periodic-reaction-cluster">
-                  <p className="periodic-reaction-label">Substâncias</p>
                   <div className="periodic-reaction-list">
                     {visibleReactionProducts.map((reaction) => {
                       const isSelected = selectedElements.some((selected) => selected.atomicNumber === reaction.atomicNumber);
                       const reactionColor = reaction.visualDNA?.solid?.color || '#d9d9d9';
                       const textColor = getReadableTextColor(reactionColor);
+                      const reactionPillStyle: ReactionPillStyle = {
+                        '--reaction-ring-color': getReactionRingColor(reactionColor),
+                      };
 
                       return (
                         <Button
@@ -676,9 +706,11 @@ const PeriodicTableSelector: React.FC<Props> = ({
                           onClick={() => onSelectReactionProduct(reaction)}
                           className="periodic-reaction-pill z-[5]"
                           title={reaction.name}
+                          style={reactionPillStyle}
                         >
+                          {isSelected && <span className="periodic-reaction-pill-selection-ring" aria-hidden />}
                           <span
-                            className={`periodic-reaction-pill-cylinder ${isSelected ? 'periodic-reaction-pill-cylinder-selected' : ''}`}
+                            className="periodic-reaction-pill-cylinder"
                             style={{
                               backgroundColor: reactionColor,
                               color: textColor,
@@ -719,6 +751,9 @@ const PeriodicTableSelector: React.FC<Props> = ({
                                 const isSelected = selectedElements.some((selected) => selected.atomicNumber === reaction.atomicNumber);
                                 const reactionColor = reaction.visualDNA?.solid?.color || '#d9d9d9';
                                 const textColor = getReadableTextColor(reactionColor);
+                                const reactionPillStyle: ReactionPillStyle = {
+                                  '--reaction-ring-color': getReactionRingColor(reactionColor),
+                                };
 
                                 return (
                                   <Button
@@ -729,9 +764,11 @@ const PeriodicTableSelector: React.FC<Props> = ({
                                     onClick={() => onSelectReactionProduct(reaction)}
                                     className="periodic-reaction-pill"
                                     title={reaction.name}
+                                    style={reactionPillStyle}
                                   >
+                                    {isSelected && <span className="periodic-reaction-pill-selection-ring" aria-hidden />}
                                     <span
-                                      className={`periodic-reaction-pill-cylinder ${isSelected ? 'periodic-reaction-pill-cylinder-selected' : ''}`}
+                                      className="periodic-reaction-pill-cylinder"
                                       style={{
                                         backgroundColor: reactionColor,
                                         color: textColor,
@@ -750,9 +787,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
                   </div>
                 </div>
               )}
-            </div>
 
-            <div className="periodic-grid">
               {visibleElements.map((el) => {
                 const position = POSITION_BY_SYMBOL.get(el.symbol);
                 if (!position) return null;
