@@ -3,7 +3,7 @@ import { ChemicalElement, ElementProperties } from "../types";
 import { SOURCE_DATA } from "./periodic_table_source";
 import { SCIENTIFIC_DATA } from "./scientific_data";
 import { SCIENTIFIC_DATA as SCIENTIFIC_THERMO_DATA } from "../scientific_data";
-import { CUSTOM_DATA, SODIUM_FALLBACK, ElementCustomData } from "./elements-visuals";
+import { CUSTOM_DATA, DEFAULT_CUSTOM_DATA, ElementCustomData } from "./elements-visuals";
 import { toPascal } from "../utils/units";
 
 // The 11 Frames extracted from the provided SVG liquid path (Preserved from original)
@@ -167,14 +167,14 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   const scientificThermo = THERMO_DATA_BY_SYMBOL[symbol];
 
   // Layer 3: Custom Data (Legacy Props + Simulation Tuning)
-  const customData: ElementCustomData = CUSTOM_DATA[symbol] || SODIUM_FALLBACK;
+  const customData: ElementCustomData = CUSTOM_DATA[symbol] || DEFAULT_CUSTOM_DATA;
 
   // Helper for Layer 3 retention & Safety Fallbacks
-  const baseLegacyProps = SODIUM_FALLBACK.properties as ElementProperties;
+  const baseLegacyProps = DEFAULT_CUSTOM_DATA.properties as ElementProperties;
   const specificLegacyProps = customData.properties || {};
 
   // HELPER: Sanity Check for Physics (Prevents 0/Infinity/NaN bugs)
-  // If scientific data is missing or 0, fallback to Sodium defaults (Layer 3 base).
+  // If scientific data is missing or 0, fallback to default baseline values (Layer 3 base).
   const ensurePhysical = (val: number | undefined | null, fallback: number): number => {
     // Handles "N/A" which results in NaN after simple casting
     if (typeof val === 'string' && val === 'N/A') return fallback;
@@ -325,18 +325,22 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   const tpPressCalcRes = parseSciValue(toSciInput(triplePressField.calcRaw), -999);
   const tpPressDisplayRes = parseSciValue(toSciInput(triplePressField.displayRaw), -999);
 
-  const triplePointObj = {
-    tempK: tpTempCalcRes.val > 0 ? tpTempCalcRes.val : meltTempCalc.val,
-    pressurePa: tpPressCalcRes.val > 0 ? tpPressCalcRes.val * 1000 : 0
-  };
+  const triplePointObj = (tpTempCalcRes.val > 0 && tpPressCalcRes.val > 0)
+    ? {
+      tempK: tpTempCalcRes.val,
+      pressurePa: tpPressCalcRes.val * 1000
+    }
+    : undefined;
 
   const tpSource =
     (tpTempDisplayRes.str && tpTempDisplayRes.str !== "N/A" ? tpTempDisplayRes.source : undefined) ??
     (tpPressDisplayRes.str && tpPressDisplayRes.str !== "N/A" ? tpPressDisplayRes.source : undefined);
+  const fallbackTripleTempDisplay = `${parseFloat(meltTempCalc.val.toFixed(6)).toString()}*`;
+  const fallbackTriplePressDisplay = `${parseFloat(((101325 * 0.001) / 1000).toFixed(6)).toString()}*`;
   const tpTempDisplayValue =
-    tpTempDisplayRes.str && tpTempDisplayRes.str !== "N/A" ? tpTempDisplayRes.str : "N/A";
+    tpTempDisplayRes.str && tpTempDisplayRes.str !== "N/A" ? tpTempDisplayRes.str : fallbackTripleTempDisplay;
   const tpPressDisplayValue =
-    tpPressDisplayRes.str && tpPressDisplayRes.str !== "N/A" ? tpPressDisplayRes.str : "N/A";
+    tpPressDisplayRes.str && tpPressDisplayRes.str !== "N/A" ? tpPressDisplayRes.str : fallbackTriplePressDisplay;
 
   const parseCriticalPressureValue = (
     input: unknown,
@@ -498,15 +502,15 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     bulkModulusSource: bulkModulusOfficial.source,
 
     // --- OFFICIAL THERMO/COMPRESSION SOURCE ---
-    // enthalpy values always keep sodium fallback for physics when source is N/A/missing,
+    // enthalpy values keep baseline fallback for physics when source is N/A/missing,
     // but UI keeps the raw source string (including N/A and *).
     enthalpyFusionJmol: enthalpyFusionJmolPhysics,
     enthalpyVapJmol: enthalpyVapJmolPhysics,
-    // bulk modulus has NO sodium fallback for compression:
+    // bulk modulus has NO baseline fallback for compression:
     // missing/invalid source data => undefined => no compression animation.
     bulkModulusGPa: bulkModulusOfficial.val,
 
-    // --- RETAINED LEGACY (Layer 3 - Custom/Sodium Fallback) ---
+    // --- RETAINED LEGACY (Layer 3 - Custom/Baseline Fallback) ---
     criticalPoint: criticalPointObj,
     criticalPointSource: criticalSource,
     criticalPointTempDisplay: cpTempDisplayValue,
@@ -547,10 +551,10 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
     },
 
     mass: source.atomic_mass,
-    category: customData.category || SODIUM_FALLBACK.category || 'metal',
+    category: customData.category || DEFAULT_CUSTOM_DATA.category || 'metal',
 
     properties,
     visualDNA: generatedVisualDNA,
-    specialBehavior: customData.specialBehavior || SODIUM_FALLBACK.specialBehavior
+    specialBehavior: customData.specialBehavior || DEFAULT_CUSTOM_DATA.specialBehavior
   };
 });
