@@ -45,19 +45,6 @@ export const calculateMeltingPoint = (element: ChemicalElement, pressure: number
         return T_ref * Math.pow(term, (1 / c));
     };
 
-    // 3. TURNOVER EXCEPTION (Sodium/Lithium)
-    if (specialBehavior?.highPressureTurnover) {
-        const PEAK_P = 3e9; // ~3 GPa turnover point
-        if (pressure < PEAK_P) {
-            return solveSG(pressure);
-        } else {
-            const maxT = solveSG(PEAK_P);
-            const excess = pressure - PEAK_P;
-            const dropRate = 5e-8; // K/Pa decay
-            return Math.max(0, maxT - (excess * dropRate));
-        }
-    }
-
     return solveSG(pressure);
 };
 
@@ -87,15 +74,18 @@ export const calculateSublimationPoint = (element: ChemicalElement, pressure: nu
     const { properties } = element;
     const triplePoint = properties.triplePoint;
 
-    if (!triplePoint || !properties.enthalpyFusionJmol) return 0;
+    if (!properties.enthalpyFusionJmol) return 0;
+
+    const triplePointTempK = triplePoint?.tempK ?? properties.meltingPointK;
+    const triplePointPressurePa = triplePoint?.pressurePa ?? (101325 * 0.001);
 
     const molarMassKg = element.mass / 1000;
     const dH_vap_mol = properties.enthalpyVapJmol || (properties.latentHeatVaporization * molarMassKg);
     const dH_sub_mol = properties.enthalpyFusionJmol + dH_vap_mol;
 
     const safePressure = Math.max(1e-9, pressure);
-    const logTerm = Math.log(safePressure / triplePoint.pressurePa);
-    const invTsub = (1 / triplePoint.tempK) - ((R * logTerm) / dH_sub_mol);
+    const logTerm = Math.log(safePressure / triplePointPressurePa);
+    const invTsub = (1 / triplePointTempK) - ((R * logTerm) / dH_sub_mol);
 
     return 1 / invTsub;
 };
@@ -106,9 +96,10 @@ export const calculateSublimationPoint = (element: ChemicalElement, pressure: nu
  */
 export const calculatePhaseBoundaries = (element: ChemicalElement, pressure: number): PhaseBoundaries => {
     const triplePoint = element.properties.triplePoint;
+    const fallbackTriplePressurePa = 101325 * 0.001;
+    const sublimationRegimePressureThreshold = triplePoint?.pressurePa ?? fallbackTriplePressurePa;
     const isSublimationRegime = Boolean(
-        triplePoint &&
-        pressure < triplePoint.pressurePa &&
+        pressure < sublimationRegimePressureThreshold &&
         element.properties.enthalpyFusionJmol
     );
 

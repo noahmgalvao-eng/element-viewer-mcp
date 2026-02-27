@@ -246,6 +246,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
   const triplePoint = element.properties.triplePoint;
   const criticalPoint = element.properties.criticalPoint;
   const hasTriplePoint = Boolean(triplePoint && triplePoint.tempK > 0 && triplePoint.pressurePa > 0);
+  const hasSublimationSupport = Boolean(element.properties.enthalpyFusionJmol);
   const hasCriticalPoint = Boolean(criticalPoint && criticalPoint.tempK > 0 && criticalPoint.pressurePa > 0);
   const isPressureBelowTriple = hasTriplePoint && physicsState.pressure < triplePoint!.pressurePa;
 
@@ -310,7 +311,7 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
     1,
     actionSublimationPoint || physicsState.sublimationPointCurrent || triplePoint?.tempK || actionMeltingPoint,
   );
-  const sublimationPressure = triplePoint ? Math.max(1, triplePoint.pressurePa * 0.8) : 1;
+  const sublimationPressure = triplePoint ? Math.max(1, triplePoint.pressurePa * 0.8) : Math.max(1, (101325 * 0.001) * 0.8);
   const rawSublimationTargetTemp = isGasLike ? Math.max(1, sublimationTemp - 40) : sublimationTemp + 40;
   const supercriticalTargetTemp = criticalPoint ? criticalPoint.tempK + 25 : physicsState.temperature;
   const tripleTargetTemp = triplePoint?.tempK ?? physicsState.temperature;
@@ -652,10 +653,9 @@ const ElementPropertiesMenu: React.FC<Props> = ({ data, onClose, onSetTemperatur
               label="Sublimacao"
               color="secondary"
               variant="soft"
-              disabled={!hasTriplePoint || isLiquidState}
+              disabled={!hasSublimationSupport || isLiquidState}
               heatsUp={sublimationTargetTemp >= physicsState.temperature}
               onClick={() => {
-                if (!triplePoint) return;
                 onSetPressure(sublimationPressure);
                 onSetTemperature(sublimationTargetTemp);
               }}

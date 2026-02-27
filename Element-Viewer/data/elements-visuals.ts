@@ -13,17 +13,15 @@ export interface ElementCustomData {
   category?: string;
 }
 
-// CRITICAL: The Sodium Rule Fallback
-// This object contains the exact physics configuration of Sodium (Na).
-// Used as the default for any element missing specific custom data.
-export const SODIUM_FALLBACK: ElementCustomData = {
+// Generic defaults used when an element has no custom visual/legacy tuning.
+export const DEFAULT_CUSTOM_DATA: ElementCustomData = {
   name: "Elemento Genérico",
   classification: {
     groupName: "Elemento Químico",
   },
   category: 'metal',
   properties: {
-    // Standard Na Data
+    // Generic baseline data
     meltingPointK: 370.87,
     boilingPointK: 1156,
     bulkModulusGPa: 6.3,
@@ -46,7 +44,7 @@ export const SODIUM_FALLBACK: ElementCustomData = {
     simonC: 2.5,
     enthalpyFusionJmol: 2600,
   },
-  specialBehavior: { highPressureTurnover: true }
+  specialBehavior: {}
 };
 
 // Proprietary Data for specific elements
@@ -73,7 +71,7 @@ export const CUSTOM_DATA: Record<string, ElementCustomData> = {
     }
   },
   "Na": {
-    ...SODIUM_FALLBACK,
+    ...DEFAULT_CUSTOM_DATA,
     name: "Sódio",
     classification: { groupName: "Metais Alcalinos" }
   },
