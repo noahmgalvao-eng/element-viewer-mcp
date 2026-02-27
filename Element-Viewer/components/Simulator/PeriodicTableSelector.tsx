@@ -787,9 +787,7 @@ const PeriodicTableSelector: React.FC<Props> = ({
                   </div>
                 </div>
               )}
-            </div>
 
-            <div className="periodic-grid">
               {visibleElements.map((el) => {
                 const position = POSITION_BY_SYMBOL.get(el.symbol);
                 if (!position) return null;
