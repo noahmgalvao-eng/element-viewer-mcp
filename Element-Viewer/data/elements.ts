@@ -335,10 +335,12 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   const tpSource =
     (tpTempDisplayRes.str && tpTempDisplayRes.str !== "N/A" ? tpTempDisplayRes.source : undefined) ??
     (tpPressDisplayRes.str && tpPressDisplayRes.str !== "N/A" ? tpPressDisplayRes.source : undefined);
+  const fallbackTripleTempDisplay = `${parseFloat(meltTempCalc.val.toFixed(6)).toString()}*`;
+  const fallbackTriplePressDisplay = `${parseFloat(((101325 * 0.001) / 1000).toFixed(6)).toString()}*`;
   const tpTempDisplayValue =
-    tpTempDisplayRes.str && tpTempDisplayRes.str !== "N/A" ? tpTempDisplayRes.str : "N/A";
+    tpTempDisplayRes.str && tpTempDisplayRes.str !== "N/A" ? tpTempDisplayRes.str : fallbackTripleTempDisplay;
   const tpPressDisplayValue =
-    tpPressDisplayRes.str && tpPressDisplayRes.str !== "N/A" ? tpPressDisplayRes.str : "N/A";
+    tpPressDisplayRes.str && tpPressDisplayRes.str !== "N/A" ? tpPressDisplayRes.str : fallbackTriplePressDisplay;
 
   const parseCriticalPressureValue = (
     input: unknown,
