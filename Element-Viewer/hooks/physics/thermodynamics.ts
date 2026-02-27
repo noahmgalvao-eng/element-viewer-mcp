@@ -278,11 +278,20 @@ export const calculateThermodynamics = ({
 
     } else {
         let activeSpecificHeat = C_SOLID;
-        if (phase === MatterState.LIQUID) activeSpecificHeat = C_LIQUID;
-        if (phase === MatterState.GAS || phase === MatterState.SUPERCRITICAL) activeSpecificHeat = C_GAS;
-        if (phase === MatterState.MELTING || phase === MatterState.BOILING) activeSpecificHeat = C_LIQUID;
-        // Approximation for Sublimation phase
-        if (phase === MatterState.SUBLIMATION) activeSpecificHeat = (C_SOLID + C_GAS) / 2;
+
+        if (phase === MatterState.LIQUID) {
+            activeSpecificHeat = C_LIQUID;
+        } else if (phase === MatterState.GAS || phase === MatterState.SUPERCRITICAL) {
+            activeSpecificHeat = C_GAS;
+        } else if (phase === MatterState.MELTING || phase === MatterState.EQUILIBRIUM_MELT) {
+            activeSpecificHeat = (C_LIQUID * meltProgress) + (C_SOLID * (1 - meltProgress));
+        } else if (phase === MatterState.BOILING || phase === MatterState.EQUILIBRIUM_BOIL) {
+            activeSpecificHeat = (C_GAS * boilProgress) + (C_LIQUID * (1 - boilProgress));
+        } else if (phase === MatterState.SUBLIMATION || phase === MatterState.EQUILIBRIUM_SUB) {
+            activeSpecificHeat = (C_GAS * sublimationProgress) + (C_SOLID * (1 - sublimationProgress));
+        } else if (phase === MatterState.EQUILIBRIUM_TRIPLE) {
+            activeSpecificHeat = (C_SOLID * 0.675) + (C_GAS * 0.15) + (C_LIQUID * 0.175);
+        }
 
         const thermalMass = SAMPLE_MASS * activeSpecificHeat;
         powerInput = (thermalMass / THERMAL_TAU) * (targetEnvTemp - currentTemp);
