@@ -228,13 +228,13 @@ export const calculateThermodynamics = ({
         // ... Triple Point Logic ...
         const time = simState.simTime;
         const oscillation = Math.sin(time * 1.5);
-        const tripleMeltRatio = 0.675 + (oscillation * 0.075);
+        const visualTripleMeltRatio = 0.675 + (oscillation * 0.075);
         const H_melt_end = (SAMPLE_MASS * C_SOLID * T_melt) + (SAMPLE_MASS * L_FUSION);
         const targetEnthalpy = H_melt_end;
         powerInput = (targetEnthalpy - simState.enthalpy) * 2.0;
         phase = MatterState.EQUILIBRIUM_TRIPLE;
         currentTemp = T_melt;
-        meltProgress = tripleMeltRatio;
+        meltProgress = visualTripleMeltRatio;
         boilProgress = 0.15;
         sublimationProgress = 0;
 
@@ -242,39 +242,39 @@ export const calculateThermodynamics = ({
         // SUBLIMATION EQUILIBRIUM LOGIC
         const time = simState.simTime;
         const oscillation = Math.sin(time * 1.5);
-        const targetRatio = 0.5 + (oscillation * 0.2); // Oscillate roughly half-sublimated
+        const visualRatio = 0.5 + (oscillation * 0.2); // Oscillate roughly half-sublimated
         // Re-calculate enthalpy bounds for sub
         const L_SUB = L_FUSION + L_VAPORIZATION;
         const H_sub_start = SAMPLE_MASS * C_SOLID * T_sub;
-        const targetEnthalpy = H_sub_start + (SAMPLE_MASS * L_SUB * targetRatio);
+        const targetEnthalpy = H_sub_start + (SAMPLE_MASS * L_SUB * 0.5);
 
-        powerInput = (targetEnthalpy - simState.enthalpy) * 5.0;
+        powerInput = (targetEnthalpy - simState.enthalpy) * 2.0;
         phase = MatterState.EQUILIBRIUM_SUB;
         currentTemp = T_sub;
-        sublimationProgress = targetRatio;
+        sublimationProgress = visualRatio;
 
     } else if (isEquilibriumMelt) {
         const time = simState.simTime;
         const oscillation = Math.sin(time * 1.5);
-        const targetRatio = 0.45 + (oscillation * 0.25);
+        const visualRatio = 0.45 + (oscillation * 0.25);
         const H_melt_start = SAMPLE_MASS * C_SOLID * T_melt;
-        const targetEnthalpy = H_melt_start + (SAMPLE_MASS * L_FUSION * targetRatio);
-        powerInput = (targetEnthalpy - simState.enthalpy) * 5.0;
+        const targetEnthalpy = H_melt_start + (SAMPLE_MASS * L_FUSION * 0.45);
+        powerInput = (targetEnthalpy - simState.enthalpy) * 2.0;
         phase = MatterState.EQUILIBRIUM_MELT;
         currentTemp = T_melt;
-        meltProgress = targetRatio;
+        meltProgress = visualRatio;
 
     } else if (isEquilibriumBoil) {
         const time = simState.simTime;
         const oscillation = Math.sin(time * 2.5);
-        const targetRatio = 0.25 + (oscillation * 0.15); // Gas Ratio
+        const visualRatio = 0.25 + (oscillation * 0.15); // Gas Ratio
         const H_melt_end = (SAMPLE_MASS * C_SOLID * T_melt) + (SAMPLE_MASS * L_FUSION);
         const H_boil_start = H_melt_end + (SAMPLE_MASS * C_LIQUID * (T_boil - T_melt));
-        const targetEnthalpy = H_boil_start + (SAMPLE_MASS * L_VAPORIZATION * targetRatio);
-        powerInput = (targetEnthalpy - simState.enthalpy) * 5.0;
+        const targetEnthalpy = H_boil_start + (SAMPLE_MASS * L_VAPORIZATION * 0.25);
+        powerInput = (targetEnthalpy - simState.enthalpy) * 2.0;
         phase = MatterState.EQUILIBRIUM_BOIL;
         currentTemp = T_boil;
-        boilProgress = targetRatio;
+        boilProgress = visualRatio;
 
     } else {
         let activeSpecificHeat = C_SOLID;
