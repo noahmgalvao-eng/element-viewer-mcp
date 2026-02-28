@@ -478,7 +478,33 @@ const MatterVisualizer: React.FC<Props> = ({ physics, element, showParticles, vi
                             fill = state === MatterState.SOLID || state === MatterState.SUBLIMATION || state === MatterState.EQUILIBRIUM_SUB ? adjustedSolidColor : adjustedLiquidColor;
                             opacity = 0.9;
 
-                            const vibrationAmp = Math.sqrt(physics.temperature) * 0.15;
+                            const GRID_COLS = 10;
+                            const neighborIds = [p.id - 1, p.id + 1, p.id - GRID_COLS, p.id + GRID_COLS]
+                                .filter((neighborId) => {
+                                    if (neighborId < 0 || neighborId >= particles.length) return false;
+                                    if (Math.abs(neighborId - p.id) === 1) {
+                                        return Math.floor(neighborId / GRID_COLS) === Math.floor(p.id / GRID_COLS);
+                                    }
+                                    return true;
+                                });
+
+                            let minNeighborDistance = Infinity;
+                            neighborIds.forEach((neighborId) => {
+                                const neighbor = particles[neighborId];
+                                const dx = neighbor.homeX - p.homeX;
+                                const dy = neighbor.homeY - p.homeY;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                if (distance < minNeighborDistance) {
+                                    minNeighborDistance = distance;
+                                }
+                            });
+
+                            const rawVibrationAmp = Math.sqrt(physics.temperature) * 0.15;
+                            const freeNeighborGap = Number.isFinite(minNeighborDistance)
+                                ? Math.max(0, minNeighborDistance - (p.r * 2))
+                                : 0;
+                            const safeVibrationAmp = freeNeighborGap * 0.45;
+                            const vibrationAmp = Math.min(rawVibrationAmp, safeVibrationAmp);
                             const time = physics.simTime * 25;
                             const jitterX = Math.sin(time + p.id * 123) * vibrationAmp;
                             const jitterY = Math.cos(time + p.id * 321) * vibrationAmp;
