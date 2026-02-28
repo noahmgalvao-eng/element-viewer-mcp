@@ -325,18 +325,20 @@ export const ELEMENTS: ChemicalElement[] = SOURCE_DATA.elements.map((source: any
   const tpPressCalcRes = parseSciValue(toSciInput(triplePressField.calcRaw), -999);
   const tpPressDisplayRes = parseSciValue(toSciInput(triplePressField.displayRaw), -999);
 
-  const triplePointObj = (tpTempCalcRes.val > 0 && tpPressCalcRes.val > 0)
-    ? {
-      tempK: tpTempCalcRes.val,
-      pressurePa: tpPressCalcRes.val * 1000
-    }
-    : undefined;
+  const fallbackTripleTempK = meltTempCalc.val;
+  const fallbackTriplePressurePa = 101325 * 0.001;
+  const resolvedTripleTempK = tpTempCalcRes.val > 0 ? tpTempCalcRes.val : fallbackTripleTempK;
+  const resolvedTriplePressurePa = tpPressCalcRes.val > 0 ? (tpPressCalcRes.val * 1000) : fallbackTriplePressurePa;
+  const triplePointObj = {
+    tempK: resolvedTripleTempK,
+    pressurePa: resolvedTriplePressurePa
+  };
 
   const tpSource =
     (tpTempDisplayRes.str && tpTempDisplayRes.str !== "N/A" ? tpTempDisplayRes.source : undefined) ??
     (tpPressDisplayRes.str && tpPressDisplayRes.str !== "N/A" ? tpPressDisplayRes.source : undefined);
-  const fallbackTripleTempDisplay = `${parseFloat(meltTempCalc.val.toFixed(6)).toString()}*`;
-  const fallbackTriplePressDisplay = `${parseFloat(((101325 * 0.001) / 1000).toFixed(6)).toString()}*`;
+  const fallbackTripleTempDisplay = `${parseFloat(fallbackTripleTempK.toFixed(6)).toString()}*`;
+  const fallbackTriplePressDisplay = `${parseFloat((fallbackTriplePressurePa / 1000).toFixed(6)).toString()}*`;
   const tpTempDisplayValue =
     tpTempDisplayRes.str && tpTempDisplayRes.str !== "N/A" ? tpTempDisplayRes.str : fallbackTripleTempDisplay;
   const tpPressDisplayValue =
