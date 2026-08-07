@@ -6,13 +6,18 @@ import { viteSingleFile } from "vite-plugin-singlefile";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
+  const isStandaloneBuild = mode === 'standalone';
   return {
     server: {
       port: 3000,
       host: '0.0.0.0',
       allowedHosts: true,
     },
-    plugins: [tailwindcss(), react(), viteSingleFile()],
+    plugins: [
+      tailwindcss(),
+      react(),
+      ...(!isStandaloneBuild ? [viteSingleFile()] : []),
+    ],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
@@ -20,7 +25,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      assetsInlineLimit: 100000000, // Force inline
+      assetsInlineLimit: isStandaloneBuild ? 4096 : 100000000,
     }
   };
 });

@@ -4,6 +4,7 @@ import { SET_GLOBALS_EVENT_TYPE } from '../../types';
 export type HostEnvironment = 'unknown' | 'chatgpt' | 'standalone';
 
 const STANDALONE_FALLBACK_DELAY_MS = 750;
+const IS_STANDALONE_BUILD = import.meta.env.MODE === 'standalone';
 
 const HostEnvironmentContext = React.createContext<HostEnvironment>('unknown');
 
@@ -12,7 +13,11 @@ function resolveInitialHostEnvironment(): HostEnvironment {
     return 'unknown';
   }
 
-  return window.openai ? 'chatgpt' : 'unknown';
+  if (window.openai) {
+    return 'chatgpt';
+  }
+
+  return IS_STANDALONE_BUILD ? 'standalone' : 'unknown';
 }
 
 export function HostEnvironmentProvider({

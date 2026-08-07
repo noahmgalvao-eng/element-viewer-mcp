@@ -16,6 +16,7 @@ import {
 } from '../../app/standalone';
 import { useStandaloneRouting } from '../../hooks/useStandaloneRouting';
 import type { Messages, SupportedLocale } from '../../i18n/types';
+import chymiaLogoDark from '../../website/chemlablogo-dark.png';
 import chymiaLogo from '../../website/chemlablogo.png';
 import qrCodeImage from '../../website/qr-code.png';
 import privacyPolicyText from '../../website/privacy policy.txt?raw';
@@ -268,11 +269,21 @@ export default function StandaloneWebsiteShell({
             className="standalone-brand group flex items-center gap-3 rounded-[1.5rem] px-1.5 py-1 text-left"
             onClick={() => navigateStandalone(STANDALONE_HOME_ROUTE)}
           >
-            <span className="standalone-brand-mark flex h-14 w-14 items-center justify-center overflow-hidden rounded-[1.15rem] sm:h-16 sm:w-16">
+            <span className="standalone-brand-mark flex h-16 w-16 items-center justify-center overflow-hidden rounded-[1.15rem] sm:h-[4.5rem] sm:w-[4.5rem]">
               <img
                 src={chymiaLogo}
                 alt={websiteMessages.logoAlt}
-                className="standalone-brand-image h-full w-full object-contain"
+                className="standalone-brand-image standalone-brand-image-light h-full w-full object-cover"
+                decoding="sync"
+                fetchPriority="high"
+              />
+              <img
+                src={chymiaLogoDark}
+                alt=""
+                aria-hidden="true"
+                className="standalone-brand-image standalone-brand-image-dark h-full w-full object-cover"
+                decoding="sync"
+                fetchPriority="high"
               />
             </span>
             <span className="flex flex-col">

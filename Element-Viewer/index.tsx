@@ -8,6 +8,12 @@ import { HostEnvironmentProvider } from './infrastructure/browser/hostEnvironmen
 import { posthog } from './infrastructure/posthog';
 import { I18nProvider } from './i18n';
 
+if (import.meta.env.MODE === 'standalone') {
+  const initialTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.documentElement.dataset.theme = initialTheme;
+  document.documentElement.style.colorScheme = initialTheme;
+}
+
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 

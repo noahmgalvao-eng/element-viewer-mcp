@@ -2,6 +2,7 @@ import React from 'react';
 import { buildSimulationTelemetryContext } from './app/telemetry';
 import { getSimulationChromeLayout } from './app/simulationLayout';
 import SimulationViewport from './components/SimulationViewport';
+import StandaloneWebsiteShell from './components/standalone/StandaloneWebsiteShell';
 import { getLocalizedElements } from './data/localizedElements';
 import { useAppChatControls } from './hooks/useAppChatControls';
 import { useDocumentTheme } from './hooks/useDocumentTheme';
@@ -10,10 +11,6 @@ import { useSimulationController } from './hooks/useSimulationController';
 import { useTelemetry } from './hooks/useTelemetry';
 import { useHostEnvironment } from './infrastructure/browser/hostEnvironment';
 import { useI18n } from './i18n';
-
-const StandaloneWebsiteShell = React.lazy(
-  () => import('./components/standalone/StandaloneWebsiteShell'),
-);
 
 function App() {
   const { locale, messages, setLocale, availableLocales } = useI18n();
@@ -151,15 +148,13 @@ function App() {
 
   if (isStandaloneWebapp) {
     return (
-      <React.Suspense fallback={embeddedViewport}>
-        <StandaloneWebsiteShell
-          availableLocales={availableLocales}
-          locale={locale}
-          onLocaleChange={setLocale}
-          simulationViewport={useDesktopFullscreenShell ? desktopFullscreenViewport : simulationViewport}
-          websiteMessages={messages.website}
-        />
-      </React.Suspense>
+      <StandaloneWebsiteShell
+        availableLocales={availableLocales}
+        locale={locale}
+        onLocaleChange={setLocale}
+        simulationViewport={useDesktopFullscreenShell ? desktopFullscreenViewport : simulationViewport}
+        websiteMessages={messages.website}
+      />
     );
   }
 

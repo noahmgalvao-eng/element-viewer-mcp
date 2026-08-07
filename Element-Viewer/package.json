@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node -e \"require('fs').copyFileSync('vercel.json', 'dist/vercel.json')\"",
+    "build:standalone": "vite build --mode standalone && node -e \"require('fs').copyFileSync('vercel.json', 'dist/vercel.json')\"",
     "preview": "vite preview"
   },
   "dependencies": {
