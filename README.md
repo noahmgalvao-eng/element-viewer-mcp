@@ -9,7 +9,7 @@
 
 O **Chymia** é uma aplicação web para simulação e visualização de elementos químicos, termodinâmica e reações. Construído com um motor de simulação de partículas no frontend e integrado diretamente ao **ChatGPT** através do Model Context Protocol (MCP), o Chymia transforma a maneira como estudantes, pesquisadores e curiosos interagem com a tabela periódica.
 
-![Simulação do Elemento Hidrogênio (H) no Chymia](./preview.gif)
+![Simulação do Elemento Hidrogênio (H) no Chymia](./docs/preview.gif)
 
 ---
 
